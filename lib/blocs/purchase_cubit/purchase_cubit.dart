@@ -27,7 +27,8 @@ class PurchaseCubit extends Cubit<PurchaseState> {
 
   Future<void> makePurchase(Package package) async {
     try {
-      PurchaseResult purchaseResult = await Purchases.purchasePackage(package);
+      PurchaseResult purchaseResult =
+          await Purchases.purchase(PurchaseParams.package(package));
       CustomerInfo customerInfo = purchaseResult.customerInfo;
 
       if (customerInfo.entitlements.all["premium"] != null &&

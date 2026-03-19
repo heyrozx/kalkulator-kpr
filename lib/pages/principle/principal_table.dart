@@ -267,9 +267,15 @@ class _PrincipalTableState extends State<PrincipalTable> {
                 child: Column(
                   children: [
                     ListTile(
+                      visualDensity: VisualDensity(vertical: -4),
+                      contentPadding: EdgeInsets.only(left: 16, right: 4),
                       selectedColor: Colors.purple,
-                      title: const Text(''),
-                      subtitle: const Text(''),
+                      title: const Text(
+                        'Detail Angsuran',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 20),
+                      ),
+                      // subtitle: const Text(''),
                       trailing: IconButton(
                         icon: const Icon(
                           Icons.close,
@@ -282,11 +288,16 @@ class _PrincipalTableState extends State<PrincipalTable> {
                     ),
                     Expanded(
                       child: SingleChildScrollView(
+                        padding: EdgeInsets.only(top: 16),
                         child: Column(
                           children: [
                             ListTile(
+                              visualDensity: VisualDensity(vertical: -4),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 16),
                               selectedColor: Colors.purple,
                               title: const Text('Jenis'),
+                              trailing: Icon(Icons.category_outlined),
                               subtitle: Text(
                                 widget.type == CalculatorType.flat
                                     ? 'Flat'
@@ -298,39 +309,59 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     color: Colors.purple),
                               ),
                             ),
+                            Divider(),
                             ListTile(
+                              visualDensity: VisualDensity(vertical: -4),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 16),
                               selectedColor: Colors.purple,
                               title: const Text('Jumlah Pinjaman'),
+                              trailing: Icon(Icons.attach_money),
                               subtitle: Text(
-                                "Rp. ${currencyId.format(widget.calculateModel!.initialLoan)}",
+                                "Rp${currencyId.format(widget.calculateModel!.initialLoan)}",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.purple),
                               ),
                             ),
+                            Divider(),
                             ListTile(
+                              visualDensity: VisualDensity(vertical: -4),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 16),
                               selectedColor: Colors.purple,
                               title: const Text('DP (Down Payment)'),
+                              trailing: Icon(Icons.attach_money),
                               subtitle: Text(
-                                "Rp. ${currencyId.format(widget.calculateModel!.dpNominal)}",
+                                "Rp${currencyId.format(widget.calculateModel!.dpNominal)}",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.purple),
                               ),
                             ),
+                            Divider(),
                             ListTile(
+                              visualDensity: VisualDensity(vertical: -4),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 16),
                               selectedColor: Colors.purple,
                               title: const Text('Total Pinjaman'),
+                              trailing: Icon(Icons.attach_money),
                               subtitle: Text(
-                                "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
+                                "Rp${currencyId.format(widget.calculateModel!.loan)}",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Colors.purple),
                               ),
                             ),
+                            Divider(),
                             ListTile(
+                              visualDensity: VisualDensity(vertical: -4),
+                              contentPadding:
+                                  EdgeInsets.symmetric(horizontal: 16),
                               selectedColor: Colors.purple,
                               title: const Text('Total Waktu Pinjaman'),
+                              trailing: Icon(Icons.timer_outlined),
                               subtitle: Text(
                                 '${currencyId.format(widget.calculateModel!.year)} Tahun',
                                 style: TextStyle(
@@ -339,51 +370,86 @@ class _PrincipalTableState extends State<PrincipalTable> {
                               ),
                             ),
                             if (widget.calculateModel?.fixInterest != null)
-                              ListTile(
-                                selectedColor: Colors.purple,
-                                title: const Text('Bunga Fix'),
-                                subtitle: Text(
-                                  '${widget.calculateModel?.fixInterest ?? '0'}%',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.purple),
-                                ),
+                              Column(
+                                children: [
+                                  Divider(),
+                                  ListTile(
+                                    visualDensity: VisualDensity(vertical: -4),
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                    title: const Text('Bunga Fix'),
+                                    trailing: Icon(Icons.percent),
+                                    subtitle: Text(
+                                      '${widget.calculateModel?.fixInterest ?? '0'}%',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.purple),
+                                    ),
+                                  ),
+                                ],
                               ),
                             if (widget.calculateModel?.fixYear != null &&
                                 widget.tieredInterest == null)
-                              ListTile(
-                                selectedColor: Colors.purple,
-                                title: const Text('Masa Bunga Fix'),
-                                subtitle: Text(
-                                  '${(widget.calculateModel?.fixYear ?? 0).toInt()} Tahun',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.purple),
-                                ),
+                              Column(
+                                children: [
+                                  Divider(),
+                                  ListTile(
+                                    visualDensity: VisualDensity(vertical: -4),
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                    selectedColor: Colors.purple,
+                                    title: const Text('Masa Bunga Fix'),
+                                    trailing: Icon(Icons.date_range),
+                                    subtitle: Text(
+                                      '${(widget.calculateModel?.fixYear ?? 0).toInt()} Tahun',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.purple),
+                                    ),
+                                  ),
+                                ],
                               ),
                             for (int i = 0;
                                 i < (widget.tieredInterest ?? []).length;
                                 i++)
-                              ListTile(
-                                selectedColor: Colors.purple,
-                                title: Text('Bunga Fix Tahun ke ${i + 1}'),
-                                subtitle: Text(
-                                  '${widget.tieredInterest![i]}%',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.purple),
-                                ),
+                              Column(
+                                children: [
+                                  Divider(),
+                                  ListTile(
+                                    visualDensity: VisualDensity(vertical: -4),
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                    selectedColor: Colors.purple,
+                                    title: Text('Bunga Fix Tahun ke ${i + 1}'),
+                                    trailing: Icon(Icons.date_range),
+                                    subtitle: Text(
+                                      '${widget.tieredInterest![i]}%',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.purple),
+                                    ),
+                                  ),
+                                ],
                               ),
                             if (widget.calculateModel?.floatingInterest != null)
-                              ListTile(
-                                selectedColor: Colors.purple,
-                                title: const Text('Bunga Floating'),
-                                subtitle: Text(
-                                  '${widget.calculateModel?.floatingInterest ?? '0'}%',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.purple),
-                                ),
+                              Column(
+                                children: [
+                                  Divider(),
+                                  ListTile(
+                                    visualDensity: VisualDensity(vertical: -4),
+                                    contentPadding:
+                                        EdgeInsets.symmetric(horizontal: 16),
+                                    trailing: Icon(Icons.percent),
+                                    selectedColor: Colors.purple,
+                                    title: const Text('Bunga Floating'),
+                                    subtitle: Text(
+                                      '${widget.calculateModel?.floatingInterest ?? '0'}%',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.purple),
+                                    ),
+                                  ),
+                                ],
                               ),
                           ],
                         ),
@@ -583,14 +649,14 @@ class _PrincipalTableState extends State<PrincipalTable> {
                             ),
                             // onSort: sortColumn,
                           ),
-                          DataColumn(
+                          DataColumn2(
                             label: Text(
                               'Jumlah\nAngsuran',
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Colors.white),
                             ),
                           ),
-                          DataColumn(
+                          DataColumn2(
                             label: Text(
                               'Sisa\nPinjaman',
                               textAlign: TextAlign.center,
