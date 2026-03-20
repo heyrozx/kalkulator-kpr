@@ -106,7 +106,8 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Container(
-                                  margin: const EdgeInsets.only(bottom: 5),
+                                  margin:
+                                      const EdgeInsets.only(bottom: 5, top: 10),
                                   child: const Text('Kalkulator KPR Premium',
                                       style: TextStyle(
                                         fontSize: 25,
@@ -151,7 +152,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                                 children: [
                                   Icon(
                                     Icons.check,
-                                    color: Colors.blue,
+                                    color: Colors.purple,
                                   ),
                                   SizedBox(
                                     width: 5,
@@ -167,7 +168,7 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                                 children: [
                                   Icon(
                                     Icons.check,
-                                    color: Colors.blue,
+                                    color: Colors.purple,
                                   ),
                                   SizedBox(
                                     width: 5,
@@ -179,55 +180,55 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                           ),
                         ),
                         for (int index = 0; index < packages.length; index++)
-                          if (!packages[index].storeProduct.identifier.contains(
-                              'lifetime_premium_100000')) // not using lifetime anymore
-                            GestureDetector(
-                              onTap: () {
-                                if (_selectedIndex != index) {
-                                  setState(() {
-                                    _selectedIndex = index;
-                                  });
-                                }
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 10),
-                                decoration: BoxDecoration(
-                                    border: _selectedIndex == index
-                                        ? Border.all(color: Colors.green)
-                                        : null,
-                                    borderRadius: BorderRadius.circular(15),
-                                    color: Colors.grey.shade200),
-                                child: ListTile(
-                                  leading: Icon(Icons.stars,
-                                      color: packages[index]
-                                                  .storeProduct
-                                                  .identifier ==
-                                              'lifetime_premium_100000'
-                                          ? Colors.purple
-                                          : Colors.amber),
-                                  title: Text(packages[index]
-                                      .storeProduct
-                                      .title
-                                      .replaceAll(
-                                          " (Kalkulator KPR Simulasi Kredit)",
-                                          "")),
-                                  subtitle: Text(
-                                    packages[index].storeProduct.description,
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                  trailing: Text(
-                                      packages[index].storeProduct.priceString,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      )),
+                          // if (packages[index].storeProduct.identifier.contains(
+                          //     'lifetime_premium_100000')) // not using lifetime anymore
+                          GestureDetector(
+                            onTap: () {
+                              if (_selectedIndex != index) {
+                                setState(() {
+                                  _selectedIndex = index;
+                                });
+                              }
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              decoration: BoxDecoration(
+                                color: _selectedIndex == index
+                                    ? Colors.purple.shade100
+                                    : Colors.grey.shade200,
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                              child: ListTile(
+                                leading: Icon(Icons.stars,
+                                    color: packages[index]
+                                                .storeProduct
+                                                .identifier ==
+                                            'lifetime_premium_100000'
+                                        ? Colors.purple
+                                        : Colors.amber),
+                                title: Text(
+                                  packages[index].storeProduct.title.replaceAll(
+                                      " (Kalkulator KPR Simulasi Kredit)", ""),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
                                 ),
+                                subtitle: Text(
+                                  packages[index].storeProduct.description,
+                                  style: const TextStyle(fontSize: 12),
+                                ),
+                                trailing: Text(
+                                    packages[index].storeProduct.priceString,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    )),
                               ),
                             ),
+                          ),
                         Container(
-                          margin: const EdgeInsets.only(bottom: 15),
+                          margin: const EdgeInsets.only(bottom: 15, top: 15),
                           width: double.infinity,
                           child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.purple,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),
@@ -251,6 +252,9 @@ class _PremiumPlanScreenState extends State<PremiumPlanScreen> {
                           ),
                         ),
                         TextButton(
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.purple,
+                            ),
                             onPressed: () {
                               LoadingOverlay.show(context);
                               _cubit.restorePurchase();

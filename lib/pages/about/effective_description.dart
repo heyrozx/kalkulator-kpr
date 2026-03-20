@@ -1,8 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:kalkulator_kpr/blocs/purchase_cubit/purchase_cubit.dart';
+import 'package:kalkulator_kpr/shared/widgets/banner_ad_widget.dart';
 
 enum StatusAd { initial, loaded }
 
@@ -14,44 +11,9 @@ class EffectiveDescription extends StatefulWidget {
 }
 
 class _EffectiveDescriptionState extends State<EffectiveDescription> {
-  BannerAd? myBanner;
-  late PurchaseCubit _cubit;
-
-  StatusAd statusAd = StatusAd.initial;
-
-  BannerAdListener listener() => BannerAdListener(
-        onAdLoaded: (Ad ad) {
-          setState(() {
-            statusAd = StatusAd.loaded;
-          });
-        },
-      );
-
   @override
   void initState() {
-    _cubit = BlocProvider.of<PurchaseCubit>(context);
-
-    if (!kDebugMode && !_cubit.isPremium()) {
-      myBanner = BannerAd(
-        adUnitId: kDebugMode
-            ? 'ca-app-pub-3940256099942544/6300978111'
-            : 'ca-app-pub-2465007971338713/9945891754',
-        size: AdSize.fullBanner,
-        request: const AdRequest(),
-        listener: listener(),
-      );
-      myBanner!.load();
-    }
-
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    if (myBanner != null) {
-      myBanner!.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -68,32 +30,11 @@ class _EffectiveDescriptionState extends State<EffectiveDescription> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(15),
         child: Column(children: [
-          statusAd == StatusAd.loaded
-              ? Container(
-                  width: size.width,
-                  margin: const EdgeInsets.only(bottom: 15),
-                  // padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    // borderRadius: BorderRadius.circular(5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.1),
-                        spreadRadius: 5,
-                        blurRadius: 3,
-                        offset:
-                            const Offset(0, 1), // changes position of shadow
-                      ),
-                    ],
-                  ),
-                  child: Container(
-                    alignment: Alignment.center,
-                    width: myBanner!.size.width.toDouble(),
-                    height: myBanner!.size.height.toDouble(),
-                    child: AdWidget(ad: myBanner!),
-                  ),
-                )
-              : const SizedBox(),
+          Center(
+            child: BannerAdWidget(
+              placement: BannerPlacement.effectiveDescription,
+            ),
+          ),
           Container(
             margin: const EdgeInsets.only(bottom: 15),
             child: const Text(

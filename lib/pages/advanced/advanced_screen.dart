@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kalkulator_kpr/shared/widgets/banner_ad_widget.dart';
 
 import '../../models/calculate_model.dart';
 import 'fix_and_floating_screen.dart';
@@ -98,6 +99,12 @@ class _AdvancedScreenState extends State<AdvancedScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              Center(
+                child: BannerAdWidget(
+                  margin: EdgeInsets.only(left: 15, right: 15, bottom: 4),
+                  placement: BannerPlacement.advancedPage,
                 ),
               ),
               Container(

@@ -236,10 +236,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   Icons.gpp_maybe_outlined,
                 ),
                 onTap: () => _launchUrl(
-                    "https://caraguna.com/privacy-policy-kalkulator-kpr-simulasi-kredit/"),
+                    "https://nexadream.id/privacy-policy-kalkulator-kpr-simulasi-kredit"),
               ),
               ListTile(
-                title: const Text('Versi 1.2.0'),
+                title: const Text('Versi 1.3.1'),
                 leading: const Icon(
                   Icons.info_outline,
                 ),

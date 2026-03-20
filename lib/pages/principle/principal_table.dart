@@ -4,16 +4,15 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:data_table_2/data_table_2.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_file_saver/flutter_file_saver.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:kalkulator_kpr/blocs/purchase_cubit/purchase_cubit.dart';
 import 'package:kalkulator_kpr/core/currency_format.dart';
 import 'package:kalkulator_kpr/core/loading_overlay.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
 import 'package:kalkulator_kpr/pages/premiums/premium_plan_screen.dart';
+import 'package:kalkulator_kpr/shared/widgets/banner_ad_widget.dart';
 import 'package:kalkulator_kpr/utils/custom_snackbar.dart';
 import 'package:kalkulator_kpr/utils/pdf_util.dart';
 import 'package:share_plus/share_plus.dart';
@@ -103,18 +102,6 @@ class _PrincipalTableState extends State<PrincipalTable> {
     return data;
   }
 
-  BannerAd? myBanner;
-
-  StatusAd statusAd = StatusAd.initial;
-
-  BannerAdListener listener() => BannerAdListener(
-        onAdLoaded: (Ad ad) {
-          setState(() {
-            statusAd = StatusAd.loaded;
-          });
-        },
-      );
-
   Future<void> sharePDF() async {
     LoadingOverlay.show(context);
     try {
@@ -170,27 +157,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
     rows = setRowValue();
     addFooter();
 
-    if (!kDebugMode && !_cubit.isPremium()) {
-      myBanner = BannerAd(
-        adUnitId: kDebugMode
-            ? 'ca-app-pub-3940256099942544/6300978111'
-            : 'ca-app-pub-2465007971338713/9945891754',
-        size: AdSize.fullBanner,
-        request: const AdRequest(),
-        listener: listener(),
-      );
-      myBanner!.load();
-    }
-
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    if (myBanner != null) {
-      myBanner!.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -451,6 +418,30 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                   ),
                                 ],
                               ),
+                            Divider(),
+                            Card(
+                              color: Colors.purple,
+                              child: ListTile(
+                                visualDensity: VisualDensity(vertical: -4),
+                                contentPadding:
+                                    EdgeInsets.symmetric(horizontal: 16),
+                                trailing: Icon(
+                                  Icons.attach_money,
+                                  color: Colors.white,
+                                ),
+                                selectedColor: Colors.purple,
+                                title: const Text(
+                                  'Total Angsuran',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                subtitle: Text(
+                                  'Rp${currencyId.format(getTotal("installment"))}',
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -546,53 +537,30 @@ class _PrincipalTableState extends State<PrincipalTable> {
                         ),
                       ),
                     if (widget.calculateModel?.floatingInterest != null)
-                      GestureDetector(
-                        onTap: () {
-                          _scaffoldKey.currentState?.openDrawer();
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: const Text(
-                            'Selengkapnya',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple),
-                          ),
-                        ),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.purple,
+                              side: const BorderSide(color: Colors.purple),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                            ),
+                            onPressed: () {
+                              _scaffoldKey.currentState?.openDrawer();
+                            },
+                            child: Text('Selengkapnya')),
                       ),
                   ],
                 ),
               ),
-              statusAd == StatusAd.loaded
-                  ? Align(
-                      alignment: Alignment.bottomCenter,
-                      child: Container(
-                        width: size.width,
-                        margin:
-                            const EdgeInsets.only(top: 15, left: 15, right: 15),
-                        // padding: const EdgeInsets.all(5),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          // borderRadius: BorderRadius.circular(5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withValues(alpha: 0.1),
-                              spreadRadius: 5,
-                              blurRadius: 3,
-                              offset: const Offset(
-                                  0, 1), // changes position of shadow
-                            ),
-                          ],
-                        ),
-                        child: Container(
-                          alignment: Alignment.center,
-                          width: myBanner!.size.width.toDouble(),
-                          height: myBanner!.size.height.toDouble(),
-                          child: AdWidget(ad: myBanner!),
-                        ),
-                      ),
-                    )
-                  : const SizedBox(),
+              Center(
+                child: BannerAdWidget(
+                  margin: const EdgeInsets.only(left: 15, right: 15, top: 15),
+                  placement: BannerPlacement.principalTable,
+                ),
+              ),
               Expanded(
                 child: Container(
                     width: size.width,
@@ -626,7 +594,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                             borderRadius: BorderRadius.circular(5)),
                         columns: const [
                           DataColumn2(
-                            size: ColumnSize.S,
+                            fixedWidth: 60,
                             label: Text(
                               'Bulan\nke',
                               textAlign: TextAlign.center,
@@ -650,6 +618,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                             // onSort: sortColumn,
                           ),
                           DataColumn2(
+                            size: ColumnSize.L,
                             label: Text(
                               'Jumlah\nAngsuran',
                               textAlign: TextAlign.center,
@@ -657,6 +626,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                             ),
                           ),
                           DataColumn2(
+                            size: ColumnSize.L,
                             label: Text(
                               'Sisa\nPinjaman',
                               textAlign: TextAlign.center,
