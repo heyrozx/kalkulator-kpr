@@ -1,7 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="com.android.vending.BILLING" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <!-- Hanya dibutuhkan pada Android 9 (API 28) ke bawah. Sejak API 29 penyimpanan
+         PDF memakai scoped storage / SAF sehingga permission ini tidak diperlukan. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
    <application
         android:label="Kalkulator KPR"
         android:name="${applicationName}"
