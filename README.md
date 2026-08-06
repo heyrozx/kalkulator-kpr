@@ -8,7 +8,7 @@ Terdapat 3 jenis penentuan bunga dalam KPR. Ini merupakan cara bank menetapkan s
 
 1. Bunga Tetap (Fixed Rate)
     - Suku bunga tidak berubah selama periode tertentu, biasanya di awal masa kredit.
-    - fMemberikan kepastian pembayaran cicilan setiap bulan karena besaran bunga tetap.
+    - Memberikan kepastian pembayaran cicilan setiap bulan karena besaran bunga tetap.
     - Cocok untuk nasabah yang menginginkan kestabilan dalam pembayaran cicilan. 
 
 2. Bunga Mengambang (Floating Rate)

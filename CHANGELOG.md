@@ -4,6 +4,8 @@
 * Rilis pertama yang memakai Google Play Billing Library 8 (persyaratan Google Play)
 * Batasi permission WRITE_EXTERNAL_STORAGE hanya untuk Android 9 (API 28) ke bawah
 * Tambah dokumentasi proyek (CLAUDE.md)
+* Tambah dokumentasi teknis (TECHNICAL.md): arsitektur, daftar fitur, paket utama, dan alur premium
+* Tambah dokumen analisis (ANALISIS-IMPROVEMENT.md): temuan potensi bug, usulan perbaikan teknis, dan ide fitur baru
 
 ## 1.3.1 (11)
 
