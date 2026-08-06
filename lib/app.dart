@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kalkulator_kpr/blocs/purchase_cubit/purchase_cubit.dart';
+import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/pages/home/home_screen.dart';
 import 'package:upgrader/upgrader.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -16,10 +18,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Kalkulator KPR',
-        theme: ThemeData(
-          useMaterial3: false,
-          primarySwatch: Colors.blue,
-        ),
+        theme: AppTheme.light,
         debugShowCheckedModeBanner: false,
         home: UpgradeAlert(
             showIgnore: false,

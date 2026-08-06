@@ -1,24 +1,27 @@
-// ignore_for_file: use_build_context_synchronously
+import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:kalkulator_kpr/blocs/purchase_cubit/purchase_cubit.dart';
+import 'package:kalkulator_kpr/core/config.dart';
 import 'package:kalkulator_kpr/core/currency_format.dart';
+import 'package:kalkulator_kpr/core/error_reporter.dart';
 import 'package:kalkulator_kpr/core/helpers.dart';
-import 'package:kalkulator_kpr/core/loading_overlay.dart';
+import 'package:kalkulator_kpr/core/interstitial_ad_manager.dart';
+import 'package:kalkulator_kpr/core/theme.dart';
+import 'package:kalkulator_kpr/core/validators.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
 import 'package:kalkulator_kpr/pages/about/anuitas_description.dart';
+import 'package:kalkulator_kpr/pages/about/disclaimer.dart';
 import 'package:kalkulator_kpr/pages/about/effective_description.dart';
 import 'package:kalkulator_kpr/pages/about/flat_description.dart';
 import 'package:kalkulator_kpr/pages/advanced/advanced_screen.dart';
 import 'package:kalkulator_kpr/pages/premiums/premium_plan_screen.dart';
 import 'package:kalkulator_kpr/pages/principle/principal_table.dart';
-import 'package:pattern_formatter/numeric_formatter.dart';
+import 'package:kalkulator_kpr/shared/widgets/labeled_number_field.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:intl/intl.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -34,673 +37,486 @@ class _MyHomePageState extends State<MyHomePage> {
   final _loanController = TextEditingController();
   final _yearController = TextEditingController();
   final _interestController = TextEditingController();
-  InterstitialAd? _interstitialAd;
+  final InterstitialAdManager _interstitialAd = InterstitialAdManager();
 
   CalculateResultModel? result;
-
   CalculatorType type = CalculatorType.anuitas;
-
-  double? percentIndicator = 0;
-
-  Future calculate() async {
-    if (_formKey.currentState!.validate()) {
-      percentIndicator = 0;
-      setState(() {});
-      // result = null;
-      // setState(() {});
-      LoadingOverlay.show(context);
-      await Future.delayed(const Duration(seconds: 1));
-      CalculateModel calculateModel = CalculateModel(
-        loan: double.parse(CurrencyFormat.toNumber(_loanController.text)),
-        year: double.parse(CurrencyFormat.toNumber(_yearController.text)),
-        interest: double.parse(
-            CurrencyFormat.toNumberComma(_interestController.text)),
-      );
-      if (type == CalculatorType.flat) {
-        result = calculateFlat(calculateModel);
-      } else if (type == CalculatorType.effective) {
-        result = calculateEffective(calculateModel);
-      } else {
-        result = calculateAnuitas(calculateModel);
-      }
-      if (result != null) {
-        percentIndicator = result!.principal! / result!.installmentResult!;
-      }
-      LoadingOverlay.hide();
-      // print(result?.toJson());
-      setState(() {});
-    }
-  }
-
-  Future<void> _launchUrl(String url) async {
-    if (!await launchUrl(Uri.parse(url),
-        mode: LaunchMode.externalApplication)) {
-      throw Exception('Could not launch $url');
-    }
-  }
+  double percentIndicator = 0;
+  String _appVersion = '';
 
   @override
   void initState() {
-    PurchaseCubit cubit = BlocProvider.of<PurchaseCubit>(context);
-    cubit.checkPremium().then((value) {
-      if (!kDebugMode && !cubit.isPremium()) {
-        InterstitialAd.load(
-            adUnitId: kDebugMode
-                ? 'ca-app-pub-3940256099942544/1033173712'
-                : 'ca-app-pub-2465007971338713/3842103086',
-            request: const AdRequest(),
-            adLoadCallback: InterstitialAdLoadCallback(
-              // Called when an ad is successfully received.
-              onAdLoaded: (ad) {
-                debugPrint('$ad loaded.');
-                // Keep a reference to the ad so you can show it later.
-                _interstitialAd = ad;
-              },
-              // Called when an ad request failed.
-              onAdFailedToLoad: (LoadAdError error) {
-                debugPrint('InterstitialAd failed to load: $error');
-              },
-            ));
-      }
-    });
-
     super.initState();
+    _loadAppVersion();
+    _preloadInterstitial();
   }
 
   @override
+  void dispose() {
+    _loanController.dispose();
+    _yearController.dispose();
+    _interestController.dispose();
+    _interstitialAd.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadAppVersion() async {
+    // Nomor versi dibaca dari paket, bukan ditulis manual — sebelumnya teks di
+    // drawer tertinggal satu rilis di belakang pubspec.yaml.
+    final info = await ErrorReporter.guard(() => PackageInfo.fromPlatform(),
+        hint: 'PackageInfo');
+    if (!mounted || info == null) return;
+    setState(() => _appVersion = info.version);
+  }
+
+  Future<void> _preloadInterstitial() async {
+    final cubit = context.read<PurchaseCubit>();
+    await cubit.checkPremium();
+    if (!mounted || cubit.isPremium()) return;
+    _interstitialAd.load();
+  }
+
+  CalculateModel _readForm() => CalculateModel(
+        loanPlafon: CurrencyFormat.parseNumber(_loanController.text),
+        loan: CurrencyFormat.parseNumber(_loanController.text),
+        year: CurrencyFormat.parseNumber(_yearController.text),
+        interest: CurrencyFormat.parseDecimal(_interestController.text),
+      );
+
+  void calculate() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final CalculateModel calculateModel = _readForm();
+    final CalculateResultModel calculated = switch (type) {
+      CalculatorType.flat => calculateFlat(calculateModel),
+      CalculatorType.effective => calculateEffective(calculateModel),
+      CalculatorType.anuitas => calculateAnuitas(calculateModel),
+    };
+
+    setState(() {
+      result = calculated;
+      percentIndicator = _safePercent(calculated);
+    });
+  }
+
+  /// Porsi pokok terhadap total angsuran. `CircularPercentIndicator` melempar
+  /// exception kalau nilainya di luar 0..1, jadi nilai tak wajar diamankan.
+  double _safePercent(CalculateResultModel value) {
+    final installment = value.installmentResult ?? 0;
+    final principal = value.principal ?? 0;
+    if (installment <= 0) return 0;
+    final percent = principal / installment;
+    if (!percent.isFinite) return 0;
+    return percent.clamp(0.0, 1.0);
+  }
+
+  void _recalculateIfFilled() {
+    final isFilled = _loanController.text.isNotEmpty &&
+        _yearController.text.isNotEmpty &&
+        _interestController.text.isNotEmpty;
+    if (isFilled) {
+      calculate();
+    } else {
+      setState(() {});
+    }
+  }
+
+  void _openInstallmentTable() {
+    // Validasi dulu, baru iklan: sebelumnya iklan tetap tampil walaupun form
+    // belum lengkap sehingga pengguna melihat iklan tanpa mendapat hasil.
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final CalculateModel calculateModel = _readForm();
+    final List<CalculateResultModel> tables = switch (type) {
+      CalculatorType.flat => installmentTableFlat(calculateModel),
+      CalculatorType.effective => installmentTableEffective(calculateModel),
+      CalculatorType.anuitas => installmentTableAnuitas(calculateModel),
+    };
+
+    _interstitialAd.showThen(() {
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PrincipalTable(
+            results: tables,
+            type: type,
+            calculateModel: _readForm(),
+          ),
+        ),
+      );
+    });
+  }
+
+  Future<void> _launchUrl(String url) async {
+    try {
+      final launched =
+          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!launched) throw Exception('Could not launch $url');
+    } catch (error, stack) {
+      ErrorReporter.report(error, stack, hint: 'launchUrl');
+    }
+  }
+
+  void _selectType(CalculatorType selected) {
+    type = selected;
+    Navigator.pop(context);
+    _recalculateIfFilled();
+  }
+
+  String get _typeLabel => switch (type) {
+        CalculatorType.flat => 'Flat',
+        CalculatorType.effective => 'Efektif',
+        CalculatorType.anuitas => 'Anuitas',
+      };
+
+  Widget get _typeDescriptionPage => switch (type) {
+        CalculatorType.flat => const FlatDescription(),
+        CalculatorType.effective => const EffectiveDescription(),
+        CalculatorType.anuitas => const AnuitasDescription(),
+      };
+
+  @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
     return Scaffold(
       key: _scaffoldKey,
-      drawer: Drawer(
-        child: SafeArea(
-          child: Column(
-            children: [
-              const ListTile(
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      drawer: _buildDrawer(),
+      body: SafeArea(
+        // API 36 memaksa edge-to-edge; tanpa SafeArea judul dan tombol menu
+        // bisa tertimpa status bar.
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: SizedBox(
+                height: math.max(constraints.maxHeight, 480),
+                child: Column(
                   children: [
-                    Text(
-                      'Kalkulator KPR',
-                      style: TextStyle(
-                          color: Colors.purple,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20),
-                    ),
-                    SizedBox(
-                      height: 5,
-                    ),
-                    Text(
-                      'Simulasi Kredit',
-                      style: TextStyle(),
-                    ),
+                    _buildAppBar(),
+                    Expanded(child: Center(child: _buildResultRing())),
+                    _buildForm(),
                   ],
                 ),
               ),
-              const Divider(
-                thickness: 0.5,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return AppBar(
+      title: Text(_typeLabel),
+      leading: IconButton(
+        onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+        icon: SizedBox(
+          width: 25,
+          height: 25,
+          child: Image.asset('assets/menu.png'),
+        ),
+      ),
+      actions: [
+        BlocBuilder<PurchaseCubit, PurchaseState>(
+          builder: (context, state) {
+            if (state is! PurchaseNothing) return const SizedBox();
+            return IconButton(
+              onPressed: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const PremiumPlanScreen())),
+              icon: SizedBox(
+                width: 30,
+                child: Image.asset('assets/premium.png'),
               ),
-              ListTile(
-                selected: type == CalculatorType.anuitas,
-                selectedColor: Colors.purple,
-                title: const Text('Bunga Anuitas'),
-                onTap: () {
-                  type = CalculatorType.anuitas;
-                  _scaffoldKey.currentState?.openEndDrawer();
-                  if (!(_loanController.text == '' ||
-                      _yearController.text == '' ||
-                      _interestController.text == '')) {
-                    calculate();
-                  } else {
-                    setState(() {});
-                  }
-                },
-              ),
-              ListTile(
-                selected: type == CalculatorType.effective,
-                selectedColor: Colors.purple,
-                title: const Text('Bunga Efektif'),
-                onTap: () {
-                  type = CalculatorType.effective;
-                  _scaffoldKey.currentState?.openEndDrawer();
-                  if (!(_loanController.text == '' ||
-                      _yearController.text == '' ||
-                      _interestController.text == '')) {
-                    calculate();
-                  } else {
-                    setState(() {});
-                  }
-                },
-              ),
-              ListTile(
-                selected: type == CalculatorType.flat,
-                selectedColor: Colors.purple,
-                title: const Text('Bunga Flat'),
-                onTap: () {
-                  type = CalculatorType.flat;
-                  _scaffoldKey.currentState?.openEndDrawer();
-                  if (!(_loanController.text == '' ||
-                      _yearController.text == '' ||
-                      _interestController.text == '')) {
-                    calculate();
-                  } else {
-                    setState(() {});
-                  }
-                },
-              ),
-              Container(
-                  margin: const EdgeInsets.only(top: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  width: double.infinity,
-                  child: FilledButton(
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.purple,
-                      ),
-                      onPressed: () {
-                        _scaffoldKey.currentState?.openEndDrawer();
-                        Navigator.push(context,
-                            MaterialPageRoute(builder: (builder) {
-                          return AdvancedScreen(
-                            type: type == CalculatorType.flat ? null : type,
-                          );
-                        }));
-                      },
-                      child: Text('Advanced'))),
-              const Spacer(),
-              ListTile(
-                title: const Text('Beri Rating'),
-                leading: const Icon(
-                  Icons.star_outline,
-                ),
-                onTap: () => _launchUrl(
-                    "https://play.google.com/store/apps/details?id=com.caraguna.kalkulator.kpr&hl=en"),
-              ),
-              ListTile(
-                title: const Text('Reset'),
-                leading: const Icon(
-                  Icons.refresh,
-                ),
-                onTap: () {
-                  _scaffoldKey.currentState?.openEndDrawer();
-                  setState(() {
-                    result = null;
-                    _interestController.text = '';
-                    _yearController.text = '';
-                    _loanController.text = '';
-                  });
-                },
-              ),
-              ListTile(
-                title: const Text('Privacy Policy'),
-                leading: const Icon(
-                  Icons.gpp_maybe_outlined,
-                ),
-                onTap: () => _launchUrl(
-                    "https://nexadream.id/privacy-policy-kalkulator-kpr-simulasi-kredit"),
-              ),
-              ListTile(
-                title: const Text('Versi 1.3.1'),
-                leading: const Icon(
-                  Icons.info_outline,
-                ),
-                onTap: () {},
-              ),
-              const SizedBox(
-                height: 15,
-              )
+            );
+          },
+        ),
+        IconButton(
+          onPressed: () => Navigator.push(
+              context, MaterialPageRoute(builder: (_) => _typeDescriptionPage)),
+          icon: SizedBox(
+            width: 25,
+            height: 25,
+            child: Image.asset('assets/question.png'),
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget _buildResultRing() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: CircularPercentIndicator(
+        radius: 120.0,
+        lineWidth: 13.0,
+        animation: true,
+        percent: percentIndicator,
+        circularStrokeCap: CircularStrokeCap.round,
+        progressColor: AppColors.primary,
+        center: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text("Total Angsuran", style: TextStyle(fontSize: 15.0)),
+            const SizedBox(height: 5),
+            Text(
+              "Rp ${currencyId.format(result?.installmentResult ?? 0)}",
+              textAlign: TextAlign.center,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0),
+            ),
+            const SizedBox(height: 5),
+            Text(
+              type == CalculatorType.effective ? "Bulan Pertama" : "Per Bulan",
+              style: const TextStyle(fontSize: 15.0),
+            ),
+          ],
+        ),
+        footer: Container(
+          margin: const EdgeInsets.only(top: 30),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _legend('Angsuran Pokok', result?.principal, AppColors.primary),
+              const SizedBox(width: 15),
+              _legend(
+                  'Bunga', result?.interestResult, AppColors.interestPortion),
             ],
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: SizedBox(
-              height: size.height,
-              child: Column(
+    );
+  }
+
+  Widget _legend(String label, double? value, Color color) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 15,
+          height: 15,
+          margin: const EdgeInsets.only(right: 5),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label),
+            Text(
+              "Rp ${currencyId.format(value ?? 0)}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildForm() {
+    return Form(
+      key: _formKey,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppRadius.sheet)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.3),
+              spreadRadius: 2,
+              blurRadius: 3,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 10),
+            LabeledNumberField(
+              controller: _loanController,
+              label: 'Jumlah Pinjaman (Rp)',
+              validator: Validators.loan,
+              suffixIcon: SizedBox(
+                width: 20,
+                height: 20,
+                child: Image.asset('assets/money.png'),
+              ),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: LabeledNumberField(
+                    controller: _yearController,
+                    label: 'Jangka Waktu (Tahun)',
+                    validator: Validators.year,
+                    suffixIcon: Icon(Icons.alarm, color: AppColors.muted),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: LabeledNumberField(
+                    controller: _interestController,
+                    label: 'Bunga Pinjaman',
+                    decimal: true,
+                    validator: Validators.interest,
+                    suffixIcon: Icon(Icons.percent, color: AppColors.muted),
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              margin: const EdgeInsets.only(top: 5),
+              child: Row(
                 children: [
-                  AppBar(
-                    title: Text(type == CalculatorType.flat
-                        ? 'Flat'
-                        : type == CalculatorType.effective
-                            ? 'Efektif'
-                            : 'Anuitas'),
-                    centerTitle: true,
-                    elevation: 0,
-                    leading: IconButton(
-                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-                      icon: SizedBox(
-                        width: 25,
-                        height: 25,
-                        child: Image.asset('assets/menu.png'),
-                      ),
-                    ),
-                    actions: [
-                      BlocBuilder<PurchaseCubit, PurchaseState>(
-                        builder: (context, state) {
-                          if (state is PurchaseNothing) {
-                            return IconButton(
-                              onPressed: () {
-                                Navigator.push(context,
-                                    MaterialPageRoute(builder: (_) {
-                                  return const PremiumPlanScreen();
-                                }));
-                              },
-                              icon: SizedBox(
-                                width: 30,
-                                child: Image.asset('assets/premium.png'),
-                              ),
-                            );
-                          }
-                          return const SizedBox();
-                        },
-                      ),
-                      IconButton(
-                        onPressed: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (builder) {
-                            if (type == CalculatorType.flat) {
-                              return const FlatDescription();
-                            } else if (type == CalculatorType.effective) {
-                              return const EffectiveDescription();
-                            } else {
-                              return const AnuitasDescription();
-                            }
-                          }));
-                        },
-                        icon: SizedBox(
-                          width: 25,
-                          height: 25,
-                          child: Image.asset('assets/question.png'),
-                        ),
-                      )
-                    ],
-                    foregroundColor: Colors.black,
-                    backgroundColor: Colors.transparent,
-                  ),
                   Expanded(
-                    child: Center(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: CircularPercentIndicator(
-                          radius: 120.0,
-                          lineWidth: 13.0,
-                          animation: true,
-                          percent: percentIndicator ?? 0,
-                          center: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                "Total Angsuran",
-                                style: TextStyle(fontSize: 15.0),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              Text(
-                                "Rp ${currencyId.format(result?.installmentResult ?? 0)}",
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 25.0),
-                              ),
-                              const SizedBox(
-                                height: 5,
-                              ),
-                              Text(
-                                type == CalculatorType.flat ||
-                                        type == CalculatorType.anuitas
-                                    ? "Per Bulan"
-                                    : "Bulan Pertama",
-                                style: const TextStyle(fontSize: 15.0),
-                              ),
-                            ],
-                          ),
-                          footer: Container(
-                            margin: const EdgeInsets.only(top: 30),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 15,
-                                  height: 15,
-                                  margin: const EdgeInsets.only(right: 5),
-                                  decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.purple),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Angsuran Pokok",
-                                      style: TextStyle(),
-                                    ),
-                                    Text(
-                                      "Rp ${currencyId.format(result?.principal ?? 0)}",
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(
-                                  width: 15,
-                                ),
-                                Container(
-                                  width: 15,
-                                  height: 15,
-                                  margin: const EdgeInsets.only(right: 5),
-                                  decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Colors.grey),
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "Bunga",
-                                      style: TextStyle(),
-                                    ),
-                                    Text(
-                                      "Rp ${currencyId.format(result?.interestResult ?? 0)}",
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          circularStrokeCap: CircularStrokeCap.round,
-                          progressColor: Colors.purple,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: result != null
+                            ? AppColors.subtle
+                            : AppColors.primary,
+                        foregroundColor:
+                            result != null ? Colors.black87 : Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppRadius.button),
                         ),
+                      ),
+                      onPressed: calculate,
+                      child: Padding(
+                        padding: const EdgeInsets.all(15.0),
+                        child: Text(result != null
+                            ? 'Hitung Ulang'
+                            : 'Hitung Simulasi'),
                       ),
                     ),
                   ),
-                  Form(
-                    key: _formKey,
-                    child: Container(
-                      // height: size.height * 0.4,
-                      width: size.width,
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withValues(alpha: 0.3),
-                              spreadRadius: 2,
-                              blurRadius: 3,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                          color: Colors.white,
-                          borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(15))),
-                      child: Column(
-                        children: [
-                          const SizedBox(
-                            height: 10,
+                  if (result != null) ...[
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppRadius.button),
                           ),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: TextFormField(
-                              controller: _loanController,
-                              validator: (value) {
-                                if (value == '') {
-                                  return "Jumlah pinjaman tidak boleh kosong";
-                                }
-                                return null;
-                              },
-                              inputFormatters: [
-                                ThousandsFormatter(
-                                    allowFraction: false,
-                                    formatter:
-                                        NumberFormat.decimalPattern('en'))
-                              ],
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                // filled: true,
-                                // fillColor: Colors.blue.shade100,
-                                label: const Text('Jumlah Pinjaman (Rp)'),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide:
-                                      BorderSide(color: Colors.grey.shade400),
-                                ),
-                                border: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Colors.grey.shade400)),
-                                suffixIcon: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: Image.asset('assets/money.png'),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _yearController,
-                                    validator: (value) {
-                                      if (value == '') {
-                                        return "Jangka waktu tidak boleh kosong";
-                                      }
-                                      return null;
-                                    },
-                                    inputFormatters: [
-                                      ThousandsFormatter(
-                                          allowFraction: false,
-                                          formatter:
-                                              NumberFormat.decimalPattern('en'))
-                                    ],
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      // filled: true,
-                                      // fillColor: Colors.blue.shade100,
-                                      label: const Text('Jangka Waktu (Tahun)'),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Colors.grey.shade400),
-                                      ),
-                                      border: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                              color: Colors.grey.shade400)),
-                                      suffixIcon: const Icon(Icons.alarm,
-                                          color: Colors.black54),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Expanded(
-                                  child: TextFormField(
-                                    controller: _interestController,
-                                    validator: (value) {
-                                      if (value == '') {
-                                        return "Bunga pinjaman tidak boleh kosong";
-                                      }
-                                      return null;
-                                    },
-                                    inputFormatters: [
-                                      ThousandsFormatter(
-                                          allowFraction: true,
-                                          formatter:
-                                              NumberFormat.decimalPattern('en'))
-                                    ],
-                                    keyboardType: TextInputType.number,
-                                    decoration: InputDecoration(
-                                      // filled: true,
-                                      // fillColor: Colors.blue.shade100,
-                                      label: const Text('Bunga Pinjaman'),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: BorderSide(
-                                            color: Colors.grey.shade400),
-                                      ),
-                                      border: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                              color: Colors.grey.shade400)),
-                                      suffixIcon: const Icon(
-                                        Icons.percent,
-                                        color: Colors.black54,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: size.width,
-                            margin: const EdgeInsets.only(top: 5),
-                            child: Row(
-                              children: [
-                                result != null
-                                    ? Expanded(
-                                        child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.grey.shade300,
-                                              foregroundColor: Colors.black87,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(30.0),
-                                              ),
-                                            ),
-                                            onPressed: () => calculate(),
-                                            child: const Padding(
-                                              padding: EdgeInsets.all(15.0),
-                                              child: Text('Hitung Ulang'),
-                                            )),
-                                      )
-                                    : Expanded(
-                                        child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.purple,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(30.0),
-                                              ),
-                                            ),
-                                            onPressed: () => calculate(),
-                                            child: const Padding(
-                                              padding: EdgeInsets.all(15.0),
-                                              child: Text('Hitung Simulasi'),
-                                            )),
-                                      ),
-                                SizedBox(
-                                  width: result != null ? 10 : 0,
-                                ),
-                                result != null
-                                    ? Expanded(
-                                        child: ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.purple,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(30.0),
-                                              ),
-                                            ),
-                                            onPressed: () async {
-                                              if (_interstitialAd != null) {
-                                                await _interstitialAd!.show();
-                                              }
-
-                                              if (_formKey.currentState!
-                                                  .validate()) {
-                                                LoadingOverlay.show(context);
-                                                CalculateModel calculateModel =
-                                                    CalculateModel(
-                                                  loanPlafon: double.parse(
-                                                      CurrencyFormat.toNumber(
-                                                          _loanController
-                                                              .text)),
-                                                  loan: double.parse(
-                                                      CurrencyFormat.toNumber(
-                                                          _loanController
-                                                              .text)),
-                                                  year: double.parse(
-                                                      CurrencyFormat.toNumber(
-                                                          _yearController
-                                                              .text)),
-                                                  interest: double.parse(
-                                                      CurrencyFormat
-                                                          .toNumberComma(
-                                                              _interestController
-                                                                  .text)),
-                                                );
-
-                                                List<CalculateResultModel>
-                                                    tables =
-                                                    type == CalculatorType.flat
-                                                        ? installmentTableFlat(
-                                                            calculateModel)
-                                                        : type ==
-                                                                CalculatorType
-                                                                    .effective
-                                                            ? installmentTableEffective(
-                                                                calculateModel)
-                                                            : installmentTableAnuitas(
-                                                                calculateModel);
-                                                await Future.delayed(
-                                                    const Duration(seconds: 1));
-                                                LoadingOverlay.hide();
-
-                                                Navigator.push(context,
-                                                    MaterialPageRoute(
-                                                        builder: (builder) {
-                                                  return PrincipalTable(
-                                                    results: tables,
-                                                    type: type,
-                                                    calculateModel:
-                                                        CalculateModel(
-                                                      loanPlafon: double.parse(
-                                                          CurrencyFormat
-                                                              .toNumber(
-                                                                  _loanController
-                                                                      .text)),
-                                                      loan: double.parse(
-                                                          CurrencyFormat
-                                                              .toNumber(
-                                                                  _loanController
-                                                                      .text)),
-                                                      year: double.parse(
-                                                          CurrencyFormat
-                                                              .toNumber(
-                                                                  _yearController
-                                                                      .text)),
-                                                      interest: double.parse(
-                                                          CurrencyFormat
-                                                              .toNumberComma(
-                                                                  _interestController
-                                                                      .text)),
-                                                    ),
-                                                  );
-                                                }));
-                                              }
-                                            },
-                                            child: const Padding(
-                                              padding: EdgeInsets.all(15.0),
-                                              child: Text('Tabel Angsuran'),
-                                            )),
-                                      )
-                                    : const SizedBox(),
-                              ],
-                            ),
-                          )
-                        ],
+                        ),
+                        onPressed: _openInstallmentTable,
+                        child: const Padding(
+                          padding: EdgeInsets.all(15.0),
+                          child: Text('Tabel Angsuran'),
+                        ),
                       ),
                     ),
-                  )
+                  ],
+                ],
+              ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: SafeArea(
+        child: Column(
+          children: [
+            const ListTile(
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Kalkulator KPR',
+                    style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20),
+                  ),
+                  SizedBox(height: 5),
+                  Text('Simulasi Kredit'),
                 ],
               ),
             ),
-          )
-        ],
+            const Divider(thickness: 0.5),
+            for (final entry in const {
+              CalculatorType.anuitas: 'Bunga Anuitas',
+              CalculatorType.effective: 'Bunga Efektif',
+              CalculatorType.flat: 'Bunga Flat',
+            }.entries)
+              ListTile(
+                selected: type == entry.key,
+                selectedColor: AppColors.primary,
+                title: Text(entry.value),
+                onTap: () => _selectType(entry.key),
+              ),
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              width: double.infinity,
+              child: FilledButton(
+                style:
+                    FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => AdvancedScreen(
+                        type: type == CalculatorType.flat ? null : type,
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('Advanced'),
+              ),
+            ),
+            const Spacer(),
+            ListTile(
+              title: const Text('Beri Rating'),
+              leading: const Icon(Icons.star_outline),
+              onTap: () => _launchUrl(AppConfig.playStoreUrl),
+            ),
+            ListTile(
+              title: const Text('Reset'),
+              leading: const Icon(Icons.refresh),
+              onTap: () {
+                Navigator.pop(context);
+                _formKey.currentState?.reset();
+                _loanController.clear();
+                _yearController.clear();
+                _interestController.clear();
+                setState(() {
+                  result = null;
+                  percentIndicator = 0;
+                });
+              },
+            ),
+            ListTile(
+              title: const Text('Disclaimer'),
+              leading: const Icon(Icons.info_outline),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const Disclaimer()));
+              },
+            ),
+            ListTile(
+              title: const Text('Privacy Policy'),
+              leading: const Icon(Icons.gpp_maybe_outlined),
+              onTap: () => _launchUrl(AppConfig.privacyPolicyUrl),
+            ),
+            ListTile(
+              title: Text(_appVersion.isEmpty ? 'Versi' : 'Versi $_appVersion'),
+              leading: const Icon(Icons.smartphone_outlined),
+            ),
+            const SizedBox(height: 15)
+          ],
+        ),
       ),
     );
   }

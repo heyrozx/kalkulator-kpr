@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/shared/widgets/banner_ad_widget.dart';
 
 import '../../models/calculate_model.dart';
@@ -33,7 +34,6 @@ class _AdvancedScreenState extends State<AdvancedScreen> {
       initialIndex: 0,
       length: 2,
       child: Scaffold(
-        backgroundColor: Colors.white,
         body: SafeArea(
           child: Column(
             children: [
@@ -75,7 +75,7 @@ class _AdvancedScreenState extends State<AdvancedScreen> {
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14)),
-                        color: Colors.purple.withValues(alpha: 0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
                               vertical: 4.0, horizontal: 12),
@@ -123,7 +123,7 @@ class _AdvancedScreenState extends State<AdvancedScreen> {
                     elevation: 0,
                     backgroundColor: Colors.transparent,
                     bottom: TabBar(
-                      indicatorColor: Colors.purple,
+                      indicatorColor: AppColors.primary,
                       tabs: <Widget>[
                         Tab(
                           child: Text(
@@ -191,7 +191,7 @@ class _AdvancedScreenState extends State<AdvancedScreen> {
                         ? TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.purple)
+                            color: AppColors.primary)
                         : TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   trailing: Icon(Icons.chevron_right),
@@ -210,7 +210,7 @@ class _AdvancedScreenState extends State<AdvancedScreen> {
                         ? TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.purple)
+                            color: AppColors.primary)
                         : TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
                   trailing: Icon(Icons.chevron_right),

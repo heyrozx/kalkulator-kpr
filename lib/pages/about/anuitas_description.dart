@@ -24,8 +24,6 @@ class _AnuitasDescriptionState extends State<AnuitasDescription> {
         title: const Text('Anuitas'),
         centerTitle: true,
         elevation: 0,
-        foregroundColor: Colors.black,
-        backgroundColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(15),

@@ -5,6 +5,11 @@ usulan perbaikan teknis, dan ide fitur baru yang bisa menambah manfaat untuk pen
 
 Referensi arsitektur dan cara kerja fitur saat ini ada di [TECHNICAL.md](TECHNICAL.md).
 
+> **Status:** seluruh temuan di bagian 1 (potensi bug) dan bagian 2 (perbaikan teknis)
+> sudah dikerjakan pada versi **1.3.3+13** — lihat kolom *Status* pada tabel di bawah dan
+> [CHANGELOG.md](CHANGELOG.md). Bagian 3–5 (fitur baru, monetisasi, compliance) belum
+> dikerjakan dan menjadi batch berikutnya.
+
 ---
 
 ## Ringkasan eksekutif
@@ -31,27 +36,27 @@ Referensi arsitektur dan cara kerja fitur saat ini ada di [TECHNICAL.md](TECHNIC
 Severity: 🔴 tinggi (crash / angka salah / kehilangan uang) · 🟠 sedang (UX rusak, leak) ·
 🟡 rendah (kosmetik, teknis).
 
-| ID | Severity | Ringkasan | Lokasi |
-| --- | --- | --- | --- |
-| [B-1](#b-1) | 🔴 | Bunga `0` → `NaN` → crash di layar Tabel Angsuran | `core/helpers.dart`, `home_screen.dart` |
-| [B-2](#b-2) | 🔴 | Jangka waktu `0` → pembagian nol, hasil `Infinity`/`NaN`, tabel kosong | `core/helpers.dart` |
-| [B-3](#b-3) | 🔴 | Tenor sangat besar (typo) → ratusan ribu baris dibangun di UI thread → ANR/OOM | `helpers.dart`, `principal_table.dart` |
-| [B-4](#b-4) | 🔴 | Status premium tidak pernah dicabut dalam satu sesi | `purchase_cubit.dart:13` |
-| [B-5](#b-5) | 🟠 | Kegagalan download/share PDF ditelan diam-diam tanpa pesan | `principal_table.dart:148` |
-| [B-6](#b-6) | 🟠 | Download PDF tanpa loading indicator (UI seolah membeku) | `principal_table.dart:127` |
-| [B-7](#b-7) | 🟠 | `setState()` setelah `await` tanpa cek `mounted` | banner, paywall, dll. |
-| [B-8](#b-8) | 🟠 | `BannerAd`, `InterstitialAd`, controller, dan listener tidak pernah di-dispose | beberapa file |
-| [B-9](#b-9) | 🟠 | Interstitial tampil sebelum validasi form & tidak pernah dimuat ulang | `home_screen.dart:608` |
-| [B-10](#b-10) | 🟠 | DP nominal boleh melebihi jumlah pinjaman → total pinjaman negatif | `fix_and_floating_screen.dart` |
-| [B-11](#b-11) | 🟠 | `checkPremium()` menelan exception → state macet di `PurchaseInitial` saat offline | `purchase_cubit.dart:25` |
-| [B-12](#b-12) | 🟠 | Layar utama tanpa `SafeArea` — berisiko tertimpa status bar di API 36 (edge-to-edge) | `home_screen.dart:255` |
-| [B-13](#b-13) | 🟡 | Nomor versi di drawer di-hardcode `1.3.1` padahal app `1.3.2` | `home_screen.dart:242` |
-| [B-14](#b-14) | 🟡 | File PDF sementara menumpuk, tidak pernah dihapus | `pdf_util.dart:244` |
-| [B-15](#b-15) | 🟡 | `Future.delayed(1 detik)` artifisial di 4 tempat | 4 file |
-| [B-16](#b-16) | 🟡 | Format angka memakai locale `EN` (`1,000,000`), bukan konvensi Indonesia | `currency_format.dart:23` |
-| [B-17](#b-17) | 🟡 | Drawer "Detail Angsuran" praktis tidak bisa dibuka dari UI | `principal_table.dart:168` |
-| [B-18](#b-18) | 🟡 | `openEndDrawer()` dipakai untuk menutup drawer (bekerja karena efek samping) | `home_screen.dart`, `principal_table.dart` |
-| [B-19](#b-19) | 🟡 | Disclaimer & halaman "aplikasi lain" ada di kode tapi tidak pernah ditampilkan | `pages/about/` |
+| ID | Severity | Ringkasan | Lokasi | Status |
+| --- | --- | --- | --- | --- |
+| [B-1](#b-1) | 🔴 | Bunga `0` → `NaN` → crash di layar Tabel Angsuran | `core/helpers.dart`, `home_screen.dart` | ✅ 1.3.3 |
+| [B-2](#b-2) | 🔴 | Jangka waktu `0` → pembagian nol, hasil `Infinity`/`NaN`, tabel kosong | `core/helpers.dart` | ✅ 1.3.3 |
+| [B-3](#b-3) | 🔴 | Tenor sangat besar (typo) → ratusan ribu baris dibangun di UI thread → ANR/OOM | `helpers.dart`, `principal_table.dart` | ✅ 1.3.3 |
+| [B-4](#b-4) | 🔴 | Status premium tidak pernah dicabut dalam satu sesi | `purchase_cubit.dart:13` | ✅ 1.3.3 |
+| [B-5](#b-5) | 🟠 | Kegagalan download/share PDF ditelan diam-diam tanpa pesan | `principal_table.dart:148` | ✅ 1.3.3 |
+| [B-6](#b-6) | 🟠 | Download PDF tanpa loading indicator (UI seolah membeku) | `principal_table.dart:127` | ✅ 1.3.3 |
+| [B-7](#b-7) | 🟠 | `setState()` setelah `await` tanpa cek `mounted` | banner, paywall, dll. | ✅ 1.3.3 |
+| [B-8](#b-8) | 🟠 | `BannerAd`, `InterstitialAd`, controller, dan listener tidak pernah di-dispose | beberapa file | ✅ 1.3.3 |
+| [B-9](#b-9) | 🟠 | Interstitial tampil sebelum validasi form & tidak pernah dimuat ulang | `home_screen.dart:608` | ✅ 1.3.3 |
+| [B-10](#b-10) | 🟠 | DP nominal boleh melebihi jumlah pinjaman → total pinjaman negatif | `fix_and_floating_screen.dart` | ✅ 1.3.3 |
+| [B-11](#b-11) | 🟠 | `checkPremium()` menelan exception → state macet di `PurchaseInitial` saat offline | `purchase_cubit.dart:25` | ✅ 1.3.3 |
+| [B-12](#b-12) | 🟠 | Layar utama tanpa `SafeArea` — berisiko tertimpa status bar di API 36 (edge-to-edge) | `home_screen.dart:255` | ✅ 1.3.3 |
+| [B-13](#b-13) | 🟡 | Nomor versi di drawer di-hardcode `1.3.1` padahal app `1.3.2` | `home_screen.dart:242` | ✅ 1.3.3 |
+| [B-14](#b-14) | 🟡 | File PDF sementara menumpuk, tidak pernah dihapus | `pdf_util.dart:244` | ✅ 1.3.3 |
+| [B-15](#b-15) | 🟡 | `Future.delayed(1 detik)` artifisial di 4 tempat | 4 file | ✅ 1.3.3 |
+| [B-16](#b-16) | 🟡 | Format angka memakai locale `EN` (`1,000,000`), bukan konvensi Indonesia | `currency_format.dart:23` | ✅ 1.3.3 |
+| [B-17](#b-17) | 🟡 | Drawer "Detail Angsuran" praktis tidak bisa dibuka dari UI | `principal_table.dart:168` | ❎ salah baca |
+| [B-18](#b-18) | 🟡 | `openEndDrawer()` dipakai untuk menutup drawer (bekerja karena efek samping) | `home_screen.dart`, `principal_table.dart` | ✅ 1.3.3 |
+| [B-19](#b-19) | 🟡 | Disclaimer & halaman "aplikasi lain" ada di kode tapi tidak pernah ditampilkan | `pages/about/` | ✅ 1.3.3 |
 
 ---
 
@@ -254,12 +259,13 @@ muncul kalau perhitungan benar-benar > 300 ms).
 mem-parsing balik dengan asumsi koma sebagai pemisah ribuan, perubahan ini harus dilakukan
 bersamaan pada formatter input (`ThousandsFormatter`) dan parser — kecil tapi perlu hati-hati.
 
-### B-17 · Drawer "Detail Angsuran" sulit diakses 🟡 {#b-17}
+### B-17 · ~~Drawer "Detail Angsuran" sulit diakses~~ — **temuan keliru** 🟡 {#b-17}
 
-`PrincipalTable` mendefinisikan `drawer:` berisi ringkasan parameter simulasi, tetapi
-`AppBar`-nya menyetel `leading:` menjadi tombol back sehingga ikon hamburger hilang. Praktis
-drawer hanya bisa dibuka dengan swipe dari tepi kiri — banyak pengguna tidak akan menemukan
-fitur ini. Sebaiknya jadikan tombol eksplisit di `actions` (mis. ikon info).
+Koreksi atas telaah sebelumnya: drawer ini **sudah punya pemicu eksplisit**, yaitu tombol
+**"Selengkapnya"** pada kartu ringkasan di layar tabel angsuran
+([principal_table.dart](lib/pages/principle/principal_table.dart)), yang muncul persis pada
+kondisi yang sama dengan drawer-nya (hasil dari layar Advanced). Jadi tidak ada yang perlu
+diperbaiki di sini.
 
 ### B-18 · `openEndDrawer()` dipakai untuk menutup drawer 🟡 {#b-18}
 
@@ -280,19 +286,40 @@ ditampilkan** (lihat [C-3](#c-3)) — sisanya hapus atau hidupkan.
 
 ## 2. Perbaikan teknis & kualitas kode
 
-| ID | Prioritas | Usulan |
-| --- | --- | --- |
-| T-1 | Tinggi | **Unit test untuk `core/helpers.dart`.** Kunci semua rumus dengan angka acuan (mis. plafon 500 jt, 15 tahun, 10% → angsuran anuitas ±5,37 jt) plus kasus tepi: bunga 0, tenor 1 bulan, `fixYear` = tenor − 1, jumlah baris tabel, dan total pokok = plafon. Ini pengaman paling murah untuk bagian yang paling berisiko. |
-| T-2 | Tinggi | **Crashlytics + analytics.** Tanpa ini, bug seperti [B-1](#b-1) tidak terdeteksi. Event yang layak dilacak: metode yang dipilih, pemakaian layar Advanced, tombol download/share ditekan (premium vs non-premium), paywall dibuka → beli. |
-| T-3 | Tinggi | **Satu sumber kebenaran status premium.** Hapus `isPremium()` berbasis field, baca dari state Cubit; panggil `checkPremium()` sekali di root, bukan di setiap `BannerAdWidget` (sekarang tiap banner memicu panggilan RevenueCat sendiri). |
-| T-4 | Sedang | **Lifecycle bersih.** Tambahkan `dispose()` untuk controller & iklan, cek `mounted` setelah `await`, lepas listener RevenueCat, lalu hapus `// ignore_for_file: use_build_context_synchronously`. |
-| T-5 | Sedang | **Pisahkan validasi input** ke satu tempat (mis. `core/validators.dart`) supaya layar utama dan Advanced punya aturan yang sama (bunga > 0, tenor 1–40 tahun, DP ≤ harga). |
-| T-6 | Sedang | **Hentikan mutasi `CalculateModel`.** Buat `helpers` menerima model dan mengembalikan hasil tanpa mengubah input (`copyWith` + variabel lokal). Sekarang setiap pemanggil terpaksa membuat dua instance identik hanya untuk menghindari efek samping — sumber bug yang mudah terulang saat menambah skema baru. |
-| T-7 | Sedang | **Konstanta terpusat** untuk ad unit id, RevenueCat key, entitlement id, dan URL (`core/config.dart` atau `--dart-define`), menggantikan string yang tersebar di widget. |
-| T-8 | Sedang | **Tema terpusat + Material 3 + dark mode.** `Colors.purple` ditulis ulang di puluhan tempat dan `useMaterial3: false`. Dark mode termasuk permintaan yang umum untuk aplikasi kalkulator. |
-| T-9 | Rendah | **CI sederhana** (GitHub Actions): `flutter analyze` + `flutter test` pada setiap push. |
-| T-10 | Rendah | **Pecah widget raksasa.** `home_screen.dart` 707 baris, `principal_table.dart` 647 baris, dua layar Advanced ±550 baris dengan blok form yang hampir identik — ekstrak `LabeledCurrencyField`, `ResultRing`, dan `SimulationForm` agar bisa dipakai ulang. |
-| T-11 | Rendah | Hapus dependency yang hanya dipakai layar mati ([B-19](#b-19)), dan `requestLegacyExternalStorage="true"` yang sudah tidak relevan karena penyimpanan memakai SAF. |
+| ID | Prioritas | Usulan | Status |
+| --- | --- | --- | --- |
+| T-1 | Tinggi | **Unit test untuk `core/helpers.dart`.** Kunci semua rumus dengan angka acuan (mis. plafon 500 jt, 15 tahun, 10% → angsuran anuitas ±5,37 jt) plus kasus tepi: bunga 0, tenor 1 bulan, `fixYear` = tenor − 1, jumlah baris tabel, dan total pokok = plafon. Ini pengaman paling murah untuk bagian yang paling berisiko. | ✅ 1.3.3 |
+| T-2 | Tinggi | **Crashlytics + analytics.** Tanpa ini, bug seperti [B-1](#b-1) tidak terdeteksi. Event yang layak dilacak: metode yang dipilih, pemakaian layar Advanced, tombol download/share ditekan (premium vs non-premium), paywall dibuka → beli. | ⚠️ sebagian |
+| T-3 | Tinggi | **Satu sumber kebenaran status premium.** Hapus `isPremium()` berbasis field, baca dari state Cubit; panggil `checkPremium()` sekali di root, bukan di setiap `BannerAdWidget` (sekarang tiap banner memicu panggilan RevenueCat sendiri). | ✅ 1.3.3 |
+| T-4 | Sedang | **Lifecycle bersih.** Tambahkan `dispose()` untuk controller & iklan, cek `mounted` setelah `await`, lepas listener RevenueCat, lalu hapus `// ignore_for_file: use_build_context_synchronously`. | ✅ 1.3.3 |
+| T-5 | Sedang | **Pisahkan validasi input** ke satu tempat (mis. `core/validators.dart`) supaya layar utama dan Advanced punya aturan yang sama (bunga > 0, tenor 1–40 tahun, DP ≤ harga). | ✅ 1.3.3 |
+| T-6 | Sedang | **Hentikan mutasi `CalculateModel`.** Buat `helpers` menerima model dan mengembalikan hasil tanpa mengubah input (`copyWith` + variabel lokal). Sekarang setiap pemanggil terpaksa membuat dua instance identik hanya untuk menghindari efek samping — sumber bug yang mudah terulang saat menambah skema baru. | ✅ 1.3.3 |
+| T-7 | Sedang | **Konstanta terpusat** untuk ad unit id, RevenueCat key, entitlement id, dan URL (`core/config.dart` atau `--dart-define`), menggantikan string yang tersebar di widget. | ✅ 1.3.3 |
+| T-8 | Sedang | **Tema terpusat + Material 3 + dark mode.** `Colors.purple` ditulis ulang di puluhan tempat dan `useMaterial3: false`. Dark mode termasuk permintaan yang umum untuk aplikasi kalkulator. | ⚠️ sebagian |
+| T-9 | Rendah | **CI sederhana** (GitHub Actions): `flutter analyze` + `flutter test` pada setiap push. | ✅ 1.3.3 |
+| T-10 | Rendah | **Pecah widget raksasa.** `home_screen.dart` 707 baris, `principal_table.dart` 647 baris, dua layar Advanced ±550 baris dengan blok form yang hampir identik — ekstrak `LabeledCurrencyField`, `ResultRing`, dan `SimulationForm` agar bisa dipakai ulang. | ✅ 1.3.3 |
+| T-11 | Rendah | Hapus dependency yang hanya dipakai layar mati ([B-19](#b-19)), dan `requestLegacyExternalStorage="true"` yang sudah tidak relevan karena penyimpanan memakai SAF. | ✅ 1.3.3 |
+
+### Catatan dua item yang baru sebagian
+
+**T-2 (crash reporting).** Yang sudah ada: `core/error_reporter.dart` sebagai satu titik
+masuk untuk semua error, `FlutterError.onError` + `PlatformDispatcher.onError` dipasang di
+`main()`, dan seluruh `catch` di aplikasi sudah melapor ke sana. Yang **belum**: mengirimkan
+ke layanan crash reporting sungguhan — memasang Firebase Crashlytics butuh
+`google-services.json`, project Firebase, dan penyesuaian Gradle yang harus dilakukan pemilik
+project. Setelah paketnya terpasang, cukup satu baris di `main()`:
+
+```dart
+ErrorReporter.onReport = (error, stack, {hint}) =>
+    FirebaseCrashlytics.instance.recordError(error, stack, reason: hint);
+```
+
+**T-8 (tema).** Yang sudah ada: `core/theme.dart` (`AppColors`, `AppRadius`, `AppTheme.light`)
+dan seluruh `Colors.purple` yang tersebar sudah diganti referensi terpusat. Yang **belum**:
+mengaktifkan Material 3 dan dark mode. Keduanya mengubah tampilan seluruh layar dan perlu
+diperiksa langsung di perangkat — menggabungkannya ke rilis perbaikan bug akan menyulitkan
+menelusuri penyebab kalau ada tampilan yang melenceng. Fondasinya sudah siap: tinggal
+menambah `AppTheme.dark`, `darkTheme:`, dan `themeMode:` di `app.dart`.
 
 ---
 

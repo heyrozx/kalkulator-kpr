@@ -13,6 +13,20 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
+// Beberapa plugin lama (mis. flutter_file_manager_android) masih menarik
+// kotlin-stdlib 1.8.x. Samakan dengan versi Kotlin plugin di settings.gradle
+// supaya tidak perlu mengunduh artefak lama dan tidak ada version skew.
+subprojects {
+    configurations.all {
+        resolutionStrategy.eachDependency { details ->
+            if (details.requested.group == 'org.jetbrains.kotlin'
+                    && details.requested.name.startsWith('kotlin-stdlib')) {
+                details.useVersion '2.1.0'
+            }
+        }
+    }
+}
+
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }

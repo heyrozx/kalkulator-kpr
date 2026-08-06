@@ -1,0 +1,82 @@
+import 'package:flutter/material.dart';
+
+/// Palet warna aplikasi. Sebelumnya `Colors.purple`, `Colors.white`, dan
+/// `Colors.grey.shade400` ditulis ulang di puluhan tempat sehingga mengubah
+/// warna berarti menyisir seluruh `lib/`.
+class AppColors {
+  const AppColors._();
+
+  static const MaterialColor primarySwatch = Colors.purple;
+  static const Color primary = Colors.purple;
+  static const Color onPrimary = Colors.white;
+
+  static const Color surface = Colors.white;
+  static const Color background = Colors.white;
+  static const Color onSurface = Colors.black87;
+
+  /// Warna teks/ikon sekunder (label, satuan, keterangan).
+  static Color get muted => Colors.grey.shade600;
+
+  /// Warna garis tepi input dan pembatas.
+  static Color get border => Colors.grey.shade400;
+
+  /// Warna latar tombol sekunder.
+  static Color get subtle => Colors.grey.shade300;
+
+  /// Warna porsi bunga pada indikator lingkaran di layar utama.
+  static const Color interestPortion = Colors.grey;
+
+  static const Color success = Color(0xFF2E7D32);
+  static const Color warning = Colors.orange;
+  static const Color danger = Color(0xFFC62828);
+}
+
+/// Radius yang dipakai berulang supaya konsisten antar layar.
+class AppRadius {
+  const AppRadius._();
+
+  static const double card = 5;
+  static const double field = 4;
+  static const double button = 30;
+  static const double sheet = 15;
+}
+
+class AppTheme {
+  const AppTheme._();
+
+  static ThemeData get light {
+    final base = ThemeData(
+      // Material 3 sengaja belum diaktifkan: mengubahnya adalah perubahan
+      // tampilan menyeluruh yang perlu diverifikasi langsung di perangkat,
+      // bukan bagian dari perbaikan bug.
+      useMaterial3: false,
+      primarySwatch: AppColors.primarySwatch,
+      scaffoldBackgroundColor: AppColors.background,
+    );
+
+    return base.copyWith(
+      colorScheme: base.colorScheme.copyWith(
+        primary: AppColors.primary,
+        onPrimary: AppColors.onPrimary,
+        surface: AppColors.surface,
+      ),
+      appBarTheme: const AppBarTheme(
+        elevation: 0,
+        centerTitle: true,
+        foregroundColor: AppColors.onSurface,
+        backgroundColor: Colors.transparent,
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        border: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: AppColors.border),
+        ),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+}

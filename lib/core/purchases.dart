@@ -1,39 +1,33 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:kalkulator_kpr/core/config.dart';
+import 'package:kalkulator_kpr/core/error_reporter.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 
 class Purchase {
-  final String _apiPublicKey = 'goog_TxHpvzIsxQmjdMVokLRhsiMObAV';
-
   Future<void> initPlatformState() async {
-    await Purchases.setLogLevel(LogLevel.debug);
-
-    PurchasesConfiguration configuration;
-    configuration = PurchasesConfiguration(_apiPublicKey);
-    await Purchases.configure(configuration);
+    await Purchases.setLogLevel(kDebugMode ? LogLevel.debug : LogLevel.error);
+    await Purchases.configure(
+      PurchasesConfiguration(AppConfig.revenueCatApiKey),
+    );
   }
 
   Future<List<Offering>> getOfferings() async {
     try {
-      Offerings offerings = await Purchases.getOfferings();
-      Offering? offering = offerings.current;
+      final Offerings offerings = await Purchases.getOfferings();
+      final Offering? offering = offerings.current;
       return offering != null ? [offering] : [];
-    } on PlatformException catch (e) {
-      if (kDebugMode) print(e.toString());
+    } on PlatformException catch (error, stack) {
+      ErrorReporter.report(error, stack, hint: 'getOfferings');
       return [];
     }
   }
 
   Future<List<Package>> getPackages() async {
-    List<Offering> offerings = await getOfferings();
-    if (offerings.isEmpty) {
-      return [];
-    } else {
-      List<Package> packages = offerings
-          .map((offer) => offer.availablePackages)
-          .expand((pair) => pair)
-          .toList();
-      return packages;
-    }
+    final List<Offering> offerings = await getOfferings();
+    return offerings
+        .map((offer) => offer.availablePackages)
+        .expand((packages) => packages)
+        .toList();
   }
 }

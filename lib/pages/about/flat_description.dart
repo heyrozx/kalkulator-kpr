@@ -24,8 +24,6 @@ class _FlatDescriptionState extends State<FlatDescription> {
         title: const Text('Flat'),
         centerTitle: true,
         elevation: 0,
-        foregroundColor: Colors.black,
-        backgroundColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(15),

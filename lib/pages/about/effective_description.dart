@@ -24,8 +24,6 @@ class _EffectiveDescriptionState extends State<EffectiveDescription> {
         title: const Text('Efektif'),
         centerTitle: true,
         elevation: 0,
-        foregroundColor: Colors.black,
-        backgroundColor: Colors.transparent,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(15),

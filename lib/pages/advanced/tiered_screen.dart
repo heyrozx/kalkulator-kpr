@@ -1,14 +1,14 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:pattern_formatter/numeric_formatter.dart';
-
-import '../../core/currency_format.dart';
-import '../../core/helpers.dart';
-import '../../core/loading_overlay.dart';
-import '../../models/calculate_model.dart';
-import '../principle/principal_table.dart';
+import 'package:kalkulator_kpr/core/currency_format.dart';
+import 'package:kalkulator_kpr/core/helpers.dart';
+import 'package:kalkulator_kpr/core/theme.dart';
+import 'package:kalkulator_kpr/core/validators.dart';
+import 'package:kalkulator_kpr/models/calculate_model.dart';
+import 'package:kalkulator_kpr/pages/principle/principal_table.dart';
+import 'package:kalkulator_kpr/shared/widgets/form_section.dart';
+import 'package:kalkulator_kpr/shared/widgets/labeled_number_field.dart';
+import 'package:kalkulator_kpr/shared/widgets/loan_dp_fields.dart';
+import 'package:kalkulator_kpr/utils/custom_snackbar.dart';
 
 class TieredScreen extends StatefulWidget {
   final CalculatorType type;
@@ -20,512 +20,153 @@ class TieredScreen extends StatefulWidget {
 
 class _TieredScreenState extends State<TieredScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final _loanController = TextEditingController();
-  final _loanTotalController = TextEditingController();
-  final _dpPercentController = TextEditingController();
-  final _dpNominalController = TextEditingController();
-  final _yearController = TextEditingController();
-  final _interestController = TextEditingController();
+  final LoanDpControllers _loanFields = LoanDpControllers();
+  final TextEditingController _yearController = TextEditingController();
+  final TextEditingController _interestController = TextEditingController();
 
-  final List<TextEditingController> _controllers = [TextEditingController()];
+  final List<TextEditingController> _tierControllers = [
+    TextEditingController()
+  ];
 
-  void removeFixInterest(int index) {
-    if (index == 0) return;
-    setState(() {
-      _controllers.removeAt(index);
-    });
+  @override
+  void dispose() {
+    _loanFields.dispose();
+    _yearController.dispose();
+    _interestController.dispose();
+    for (final controller in _tierControllers) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
-  void addFixInterest() {
-    setState(() {
-      _controllers.add(TextEditingController());
-    });
+  void _addTier() {
+    setState(() => _tierControllers.add(TextEditingController()));
+  }
+
+  void _removeTier(int index) {
+    if (index == 0) return;
+    final removed = _tierControllers.removeAt(index);
+    removed.dispose();
+    setState(() {});
+  }
+
+  CalculateModel _readForm() => CalculateModel(
+        fixYear: _tierControllers.length.floorToDouble(),
+        floatingInterest: CurrencyFormat.parseDecimal(_interestController.text),
+        initialLoan: _loanFields.loanAmount,
+        dpNominal: _loanFields.dpAmount,
+        loanPlafon: _loanFields.totalAmount,
+        loan: _loanFields.totalAmount,
+        year: CurrencyFormat.parseNumber(_yearController.text),
+        interest: CurrencyFormat.parseDecimal(_interestController.text),
+      );
+
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final double year = CurrencyFormat.parseNumber(_yearController.text);
+    if (_tierControllers.length >= year) {
+      CustomSnackbar.show(
+        context,
+        title: 'Tahun bunga fix terlalu banyak',
+        message: 'Tahun bunga fix harus lebih kecil dari jangka waktu pinjaman',
+        type: SnackbarType.warning,
+      );
+      return;
+    }
+
+    final List<double> tieredInterest = _tierControllers
+        .map((controller) => CurrencyFormat.parseDecimal(controller.text))
+        .toList();
+
+    final CalculateModel calculateModel = _readForm();
+    final tables =
+        installmentTableTiered(widget.type, calculateModel, tieredInterest);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PrincipalTable(
+          tieredInterest: tieredInterest,
+          results: tables,
+          type: widget.type,
+          calculateModel: calculateModel,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Form(
         key: _formKey,
         child: Column(
           children: [
             Expanded(
-                child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: TextFormField(
-                      controller: _loanController,
-                      validator: (value) {
-                        if (value == '' || value?.replaceAll(' ', '') == '0') {
-                          return "Jumlah pinjaman tidak boleh kosong";
-                        }
-                        return null;
-                      },
-                      onChanged: (value) {
-                        double dpPercent = 0;
-                        double dpNominal = 0;
-                        if (_dpPercentController.text.isNotEmpty) {
-                          dpPercent = double.tryParse(_dpPercentController.text
-                                  .replaceAll(",", "")) ??
-                              0;
-                          dpNominal = (double.tryParse(_loanController.text
-                                      .replaceAll(",", "")) ??
-                                  0) *
-                              (dpPercent / 100);
-                          _dpNominalController.text =
-                              NumberFormat.decimalPattern('en')
-                                  .format(dpNominal.toInt());
-                        } else {
-                          _dpPercentController.text = '';
-                          _dpNominalController.text = '';
-                        }
-
-                        double loanNominal = double.tryParse(
-                                _loanController.text.replaceAll(",", "")) ??
-                            0;
-
-                        if (loanNominal > 0) {
-                          _loanTotalController.text =
-                              NumberFormat.decimalPattern('en')
-                                  .format((loanNominal - dpNominal).toInt());
-                        } else {
-                          _loanTotalController.text = '0';
-                        }
-                      },
-                      inputFormatters: [
-                        ThousandsFormatter(
-                            allowFraction: false,
-                            formatter: NumberFormat.decimalPattern('en'))
-                      ],
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        label: const Text('Jumlah Pinjaman (Rp)'),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey.shade400),
-                        ),
-                        border: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.grey.shade400)),
-                        suffixIcon: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: Image.asset('assets/money.png'),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: TextFormField(
-                            controller: _dpPercentController,
-                            inputFormatters: [
-                              ThousandsFormatter(
-                                  allowFraction: true,
-                                  formatter: NumberFormat.decimalPattern('en'))
-                            ],
-                            onChanged: (value) {
-                              double dpPercent =
-                                  double.tryParse(value.replaceAll(",", "")) ??
-                                      0;
-                              if (dpPercent > 100) {
-                                dpPercent = 100;
-                                _dpPercentController.text = '100';
-                              }
-
-                              double dpNominal = 0;
-                              if (_loanController.text.isNotEmpty) {
-                                dpNominal = (double.tryParse(_loanController
-                                            .text
-                                            .replaceAll(",", "")) ??
-                                        0) *
-                                    (dpPercent / 100);
-                                _dpNominalController.text =
-                                    NumberFormat.decimalPattern('en')
-                                        .format(dpNominal.toInt());
-                              } else {
-                                _dpNominalController.text = '';
-                              }
-
-                              double loanNominal = double.tryParse(
-                                      _loanController.text
-                                          .replaceAll(",", "")) ??
-                                  0;
-
-                              if (loanNominal > 0) {
-                                _loanTotalController.text =
-                                    NumberFormat.decimalPattern('en').format(
-                                        (loanNominal - dpNominal).toInt());
-                              } else {
-                                _loanTotalController.text = '0';
-                              }
-                            },
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              label: const Text('DP'),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.grey.shade400),
-                              ),
-                              border: OutlineInputBorder(
-                                  borderSide:
-                                      BorderSide(color: Colors.grey.shade400)),
-                              suffixIcon: const Icon(
-                                Icons.percent,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(
-                          width: 10,
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: TextFormField(
-                            controller: _dpNominalController,
-                            inputFormatters: [
-                              ThousandsFormatter(
-                                  allowFraction: true,
-                                  formatter: NumberFormat.decimalPattern('en'))
-                            ],
-                            onChanged: (value) {
-                              double dpNominal =
-                                  double.tryParse(value.replaceAll(",", "")) ??
-                                      0;
-                              if (dpNominal < 0) {
-                                dpNominal = 0;
-                                _dpNominalController.text = '0';
-                              }
-
-                              double dpPercent = 0;
-                              if (_loanController.text.isNotEmpty) {
-                                dpPercent = (dpNominal /
-                                        (double.tryParse(_loanController.text
-                                                .replaceAll(",", "")) ??
-                                            1)) *
-                                    100;
-                                _dpPercentController.text =
-                                    NumberFormat.decimalPattern('en')
-                                        .format(dpPercent);
-                              } else {
-                                _dpPercentController.text = '';
-                              }
-
-                              double loanNominal = double.tryParse(
-                                      _loanController.text
-                                          .replaceAll(",", "")) ??
-                                  0;
-
-                              if (loanNominal > 0) {
-                                _loanTotalController.text =
-                                    NumberFormat.decimalPattern('en').format(
-                                        (loanNominal - dpNominal).toInt());
-                              } else {
-                                _loanTotalController.text = '0';
-                              }
-                            },
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              label: const Text('DP (RP)'),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.grey.shade400),
-                              ),
-                              border: OutlineInputBorder(
-                                  borderSide:
-                                      BorderSide(color: Colors.grey.shade400)),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: TextFormField(
-                      controller: _loanTotalController,
-                      onChanged: (value) {},
-                      readOnly: true,
-                      inputFormatters: [
-                        ThousandsFormatter(
-                            allowFraction: false,
-                            formatter: NumberFormat.decimalPattern('en'))
-                      ],
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        label: const Text('Total Pinjaman (Rp)'),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey.shade400),
-                        ),
-                        border: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.grey.shade400)),
-                        suffixIcon: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: Image.asset('assets/money.png'),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(
-                      bottom: 10,
-                    ),
-                    child: TextFormField(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LoanDpFields(controllers: _loanFields),
+                    LabeledNumberField(
                       controller: _yearController,
-                      validator: (value) {
-                        if (value == '' || value?.replaceAll(' ', '') == '0') {
-                          return "Jangka waktu tidak boleh kosong";
-                        }
-                        return null;
-                      },
-                      inputFormatters: [
-                        ThousandsFormatter(
-                            allowFraction: false,
-                            formatter: NumberFormat.decimalPattern('en'))
-                      ],
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        label: const Text('Jangka Waktu (Tahun)'),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey.shade400),
-                        ),
-                        border: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.grey.shade400)),
-                        suffixIcon:
-                            const Icon(Icons.alarm, color: Colors.black54),
+                      label: 'Jangka Waktu (Tahun)',
+                      validator: Validators.year,
+                      suffixIcon: Icon(Icons.alarm, color: AppColors.muted),
+                    ),
+                    SectionTitle(
+                      'Bunga Fix',
+                      topPadding: 24,
+                      trailing: IconButton(
+                        onPressed: _addTier,
+                        icon: const Icon(Icons.add_circle_outline,
+                            color: AppColors.primary),
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.only(bottom: 12, top: 32),
-                    child: Row(
-                      children: [
-                        Text(
-                          'Bunga Fix',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        Spacer(),
-                        IconButton(
-                          onPressed: () {
-                            addFixInterest();
-                          },
-                          icon: Icon(Icons.add_circle_outline,
-                              color: Colors.purple),
-                        ),
-                      ],
-                    ),
-                  ),
-                  for (int i = 0; i < _controllers.length; i++)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Row(
+                    for (int i = 0; i < _tierControllers.length; i++)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Text('Bunga tahun ke ${i + 1}'),
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 18),
+                              child: Text('Bunga tahun ke ${i + 1}'),
+                            ),
                           ),
                           Expanded(
-                            child: TextFormField(
-                              controller: _controllers[i],
-                              validator: (value) {
-                                if (value == '' ||
-                                    value?.replaceAll(' ', '') == '0') {
-                                  return "Bunga pinjaman tidak boleh kosong";
-                                }
-                                return null;
-                              },
-                              inputFormatters: [
-                                ThousandsFormatter(
-                                    allowFraction: true,
-                                    formatter:
-                                        NumberFormat.decimalPattern('en'))
-                              ],
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                label: const Text('Bunga (%)'),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide:
-                                      BorderSide(color: Colors.grey.shade400),
-                                ),
-                                border: OutlineInputBorder(
-                                    borderSide: BorderSide(
-                                        color: Colors.grey.shade400)),
-                                suffixIcon: IconButton(
-                                  onPressed: () {
-                                    removeFixInterest(i);
-                                  },
-                                  icon: Icon(
-                                    Icons.do_not_disturb_on_outlined,
-                                    color: i == 0 ? Colors.grey : Colors.purple,
-                                  ),
+                            child: LabeledNumberField(
+                              controller: _tierControllers[i],
+                              label: 'Bunga (%)',
+                              decimal: true,
+                              validator: Validators.interest,
+                              suffixIcon: IconButton(
+                                onPressed: () => _removeTier(i),
+                                tooltip: 'Hapus bunga tahun ke ${i + 1}',
+                                icon: Icon(
+                                  Icons.do_not_disturb_on_outlined,
+                                  color:
+                                      i == 0 ? Colors.grey : AppColors.primary,
                                 ),
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-                  Container(
-                    padding: const EdgeInsets.only(bottom: 12, top: 32),
-                    child: Text(
-                      'Bunga Floating',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: TextFormField(
+                    const SectionTitle('Bunga Floating'),
+                    LabeledNumberField(
                       controller: _interestController,
-                      validator: (value) {
-                        if (value == '' || value?.replaceAll(' ', '') == '0') {
-                          return "Bunga pinjaman tidak boleh kosong";
-                        }
-                        return null;
-                      },
-                      inputFormatters: [
-                        ThousandsFormatter(
-                            allowFraction: true,
-                            formatter: NumberFormat.decimalPattern('en'))
-                      ],
-                      keyboardType: TextInputType.number,
-                      decoration: InputDecoration(
-                        label: const Text('Bunga Pinjaman'),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: Colors.grey.shade400),
-                        ),
-                        border: OutlineInputBorder(
-                            borderSide:
-                                BorderSide(color: Colors.grey.shade400)),
-                        suffixIcon: const Icon(
-                          Icons.percent,
-                          color: Colors.black54,
-                        ),
-                      ),
+                      label: 'Bunga Pinjaman',
+                      decimal: true,
+                      validator: Validators.interest,
+                      suffixIcon: Icon(Icons.percent, color: AppColors.muted),
                     ),
-                  ),
-                ],
-              ),
-            )),
-            Container(
-              color: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                    style:
-                        FilledButton.styleFrom(backgroundColor: Colors.purple),
-                    onPressed: () async {
-                      if (!_formKey.currentState!.validate()) {
-                        return;
-                      }
-
-                      if (_controllers.length >=
-                          double.parse(
-                              CurrencyFormat.toNumber(_yearController.text))) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            backgroundColor: Colors.purple,
-                            content: Text(
-                              'Tahun bunga fix harus lebih kecil dari jangka waktu pinjaman',
-                            ),
-                          ),
-                        );
-                        return;
-                      }
-
-                      LoadingOverlay.show(context);
-                      CalculateModel calculateModel = CalculateModel(
-                        fixYear: _controllers.length.floorToDouble(),
-                        floatingInterest: double.parse(
-                          CurrencyFormat.toNumberComma(
-                            _interestController.text,
-                          ),
-                        ),
-                        initialLoan: double.parse(
-                            CurrencyFormat.toNumber(_loanController.text)),
-                        dpNominal: double.parse(
-                            CurrencyFormat.toNumber(_dpNominalController.text)),
-                        loanPlafon: double.parse(
-                            CurrencyFormat.toNumber(_loanTotalController.text)),
-                        loan: double.parse(
-                            CurrencyFormat.toNumber(_loanTotalController.text)),
-                        year: double.parse(
-                            CurrencyFormat.toNumber(_yearController.text)),
-                        interest: double.parse(
-                          CurrencyFormat.toNumberComma(
-                            _interestController.text,
-                          ),
-                        ),
-                      );
-
-                      List<double> tieredInterest = [];
-                      for (var controller in _controllers) {
-                        double interest = double.parse(
-                          CurrencyFormat.toNumberComma(controller.text),
-                        );
-                        tieredInterest.add(interest);
-                      }
-
-                      List<CalculateResultModel> tables =
-                          installmentTableTiered(
-                              widget.type, calculateModel, tieredInterest);
-
-                      await Future.delayed(const Duration(seconds: 1));
-                      LoadingOverlay.hide();
-
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (builder) {
-                        return PrincipalTable(
-                          tieredInterest: tieredInterest,
-                          results: tables,
-                          type: widget.type,
-                          calculateModel: CalculateModel(
-                            fixYear: _controllers.length.floorToDouble(),
-                            floatingInterest: double.parse(
-                              CurrencyFormat.toNumberComma(
-                                _interestController.text,
-                              ),
-                            ),
-                            initialLoan: double.parse(
-                                CurrencyFormat.toNumber(_loanController.text)),
-                            dpNominal: double.parse(CurrencyFormat.toNumber(
-                                _dpNominalController.text)),
-                            loanPlafon: double.parse(CurrencyFormat.toNumber(
-                                _loanTotalController.text)),
-                            loan: double.parse(CurrencyFormat.toNumber(
-                                _loanTotalController.text)),
-                            year: double.parse(
-                                CurrencyFormat.toNumber(_yearController.text)),
-                            interest: double.parse(
-                              CurrencyFormat.toNumberComma(
-                                _interestController.text,
-                              ),
-                            ),
-                          ),
-                        );
-                      }));
-                    },
-                    child: Wrap(
-                      children: [
-                        Text('Hitung Simulasi'),
-                        Icon(Icons.chevron_right)
-                      ],
-                    )),
+                  ],
+                ),
               ),
             ),
+            SubmitBar(onPressed: _submit),
           ],
         ),
       ),

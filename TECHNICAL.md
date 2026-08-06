@@ -7,7 +7,7 @@ dipakai, serta cara kerja skema premium (langganan) pada aplikasi **Kalkulator K
 | --- | --- |
 | Nama paket Flutter | `kalkulator_kpr` |
 | applicationId / namespace | `com.caraguna.kalkulator.kpr` |
-| Versi saat ini | `1.3.2+12` (lihat `pubspec.yaml`) |
+| Versi saat ini | `1.3.3+13` (lihat `pubspec.yaml`) |
 | Platform | Android (utama) & iOS |
 | Dart SDK | `>=3.3.4 <4.0.0` |
 | Bahasa UI | Indonesia |
@@ -36,30 +36,39 @@ main.dart
 
 | Path | Isi |
 | --- | --- |
-| `main.dart` | Entry point; set status bar transparan, init RevenueCat, `runApp`. |
-| `app.dart` | `MaterialApp` (Material 2, `useMaterial3: false`) + `MultiBlocProvider` + `UpgradeAlert`. |
-| `core/helpers.dart` | **Inti bisnis**: seluruh rumus angsuran & pembangkit tabel angsuran. |
-| `core/currency_format.dart` | `currencyId` (format ribuan tanpa simbol) + parser balik dari teks input. |
+| `main.dart` | Entry point; pasang `ErrorReporter`, set status bar transparan, init RevenueCat, `runApp`. |
+| `app.dart` | `MaterialApp` (`AppTheme.light`, Material 2) + `MultiBlocProvider` + `UpgradeAlert`. |
+| `core/helpers.dart` | **Inti bisnis**: seluruh rumus angsuran, pembangkit tabel angsuran, dan `sumOf`. |
+| `core/config.dart` | `AppConfig` (kunci RevenueCat, entitlement, tautan, batas input) + `AdConfig` (ad unit id per penempatan) + enum `BannerPlacement`. |
+| `core/validators.dart` | Validator input bersama untuk layar utama & Advanced. |
+| `core/error_reporter.dart` | Titik masuk tunggal pelaporan error; siap disambung ke Crashlytics. |
+| `core/theme.dart` | `AppColors`, `AppRadius`, `AppTheme.light`. |
+| `core/currency_format.dart` | `currencyId` (format Indonesia) + parser balik dari teks input. |
+| `core/interstitial_ad_manager.dart` | Muat → tampilkan → muat ulang interstitial, termasuk `dispose`. |
 | `core/custom_date.dart` | Utilitas tanggal (`timestamp()` dipakai di header PDF). |
 | `core/loading_overlay.dart` | Wrapper `overlay_loading_progress` + `loading_animation_widget`. |
 | `core/purchases.dart` | Wrapper RevenueCat: `initPlatformState`, `getOfferings`, `getPackages`. |
-| `models/calculate_model.dart` | `CalculateModel`, `CalculateResultModel`, enum `CalculatorType`. |
+| `models/calculate_model.dart` | `CalculateModel` (+`copyWith`), `CalculateResultModel`, enum `CalculatorType`. |
 | `blocs/purchase_cubit/` | State premium: `checkPremium`, `makePurchase`, `restorePurchase`. |
 | `pages/home/` | Form input utama, ring hasil, drawer pemilih metode, interstitial ad. |
 | `pages/advanced/` | Tab **Fix & Floating** dan **Berjenjang** (`advanced_screen.dart` sebagai host tab). |
 | `pages/principle/principal_table.dart` | Tabel angsuran per bulan (`data_table_2`), share & download PDF, drawer detail. |
-| `pages/pdf/` + `utils/pdf_util.dart` | Generator dokumen PDF tabel angsuran. |
+| `utils/pdf_util.dart` | Generator dokumen PDF tabel angsuran (dijalankan di isolate). |
 | `pages/about/` | Penjelasan skema bunga (flat/efektif/anuitas) + disclaimer. |
 | `pages/premiums/` | Paywall (`premium_plan_screen.dart`) & layar sukses (`payment_success.dart`). |
 | `shared/widgets/banner_ad_widget.dart` | Banner ad dengan unit id per penempatan. |
+| `shared/widgets/labeled_number_field.dart` | Field angka/persen dengan formatter & validator seragam. |
+| `shared/widgets/loan_dp_fields.dart` | Blok input pinjaman + DP (persen ↔ nominal saling sinkron). |
+| `shared/widgets/form_section.dart` | `SectionTitle` & `SubmitBar` untuk layar Advanced. |
 | `utils/custom_snackbar.dart` | Snackbar bertipe (success/warning/error). |
 
 ### Model data
 
 ```dart
 class CalculateModel {
+  // Punya copyWith(); dipakai helpers agar model pemanggil tidak ikut berubah.
   double? loanPlafon;        // plafon pinjaman (basis angsuran pokok)
-  double? loan;              // sisa pinjaman berjalan (dimutasi saat membangun tabel)
+  double? loan;              // sisa pinjaman berjalan (dimutakhirkan pada salinan kerja)
   double? initialLoan;       // harga/pinjaman awal sebelum DP (khusus layar advanced)
   double? dpNominal;         // nominal DP (khusus layar advanced)
   double? year;              // jangka waktu (tahun)
@@ -98,9 +107,9 @@ dengan `year * 12`.
 dengan `n = year × 12`, `i = interest% / 12`, `plafon = loanPlafon ?? loan`.
 
 Perbedaan flat vs efektif **tidak ada di level fungsi bulanan** — perbedaannya muncul pada
-pembangkit tabel: `installmentTableFlat` tidak pernah mengubah `calculateModel.loan`
-(bunga tetap sepanjang tenor), sedangkan `installmentTableEffective` menyetel
-`calculateModel.loan = sisa pinjaman` setiap iterasi.
+pembangkit tabel: `installmentTableFlat` selalu menghitung bunga dari plafon penuh (bunga
+tetap sepanjang tenor), sedangkan `installmentTableEffective` memutakhirkan sisa pinjaman
+pada salinan kerjanya setiap iterasi sehingga bunga menurun.
 
 ### 2.2 Pembangkit tabel angsuran
 
@@ -116,10 +125,13 @@ pembangkit tabel: `installmentTableFlat` tidak pernah mengubah `calculateModel.l
 hanya mendukung **anuitas** dan **efektif** (UI Advanced memang hanya menawarkan dua opsi
 tersebut; jika pengguna masuk dari mode Flat, tipe otomatis dipaksa ke Anuitas).
 
-> **Catatan implementasi:** fungsi-fungsi tabel **memutasi** `CalculateModel` yang dikirim
-> (`loan`, `loanPlafon`, `year`, `interest`). Karena itu setiap pemanggil membuat instance
-> `CalculateModel` baru untuk dikirim ke `PrincipalTable` — model yang sudah dipakai
-> menghitung tidak lagi berisi nilai input asli.
+> **Catatan implementasi:**
+> - Fungsi tabel bekerja di atas **salinan** (`copyWith`) sehingga tidak pernah mengubah
+>   `CalculateModel` milik pemanggil — satu instance cukup untuk menghitung sekaligus
+>   ditampilkan di `PrincipalTable`.
+> - Semua rumus punya guard: tenor 0 mengembalikan hasil nol, dan bunga 0 pada anuitas
+>   dihitung sebagai pokok dibagi rata (bukan `NaN`).
+> - `sumOf(results, selector)` menjumlahkan kolom tabel sambil melewati nilai non-finite.
 
 ---
 
@@ -128,7 +140,8 @@ tersebut; jika pengguna masuk dari mode Flat, tipe otomatis dipaksa ke Anuitas).
 ### 3.1 Kalkulator utama (`pages/home/home_screen.dart`)
 
 - Input: **Jumlah Pinjaman (Rp)**, **Jangka Waktu (Tahun)**, **Bunga Pinjaman (%)** dengan
-  format ribuan otomatis (`pattern_formatter`) dan validasi wajib isi.
+  format ribuan otomatis (`pattern_formatter`) dan validasi rentang lewat `core/validators.dart`
+  (pinjaman > 0, tenor 1–40 tahun, bunga > 0 sampai 100%).
 - Pemilihan metode lewat drawer: **Anuitas** (default), **Efektif**, **Flat**. Mengganti
   metode langsung menghitung ulang bila form sudah terisi.
 - Hasil ditampilkan sebagai `CircularPercentIndicator`: total angsuran di tengah
@@ -170,7 +183,9 @@ Keduanya bermuara ke layar tabel angsuran yang sama.
 - Dokumen A4 multi-halaman (`maxPages: 1000`) berisi logo aplikasi, timestamp, ringkasan
   parameter simulasi (termasuk rincian bunga fix/berjenjang/floating bila ada), tabel
   lengkap, dan baris total.
-- File ditulis ke `getDownloadsDirectory()` dengan nama acak, lalu:
+- Dokumen dibangun di **isolate terpisah** (`compute`) supaya UI tetap responsif, lalu
+  ditulis ke `getTemporaryDirectory()` dengan nama informatif
+  (`Tabel-Angsuran-Anuitas-20260806-153000.pdf`); berkas lama dibersihkan otomatis. Setelah itu:
   - **Download** → `FlutterFileSaver().writeFileAsBytes(...)` sehingga pengguna memilih
     lokasi simpan; sukses ditandai snackbar.
   - **Share** → `SharePlus.instance.share(ShareParams(files: [XFile(...)]))`.
@@ -184,10 +199,6 @@ Keduanya bermuara ke layar tabel angsuran yang sama.
   banner ad sendiri.
 - **Loading overlay** global saat menghitung/generate PDF (dengan delay artifisial 1 detik
   agar transisi terasa halus).
-
-> Layar `pages/about/other_app.dart`, `pages/about/disclaimer.dart`, dan
-> `pages/pdf/principal_table_pdf.dart` (preview PDF via `flutter_pdfview`) sudah ada di
-> kode tetapi **belum di-route dari mana pun**.
 
 ---
 
@@ -231,8 +242,11 @@ sudah tidak dijual).
    `runApp`.
 2. `MyApp` membuat `PurchaseCubit()..checkPremium()`.
 3. `checkPremium()` memanggil `Purchases.getCustomerInfo()`; bila
-   `entitlements.all["premium"]` ada **dan** aktif → simpan `CustomerInfo` dan
-   `emit(PurchaseData(isPremium: true))`, selain itu `emit(PurchaseNothing())`.
+   `entitlements.all["premium"]` ada **dan** aktif → `emit(PurchaseData(isPremium: true))`,
+   selain itu `emit(PurchaseNothing())`. Panggilan yang tumpang tindih berbagi satu request,
+   dan kegagalan (mis. offline) tetap meng-emit status agar UI tidak tertahan.
+4. `PurchaseCubit.isPremium()` **diturunkan dari `state`**, jadi hanya ada satu sumber
+   kebenaran untuk gating fitur maupun tampilan ikon premium.
 
 **Pembelian**
 
@@ -271,13 +285,8 @@ di app bar hanya dirender ketika state `PurchaseNothing`.
 
 ### 5.4 Catatan teknis yang perlu diperhatikan
 
-- `isPremium()` mengembalikan `_customerInfo != null`, dan `_customerInfo` **tidak pernah
-  di-reset ke `null`** saat pengecekan berikutnya menemukan entitlement tidak aktif. Efeknya:
-  bila status premium berubah di tengah sesi, aplikasi masih menganggap pengguna premium
-  sampai proses di-restart. State `PurchaseNothing`/`PurchaseData` yang dipakai widget
-  `BlocBuilder` sendiri sudah benar.
-- `checkPremium()` menelan `PlatformException` tanpa emit apa pun, sehingga saat offline
-  state bisa bertahan di `PurchaseInitial` (ikon premium & banner tidak tampil).
+- Banner ad hanya dimuat setelah status premium **selesai** diperiksa (state bukan lagi
+  `PurchaseInitial`), dan otomatis dilepas kalau status berubah menjadi premium.
 - Pembelian saat ini hanya diuji/di-support untuk Android (disclaimer di paywall menyebut
   hal ini secara eksplisit).
 
@@ -295,14 +304,13 @@ di app bar hanya dirender ketika state `PurchaseNothing`.
 | `path_provider` | ^2.1.1 | Menentukan direktori penulisan file PDF sementara. |
 | `flutter_file_saver` | ^0.9.0 | Menyimpan PDF ke lokasi pilihan pengguna. |
 | `share_plus` | ^12.0.1 | Membagikan PDF ke aplikasi lain. |
-| `flutter_pdfview` | ^1.4.1+1 | Preview PDF (layar preview belum di-route). |
 | `intl` | ^0.20.2 | Format angka/mata uang (`currencyId`) dan tanggal. |
 | `pattern_formatter` | ^4.0.0 | `ThousandsFormatter` pada input nominal & bunga. |
 | `percent_indicator` | ^4.2.2 | Ring hasil di layar utama. |
 | `upgrader` | ^12.5.0 | Dialog wajib update versi. |
 | `url_launcher` | ^6.1.8 | Buka Play Store & halaman privacy policy. |
+| `package_info_plus` | ^9.0.1 | Membaca nomor versi aplikasi untuk ditampilkan di menu. |
 | `overlay_loading_progress` + `loading_animation_widget` | ^1.0.1 / ^1.2.0+3 | Loading overlay global. |
-| `cached_network_image` | ^3.2.3 | Cache gambar (dependensi pendukung). |
 | `flutter_lints` (dev) | ^6.0.0 | Aturan lint `flutter analyze`. |
 | `change_app_package_name` (dev) | ^1.1.0 | Utilitas ganti applicationId. |
 
@@ -338,16 +346,27 @@ hanya untuk Android.
 
 ---
 
-## 8. Perintah
+## 8. Perintah & pengujian
 
 Build/run dijalankan manual oleh pemilik project.
 
 ```bash
 flutter pub get
 flutter analyze          # lint: package:flutter_lints
-flutter test             # test/widget_test.dart masih kosong
+flutter test             # unit test rumus, validator, dan format angka
 flutter build appbundle  # rilis Play Store
 ```
+
+Test berada di `test/core/`:
+
+| Berkas | Cakupan |
+| --- | --- |
+| `helpers_test.dart` | Angka acuan tiap metode, jumlah baris tabel, pelunasan di bulan terakhir, skema fix & floating dan berjenjang, kasus tepi (bunga 0, tenor 0), serta jaminan fungsi tabel tidak memutasi model. |
+| `validators_test.dart` | Batasan input: pinjaman, tenor 1–40 tahun, bunga 0–100%, DP ≤ pinjaman. |
+| `currency_format_test.dart` | Format Rupiah Indonesia dan parsing balik (koma maupun titik sebagai desimal). |
+
+CI (`.github/workflows/ci.yml`) menjalankan `dart format --set-exit-if-changed`,
+`flutter analyze`, dan `flutter test` pada setiap push/PR ke `master`.
 
 ## 9. Konvensi kontribusi
 

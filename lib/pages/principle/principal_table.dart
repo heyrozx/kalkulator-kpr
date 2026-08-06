@@ -1,7 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
-import 'dart:math';
 
 import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
@@ -9,15 +6,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_file_saver/flutter_file_saver.dart';
 import 'package:kalkulator_kpr/blocs/purchase_cubit/purchase_cubit.dart';
 import 'package:kalkulator_kpr/core/currency_format.dart';
+import 'package:kalkulator_kpr/core/error_reporter.dart';
+import 'package:kalkulator_kpr/core/helpers.dart';
 import 'package:kalkulator_kpr/core/loading_overlay.dart';
+import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
 import 'package:kalkulator_kpr/pages/premiums/premium_plan_screen.dart';
 import 'package:kalkulator_kpr/shared/widgets/banner_ad_widget.dart';
 import 'package:kalkulator_kpr/utils/custom_snackbar.dart';
 import 'package:kalkulator_kpr/utils/pdf_util.dart';
 import 'package:share_plus/share_plus.dart';
-
-enum StatusAd { initial, loaded }
 
 class PrincipalTable extends StatefulWidget {
   final List<double>? tieredInterest;
@@ -37,29 +35,27 @@ class PrincipalTable extends StatefulWidget {
 
 class _PrincipalTableState extends State<PrincipalTable> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  int month = 0;
   List<DataRow> rows = [];
+  bool _isBusy = false;
   late PurchaseCubit _cubit;
 
+  List<CalculateResultModel> get _results => widget.results ?? const [];
+
   List<DataRow> setRowValue() {
-    return (widget.results ?? []).map((e) {
+    int month = 0;
+    return _results.map((e) {
       month++;
       return DataRow(
         cells: <DataCell>[
-          DataCell(GestureDetector(
-            onTap: () {},
-            child: Text(
-              month.toString(),
-            ),
-          )),
-          DataCell(Text(currencyId.format(e.principal))),
-          DataCell(Text(currencyId.format(e.interestResult))),
+          DataCell(Text(month.toString())),
+          DataCell(Text(currencyId.format(e.principal ?? 0))),
+          DataCell(Text(currencyId.format(e.interestResult ?? 0))),
           DataCell(Text(
-            currencyId.format(e.installmentResult),
-            style: TextStyle(fontWeight: FontWeight.bold),
+            currencyId.format(e.installmentResult ?? 0),
+            style: const TextStyle(fontWeight: FontWeight.bold),
           )),
           DataCell(Text(currencyId.format(
-              e.principalTotalRemain! < 1 ? 0 : e.principalTotalRemain!))),
+              (e.principalTotalRemain ?? 0) < 1 ? 0 : e.principalTotalRemain))),
         ],
       );
     }).toList();
@@ -86,68 +82,96 @@ class _PrincipalTableState extends State<PrincipalTable> {
     ));
   }
 
+  /// Menjumlahkan satu kolom. Memakai [sumOf] yang melewati nilai non-finite —
+  /// sebelumnya `NaN.toInt()` di sini melempar `UnsupportedError` dan
+  /// meng-crash layar begitu ada satu saja hasil perhitungan yang tidak wajar.
   int getTotal(String type) {
-    int data = 0;
-    for (var i = 0; i < (widget.results ?? []).length; i++) {
-      if (type == "principal") {
-        data = data + widget.results![i].principal!.toInt();
-      } else if (type == "interest") {
-        data = data + widget.results![i].interestResult!.toInt();
-      } else if (type == "installment") {
-        data = data + widget.results![i].installmentResult!.toInt();
-      } else if (type == "principal_remain") {
-        data = data + widget.results![i].principalTotalRemain!.toInt();
-      }
-    }
-    return data;
+    final double total = switch (type) {
+      "principal" => sumOf(_results, (e) => e.principal),
+      "interest" => sumOf(_results, (e) => e.interestResult),
+      "installment" => sumOf(_results, (e) => e.installmentResult),
+      "principal_remain" => sumOf(_results, (e) => e.principalTotalRemain),
+      _ => 0,
+    };
+    return total.isFinite ? total.round() : 0;
   }
 
+  Future<File> _generatePdf() => PdfUtil.generatePrincipalPDF(
+        _results,
+        totalPrincipal: getTotal("principal"),
+        totalInstallment: getTotal("installment"),
+        totalInterest: getTotal("interest"),
+        tieredInterest: widget.tieredInterest,
+        type: widget.type,
+        calculateModel: widget.calculateModel,
+      );
+
   Future<void> sharePDF() async {
+    if (_isBusy) return;
+    _isBusy = true;
     LoadingOverlay.show(context);
     try {
-      File filePdf = await PdfUtil.generatePrincipalPDF(widget.results ?? [],
-          totalPrincipal: getTotal("principal"),
-          totalInstallment: getTotal("installment"),
-          totalInterest: getTotal("interest"),
-          tieredInterest: widget.tieredInterest,
-          type: widget.type,
-          calculateModel: widget.calculateModel);
+      final File filePdf = await _generatePdf();
       LoadingOverlay.hide();
 
-      SharePlus.instance.share(ShareParams(
+      await SharePlus.instance.share(ShareParams(
         title: 'Tabel Angsuran',
         text: 'Tabel Angsuran Kalkulator KPR',
         files: [XFile(filePdf.path)],
       ));
-    } catch (e) {
+    } catch (error, stack) {
       LoadingOverlay.hide();
+      ErrorReporter.report(error, stack, hint: 'sharePDF');
+      _showFailure('Gagal membagikan tabel angsuran. Silakan coba lagi.');
+    } finally {
+      _isBusy = false;
     }
   }
 
   Future<void> downloadPDF() async {
+    if (_isBusy) return;
+    _isBusy = true;
+    // Sebelumnya proses ini berjalan tanpa indikator apa pun sehingga layar
+    // terlihat membeku saat PDF dibuat.
+    LoadingOverlay.show(context);
     try {
-      File filePdf = await PdfUtil.generatePrincipalPDF(widget.results ?? [],
-          totalPrincipal: getTotal("principal"),
-          totalInstallment: getTotal("installment"),
-          totalInterest: getTotal("interest"),
-          tieredInterest: widget.tieredInterest,
-          type: widget.type,
-          calculateModel: widget.calculateModel);
-
+      final File filePdf = await _generatePdf();
       await FlutterFileSaver().writeFileAsBytes(
-        fileName:
-            "Tabel-angsuran-kalkulator-kpr-${Random().nextInt(10000)}.pdf",
+        fileName: PdfUtil.suggestedFileName(widget.type),
         bytes: await filePdf.readAsBytes(),
       );
       LoadingOverlay.hide();
 
+      if (!mounted) return;
       CustomSnackbar.show(context,
           title: "Download Berhasil",
           message: "Silahkan cek folder download.",
           type: SnackbarType.success);
-    } catch (e) {
+    } catch (error, stack) {
       LoadingOverlay.hide();
+      ErrorReporter.report(error, stack, hint: 'downloadPDF');
+      // Kegagalan tidak lagi ditelan diam-diam.
+      _showFailure('Gagal menyimpan tabel angsuran. Silakan coba lagi.');
+    } finally {
+      _isBusy = false;
     }
+  }
+
+  void _showFailure(String message) {
+    if (!mounted) return;
+    CustomSnackbar.show(context,
+        title: 'Gagal', message: message, type: SnackbarType.failure);
+  }
+
+  void _requirePremium(String action, VoidCallback onGranted) {
+    if (!_cubit.isPremium()) {
+      CustomSnackbar.show(context,
+          title: "Premium",
+          message: "Upgrade premium untuk $action tabel angsuran",
+          type: SnackbarType.warning);
+      return;
+    }
+    onGranted();
   }
 
   @override
@@ -178,33 +202,17 @@ class _PrincipalTableState extends State<PrincipalTable> {
         elevation: 0,
         actions: [
           IconButton(
-              onPressed: () {
-                if (!_cubit.isPremium()) {
-                  CustomSnackbar.show(context,
-                      title: "Premium",
-                      message: "Upgrade premium untuk download tabel angsuran",
-                      type: SnackbarType.warning);
-                  return;
-                }
-
-                downloadPDF();
-              },
-              icon: Icon(Icons.download_outlined)),
+              tooltip: 'Download PDF',
+              onPressed: () => _requirePremium('download', downloadPDF),
+              icon: const Icon(Icons.download_outlined)),
           IconButton(
-              onPressed: () {
-                if (!_cubit.isPremium()) {
-                  CustomSnackbar.show(context,
-                      title: "Premium",
-                      message: "Upgrade premium untuk share tabel angsuran",
-                      type: SnackbarType.warning);
-                  return;
-                }
-                sharePDF();
-              },
-              icon: Icon(Icons.share_outlined)),
+              tooltip: 'Bagikan PDF',
+              onPressed: () => _requirePremium('share', sharePDF),
+              icon: const Icon(Icons.share_outlined)),
           BlocBuilder<PurchaseCubit, PurchaseState>(
             builder: (context, state) {
-              if (state is PurchaseNothing) {
+              if (state is! PurchaseNothing) return const SizedBox();
+              {
                 return IconButton(
                   onPressed: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) {
@@ -217,15 +225,12 @@ class _PrincipalTableState extends State<PrincipalTable> {
                   ),
                 );
               }
-              return const SizedBox();
             },
           ),
           const SizedBox(
             width: 7,
           )
         ],
-        foregroundColor: Colors.black,
-        backgroundColor: Colors.transparent,
       ),
       drawer: widget.calculateModel?.floatingInterest == null
           ? null
@@ -236,7 +241,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                     ListTile(
                       visualDensity: VisualDensity(vertical: -4),
                       contentPadding: EdgeInsets.only(left: 16, right: 4),
-                      selectedColor: Colors.purple,
+                      selectedColor: AppColors.primary,
                       title: const Text(
                         'Detail Angsuran',
                         style: TextStyle(
@@ -246,7 +251,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                       trailing: IconButton(
                         icon: const Icon(
                           Icons.close,
-                          color: Colors.purple,
+                          color: AppColors.primary,
                         ),
                         onPressed: () {
                           _scaffoldKey.currentState?.openEndDrawer();
@@ -262,7 +267,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                               visualDensity: VisualDensity(vertical: -4),
                               contentPadding:
                                   EdgeInsets.symmetric(horizontal: 16),
-                              selectedColor: Colors.purple,
+                              selectedColor: AppColors.primary,
                               title: const Text('Jenis'),
                               trailing: Icon(Icons.category_outlined),
                               subtitle: Text(
@@ -273,7 +278,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                         : 'Anuitas',
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.purple),
+                                    color: AppColors.primary),
                               ),
                             ),
                             Divider(),
@@ -281,14 +286,14 @@ class _PrincipalTableState extends State<PrincipalTable> {
                               visualDensity: VisualDensity(vertical: -4),
                               contentPadding:
                                   EdgeInsets.symmetric(horizontal: 16),
-                              selectedColor: Colors.purple,
+                              selectedColor: AppColors.primary,
                               title: const Text('Jumlah Pinjaman'),
                               trailing: Icon(Icons.attach_money),
                               subtitle: Text(
                                 "Rp${currencyId.format(widget.calculateModel!.initialLoan)}",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.purple),
+                                    color: AppColors.primary),
                               ),
                             ),
                             Divider(),
@@ -296,14 +301,14 @@ class _PrincipalTableState extends State<PrincipalTable> {
                               visualDensity: VisualDensity(vertical: -4),
                               contentPadding:
                                   EdgeInsets.symmetric(horizontal: 16),
-                              selectedColor: Colors.purple,
+                              selectedColor: AppColors.primary,
                               title: const Text('DP (Down Payment)'),
                               trailing: Icon(Icons.attach_money),
                               subtitle: Text(
                                 "Rp${currencyId.format(widget.calculateModel!.dpNominal)}",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.purple),
+                                    color: AppColors.primary),
                               ),
                             ),
                             Divider(),
@@ -311,14 +316,14 @@ class _PrincipalTableState extends State<PrincipalTable> {
                               visualDensity: VisualDensity(vertical: -4),
                               contentPadding:
                                   EdgeInsets.symmetric(horizontal: 16),
-                              selectedColor: Colors.purple,
+                              selectedColor: AppColors.primary,
                               title: const Text('Total Pinjaman'),
                               trailing: Icon(Icons.attach_money),
                               subtitle: Text(
                                 "Rp${currencyId.format(widget.calculateModel!.loan)}",
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.purple),
+                                    color: AppColors.primary),
                               ),
                             ),
                             Divider(),
@@ -326,14 +331,14 @@ class _PrincipalTableState extends State<PrincipalTable> {
                               visualDensity: VisualDensity(vertical: -4),
                               contentPadding:
                                   EdgeInsets.symmetric(horizontal: 16),
-                              selectedColor: Colors.purple,
+                              selectedColor: AppColors.primary,
                               title: const Text('Total Waktu Pinjaman'),
                               trailing: Icon(Icons.timer_outlined),
                               subtitle: Text(
                                 '${currencyId.format(widget.calculateModel!.year)} Tahun',
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.purple),
+                                    color: AppColors.primary),
                               ),
                             ),
                             if (widget.calculateModel?.fixInterest != null)
@@ -350,7 +355,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                       '${widget.calculateModel?.fixInterest ?? '0'}%',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.purple),
+                                          color: AppColors.primary),
                                     ),
                                   ),
                                 ],
@@ -364,14 +369,14 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     visualDensity: VisualDensity(vertical: -4),
                                     contentPadding:
                                         EdgeInsets.symmetric(horizontal: 16),
-                                    selectedColor: Colors.purple,
+                                    selectedColor: AppColors.primary,
                                     title: const Text('Masa Bunga Fix'),
                                     trailing: Icon(Icons.date_range),
                                     subtitle: Text(
                                       '${(widget.calculateModel?.fixYear ?? 0).toInt()} Tahun',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.purple),
+                                          color: AppColors.primary),
                                     ),
                                   ),
                                 ],
@@ -386,14 +391,14 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     visualDensity: VisualDensity(vertical: -4),
                                     contentPadding:
                                         EdgeInsets.symmetric(horizontal: 16),
-                                    selectedColor: Colors.purple,
+                                    selectedColor: AppColors.primary,
                                     title: Text('Bunga Fix Tahun ke ${i + 1}'),
                                     trailing: Icon(Icons.date_range),
                                     subtitle: Text(
                                       '${widget.tieredInterest![i]}%',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.purple),
+                                          color: AppColors.primary),
                                     ),
                                   ),
                                 ],
@@ -407,20 +412,20 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     contentPadding:
                                         EdgeInsets.symmetric(horizontal: 16),
                                     trailing: Icon(Icons.percent),
-                                    selectedColor: Colors.purple,
+                                    selectedColor: AppColors.primary,
                                     title: const Text('Bunga Floating'),
                                     subtitle: Text(
                                       '${widget.calculateModel?.floatingInterest ?? '0'}%',
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.purple),
+                                          color: AppColors.primary),
                                     ),
                                   ),
                                 ],
                               ),
                             Divider(),
                             Card(
-                              color: Colors.purple,
+                              color: AppColors.primary,
                               child: ListTile(
                                 visualDensity: VisualDensity(vertical: -4),
                                 contentPadding:
@@ -429,7 +434,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                   Icons.attach_money,
                                   color: Colors.white,
                                 ),
-                                selectedColor: Colors.purple,
+                                selectedColor: AppColors.primary,
                                 title: const Text(
                                   'Total Angsuran',
                                   style: TextStyle(color: Colors.white),
@@ -450,197 +455,194 @@ class _PrincipalTableState extends State<PrincipalTable> {
                 ),
               ),
             ),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Container(
-                width: size.width,
-                margin: const EdgeInsets.only(top: 15, left: 15, right: 15),
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.1),
-                      spreadRadius: 5,
-                      blurRadius: 3,
-                      offset: const Offset(0, 1), // changes position of shadow
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Text('Jenis'),
-                          ),
-                          Text(
-                            widget.type == CalculatorType.flat
-                                ? 'Flat'
-                                : widget.type == CalculatorType.effective
-                                    ? 'Efektif'
-                                    : 'Anuitas',
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.purple),
-                          )
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Text('Jumlah Pinjaman'),
-                          ),
-                          Text(
-                            "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          )
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Text('Jangka Waktu (Tahun)'),
-                          ),
-                          Text(
-                            currencyId.format(widget.calculateModel!.year),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          )
-                        ],
-                      ),
-                    ),
-                    if (widget.calculateModel?.floatingInterest == null)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          children: [
-                            const Expanded(
-                              child: Text('Bunga'),
-                            ),
-                            Text(
-                              '${widget.calculateModel!.interest!}%',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            )
-                          ],
-                        ),
-                      ),
-                    if (widget.calculateModel?.floatingInterest != null)
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.purple,
-                              side: const BorderSide(color: Colors.purple),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                            ),
-                            onPressed: () {
-                              _scaffoldKey.currentState?.openDrawer();
-                            },
-                            child: Text('Selengkapnya')),
-                      ),
-                  ],
-                ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              width: size.width,
+              margin: const EdgeInsets.only(top: 15, left: 15, right: 15),
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(5),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withValues(alpha: 0.1),
+                    spreadRadius: 5,
+                    blurRadius: 3,
+                    offset: const Offset(0, 1), // changes position of shadow
+                  ),
+                ],
               ),
-              Center(
-                child: BannerAdWidget(
-                  margin: const EdgeInsets.only(left: 15, right: 15, top: 15),
-                  placement: BannerPlacement.principalTable,
-                ),
-              ),
-              Expanded(
-                child: Container(
-                    width: size.width,
-                    margin: const EdgeInsets.only(
-                        top: 15, left: 15, right: 15, bottom: 15),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withValues(alpha: 0.2),
-                          spreadRadius: 4,
-                          blurRadius: 3,
-                          offset:
-                              const Offset(0, 1), // changes position of shadow
+              child: Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text('Jenis'),
                         ),
+                        Text(
+                          widget.type == CalculatorType.flat
+                              ? 'Flat'
+                              : widget.type == CalculatorType.effective
+                                  ? 'Efektif'
+                                  : 'Anuitas',
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.primary),
+                        )
                       ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(5),
-                      child: DataTable2(
-                        headingRowColor: WidgetStateColor.resolveWith(
-                          (states) {
-                            return Colors.purple;
-                          },
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text('Jumlah Pinjaman'),
                         ),
-                        minWidth: 700,
-                        headingTextStyle:
-                            const TextStyle(fontWeight: FontWeight.bold),
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(5)),
-                        columns: const [
-                          DataColumn2(
-                            fixedWidth: 60,
-                            label: Text(
-                              'Bulan\nke',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
-                            ),
+                        Text(
+                          "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      ],
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    child: Row(
+                      children: [
+                        const Expanded(
+                          child: Text('Jangka Waktu (Tahun)'),
+                        ),
+                        Text(
+                          currencyId.format(widget.calculateModel!.year),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        )
+                      ],
+                    ),
+                  ),
+                  if (widget.calculateModel?.floatingInterest == null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text('Bunga'),
                           ),
-                          DataColumn2(
-                            label: Text(
-                              'Angsuran\nPokok',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          DataColumn2(
-                            size: ColumnSize.L,
-                            label: Text(
-                              'Bunga',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            // onSort: sortColumn,
-                          ),
-                          DataColumn2(
-                            size: ColumnSize.L,
-                            label: Text(
-                              'Jumlah\nAngsuran',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          DataColumn2(
-                            size: ColumnSize.L,
-                            label: Text(
-                              'Sisa\nPinjaman',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: Colors.white),
-                            ),
-                          ),
+                          Text(
+                            '${widget.calculateModel!.interest!}%',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          )
                         ],
-                        rows: rows,
                       ),
-                    )),
+                    ),
+                  if (widget.calculateModel?.floatingInterest != null)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                          ),
+                          onPressed: () {
+                            _scaffoldKey.currentState?.openDrawer();
+                          },
+                          child: Text('Selengkapnya')),
+                    ),
+                ],
               ),
-            ],
-          ),
-        ],
+            ),
+            Center(
+              child: BannerAdWidget(
+                margin: const EdgeInsets.only(left: 15, right: 15, top: 15),
+                placement: BannerPlacement.principalTable,
+              ),
+            ),
+            Expanded(
+              child: Container(
+                  width: size.width,
+                  margin: const EdgeInsets.only(
+                      top: 15, left: 15, right: 15, bottom: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withValues(alpha: 0.2),
+                        spreadRadius: 4,
+                        blurRadius: 3,
+                        offset:
+                            const Offset(0, 1), // changes position of shadow
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(5),
+                    child: DataTable2(
+                      headingRowColor: WidgetStateColor.resolveWith(
+                        (states) {
+                          return AppColors.primary;
+                        },
+                      ),
+                      minWidth: 700,
+                      headingTextStyle:
+                          const TextStyle(fontWeight: FontWeight.bold),
+                      decoration:
+                          BoxDecoration(borderRadius: BorderRadius.circular(5)),
+                      columns: const [
+                        DataColumn2(
+                          fixedWidth: 60,
+                          label: Text(
+                            'Bulan\nke',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        DataColumn2(
+                          label: Text(
+                            'Angsuran\nPokok',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        DataColumn2(
+                          size: ColumnSize.L,
+                          label: Text(
+                            'Bunga',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                          // onSort: sortColumn,
+                        ),
+                        DataColumn2(
+                          size: ColumnSize.L,
+                          label: Text(
+                            'Jumlah\nAngsuran',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        DataColumn2(
+                          size: ColumnSize.L,
+                          label: Text(
+                            'Sisa\nPinjaman',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                      rows: rows,
+                    ),
+                  )),
+            ),
+          ],
+        ),
       ),
     );
   }

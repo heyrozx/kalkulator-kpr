@@ -15,6 +15,33 @@ class CalculateModel {
       this.fixInterest,
       this.fixYear,
       this.floatingInterest});
+
+  /// Salinan model. Dipakai oleh `core/helpers.dart` supaya proses membangun
+  /// tabel angsuran — yang perlu memutakhirkan sisa pinjaman, plafon, tenor,
+  /// dan bunga di tiap iterasi — tidak pernah mengubah model milik pemanggil.
+  CalculateModel copyWith({
+    double? loan,
+    double? initialLoan,
+    double? dpNominal,
+    double? loanPlafon,
+    double? year,
+    double? interest,
+    double? fixInterest,
+    double? fixYear,
+    double? floatingInterest,
+  }) {
+    return CalculateModel(
+      loan: loan ?? this.loan,
+      initialLoan: initialLoan ?? this.initialLoan,
+      dpNominal: dpNominal ?? this.dpNominal,
+      loanPlafon: loanPlafon ?? this.loanPlafon,
+      year: year ?? this.year,
+      interest: interest ?? this.interest,
+      fixInterest: fixInterest ?? this.fixInterest,
+      fixYear: fixYear ?? this.fixYear,
+      floatingInterest: floatingInterest ?? this.floatingInterest,
+    );
+  }
 }
 
 class CalculateResultModel {
