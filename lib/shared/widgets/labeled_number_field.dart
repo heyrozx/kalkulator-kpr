@@ -20,6 +20,15 @@ class LabeledNumberField extends StatelessWidget {
     this.margin = const EdgeInsets.only(bottom: 10),
   });
 
+  /// Ukuran ringkas yang dipakai semua layar kalkulator: tinggi field, teks, dan
+  /// label sedikit lebih kecil dari baku Material supaya form, tombol, dan hasil
+  /// muat dalam satu layar tanpa menggulir.
+  static const TextStyle _textStyle = TextStyle(fontSize: 15);
+  static const TextStyle _labelStyle = TextStyle(fontSize: 14);
+  static const TextStyle _errorStyle = TextStyle(fontSize: 11);
+  static const EdgeInsets _contentPadding =
+      EdgeInsets.symmetric(horizontal: 12, vertical: 16);
+
   final TextEditingController controller;
   final String label;
   final String? Function(String?)? validator;
@@ -56,9 +65,15 @@ class LabeledNumberField extends StatelessWidget {
       keyboardType: decimal
           ? const TextInputType.numberWithOptions(decimal: true)
           : TextInputType.number,
+      style: _textStyle,
       decoration: InputDecoration(
         label: Text(label),
         suffixIcon: suffixIcon,
+        // `isDense` sengaja tidak dipakai: tingginya jadi terlalu pendek untuk
+        // field yang sering diketik. Cukup padding & ukuran teks yang dirapatkan.
+        labelStyle: _labelStyle,
+        errorStyle: _errorStyle,
+        contentPadding: _contentPadding,
       ),
     );
 

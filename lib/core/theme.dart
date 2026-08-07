@@ -23,8 +23,28 @@ class AppColors {
   /// Warna latar tombol sekunder.
   static Color get subtle => Colors.grey.shade300;
 
+  /// Garis tipis yang hanya berperan sebagai jalur/latar, bukan pembatas tegas
+  /// — mis. garis tab yang tidak aktif di beranda.
+  static Color get faintLine => Colors.grey.shade200;
+
   /// Warna porsi bunga pada indikator lingkaran di layar utama.
   static const Color interestPortion = Colors.grey;
+
+  // --- Warna seri grafik ---
+  // Pasangan ungu/oranye ini sudah diperiksa keterbacaannya untuk pengguna buta
+  // warna (jarak warna terkecil ΔE 20 pada tritanopia, jauh di atas ambang 8),
+  // jadi batang pokok dan bunga tetap bisa dibedakan tanpa mengandalkan legenda.
+  /// Porsi angsuran pokok pada grafik.
+  static const Color chartPrincipal = primary;
+
+  /// Porsi bunga pada grafik.
+  static const Color chartInterest = Color(0xFFE8710A);
+
+  /// Garis bantu (grid) grafik — satu langkah dari warna latar, tidak menonjol.
+  static Color get gridLine => Colors.grey.shade300;
+
+  /// Latar tooltip grafik.
+  static const Color chartTooltip = Color(0xFF212121);
 
   static const Color success = Color(0xFF2E7D32);
   static const Color warning = Colors.orange;

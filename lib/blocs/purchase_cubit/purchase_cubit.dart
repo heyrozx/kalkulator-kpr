@@ -48,30 +48,22 @@ class PurchaseCubit extends Cubit<PurchaseState> {
     }
   }
 
-  Future<void> makePurchase(Package package) async {
-    try {
-      final PurchaseResult purchaseResult =
-          await Purchases.purchase(PurchaseParams.package(package));
-      _emitFor(purchaseResult.customerInfo);
-    } on PlatformException catch (error, stack) {
-      final errorCode = PurchasesErrorHelper.getErrorCode(error);
-      if (errorCode == PurchasesErrorCode.purchaseCancelledError) {
-        // Dibatalkan pengguna: bukan kegagalan, kembalikan ke status semula.
-        if (!isClosed) emit(PurchaseNothing());
-        return;
-      }
-      ErrorReporter.report(error, stack, hint: 'makePurchase');
-      if (kDebugMode) debugPrint('purchase error: $errorCode');
-      if (!isClosed) emit(PurchaseError());
-    }
-  }
+  /// Memuat ulang status premium tanpa ikut menumpang request [checkPremium]
+  /// yang mungkin sudah berjalan. Dipakai setelah paywall RevenueCat ditutup:
+  /// hasil request lama bisa saja dimulai sebelum pembelian terjadi.
+  Future<void> refreshPremium() => _runCheck();
 
-  Future<void> restorePurchase() async {
+  /// Memulihkan pembelian dari akun store yang sedang login (mis. setelah ganti
+  /// perangkat). Mengembalikan `true` kalau entitlement premium aktif setelah
+  /// pemulihan. Kegagalan dilempar ulang supaya pemanggil bisa membedakan
+  /// "tidak ada pembelian" dari "gagal menghubungi store".
+  Future<bool> restorePurchase() async {
     try {
       _emitFor(await Purchases.restorePurchases());
+      return isPremium();
     } on PlatformException catch (error, stack) {
       ErrorReporter.report(error, stack, hint: 'restorePurchase');
-      if (!isClosed) emit(PurchaseError());
+      rethrow;
     }
   }
 

@@ -20,20 +20,17 @@ class AppConfig {
   static const String revenueCatApiKey = 'goog_TxHpvzIsxQmjdMVokLRhsiMObAV';
 
   /// Nama entitlement yang menandakan pengguna premium.
+  ///
+  /// Tampilan & daftar paket paywall tidak lagi ditulis di kode — semuanya
+  /// diatur dari dashboard RevenueCat (lihat `pages/premiums/premium_paywall.dart`).
   static const String premiumEntitlement = 'premium';
-
-  /// Product id paket lifetime lama — sudah tidak dijual, hanya dipakai untuk
-  /// membedakan ikon di paywall bagi pengguna lama.
-  static const String legacyLifetimeProductId = 'lifetime_premium_100000';
-
-  /// Suffix judul produk dari Play Console yang tidak perlu ditampilkan ulang.
-  static const String storeTitleSuffix = ' (Kalkulator KPR Simulasi Kredit)';
 
   // --- Tautan ---
   static const String playStoreUrl =
       'https://play.google.com/store/apps/details?id=com.caraguna.kalkulator.kpr&hl=en';
   static const String privacyPolicyUrl =
       'https://nexadream.id/privacy-policy-kalkulator-kpr-simulasi-kredit';
+  static const String contactUrl = 'https://nexadream.id/contact';
 
   // --- Batasan input ---
   /// Jangka waktu maksimum. Membatasi tenor mencegah tabel angsuran raksasa

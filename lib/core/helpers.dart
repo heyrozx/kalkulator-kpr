@@ -148,6 +148,27 @@ List<CalculateResultModel> installmentTableAnuitas(
   return data;
 }
 
+/// Tabel angsuran akad **murabahah** (jual beli dengan margin).
+///
+/// Bank membeli aset lalu menjualnya kembali seharga pokok + margin yang
+/// disepakati di muka, dan harga jual itu dicicil rata sampai lunas — secara
+/// aritmetika sama dengan bunga flat. Bedanya ada pada kolom sisa: utang
+/// nasabah dalam murabahah adalah **harga jual**, bukan pokok yang berbunga,
+/// jadi yang tersisa dihitung dari total angsuran yang belum dibayar.
+List<CalculateResultModel> installmentTableMurabahah(
+    CalculateModel calculateModel) {
+  final List<CalculateResultModel> data = installmentTableFlat(calculateModel);
+
+  double remaining = sumOf(data, (e) => e.installmentResult);
+  for (final result in data) {
+    final double paid = result.installmentResult ?? 0;
+    if (paid.isFinite) remaining -= paid;
+    result.principalTotalRemain = remaining < 0 ? 0 : remaining;
+  }
+
+  return data;
+}
+
 List<CalculateResultModel> installmentTableFixFloating(
     CalculatorType type, CalculateModel calculateModel) {
   final List<CalculateResultModel> data = [];
@@ -246,4 +267,135 @@ double sumOf(List<CalculateResultModel> results,
     if (value != null && value.isFinite) total += value;
   }
   return total;
+}
+
+/// Ringkasan satu tabel angsuran.
+///
+/// Dipakai bersama oleh kartu ringkasan di layar hasil, footer tabel, dan
+/// record riwayat supaya ketiganya tidak menjumlahkan kolom dengan caranya
+/// masing-masing (dan berpotensi berbeda hasil).
+class InstallmentSummary {
+  const InstallmentSummary({
+    required this.totalPrincipal,
+    required this.totalInterest,
+    required this.totalPayment,
+    required this.firstInstallment,
+    required this.lastInstallment,
+    required this.months,
+  });
+
+  final double totalPrincipal;
+  final double totalInterest;
+  final double totalPayment;
+  final double firstInstallment;
+  final double lastInstallment;
+  final int months;
+
+  static const InstallmentSummary zero = InstallmentSummary(
+    totalPrincipal: 0,
+    totalInterest: 0,
+    totalPayment: 0,
+    firstInstallment: 0,
+    lastInstallment: 0,
+    months: 0,
+  );
+
+  /// `true` kalau angsuran berubah di tengah jalan (efektif, fix & floating,
+  /// berjenjang) sehingga "angsuran per bulan" perlu ditampilkan sebagai
+  /// rentang, bukan satu angka.
+  bool get isVarying => (lastInstallment - firstInstallment).abs() >= 1;
+
+  /// Porsi bunga terhadap seluruh pembayaran, 0..1.
+  double get interestRatio {
+    if (totalPayment <= 0) return 0;
+    final double ratio = totalInterest / totalPayment;
+    return ratio.isFinite ? ratio.clamp(0.0, 1.0) : 0;
+  }
+}
+
+InstallmentSummary summarizeInstallments(List<CalculateResultModel> results) {
+  if (results.isEmpty) return InstallmentSummary.zero;
+
+  double principal = 0;
+  double interest = 0;
+  double installment = 0;
+  double? first;
+  double? last;
+
+  for (final result in results) {
+    final double? p = result.principal;
+    final double? b = result.interestResult;
+    final double? a = result.installmentResult;
+    if (p != null && p.isFinite) principal += p;
+    if (b != null && b.isFinite) interest += b;
+    if (a != null && a.isFinite) {
+      installment += a;
+      first ??= a;
+      last = a;
+    }
+  }
+
+  return InstallmentSummary(
+    totalPrincipal: principal,
+    totalInterest: interest,
+    totalPayment: installment,
+    firstInstallment: first ?? 0,
+    lastInstallment: last ?? 0,
+    months: results.length,
+  );
+}
+
+/// Satu tahun pada grafik: pokok dan bunga yang dibayar sepanjang tahun itu,
+/// serta sisa pinjaman di akhir tahun.
+class YearlyInstallment {
+  const YearlyInstallment({
+    required this.year,
+    required this.principal,
+    required this.interest,
+    required this.remaining,
+  });
+
+  /// Tahun ke berapa, dimulai dari 1.
+  final int year;
+  final double principal;
+  final double interest;
+  final double remaining;
+
+  double get total => principal + interest;
+}
+
+/// Meringkas tabel angsuran bulanan menjadi per tahun untuk grafik.
+///
+/// Menggambar 360 titik di layar ponsel hanya menghasilkan garis pekat tanpa
+/// informasi tambahan; per tahun (maksimal 40 titik, sesuai `maxLoanYear`)
+/// bentuk kurvanya tetap terbaca dan grafik jauh lebih ringan.
+List<YearlyInstallment> yearlyBreakdown(List<CalculateResultModel> results) {
+  final List<YearlyInstallment> years = [];
+
+  for (var start = 0; start < results.length; start += monthsPerYear) {
+    final int end = min(start + monthsPerYear, results.length);
+    double principal = 0;
+    double interest = 0;
+    double remaining = 0;
+
+    for (var i = start; i < end; i++) {
+      final result = results[i];
+      final double? p = result.principal;
+      final double? b = result.interestResult;
+      final double? sisa = result.principalTotalRemain;
+      if (p != null && p.isFinite) principal += p;
+      if (b != null && b.isFinite) interest += b;
+      // Sisa pinjaman diambil dari bulan terakhir yang nilainya wajar.
+      if (sisa != null && sisa.isFinite) remaining = sisa < 0 ? 0 : sisa;
+    }
+
+    years.add(YearlyInstallment(
+      year: start ~/ monthsPerYear + 1,
+      principal: principal,
+      interest: interest,
+      remaining: remaining,
+    ));
+  }
+
+  return years;
 }

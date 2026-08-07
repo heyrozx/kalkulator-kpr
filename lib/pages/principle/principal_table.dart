@@ -9,10 +9,15 @@ import 'package:kalkulator_kpr/core/currency_format.dart';
 import 'package:kalkulator_kpr/core/error_reporter.dart';
 import 'package:kalkulator_kpr/core/helpers.dart';
 import 'package:kalkulator_kpr/core/loading_overlay.dart';
+import 'package:kalkulator_kpr/core/simulation_history_repository.dart';
 import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
-import 'package:kalkulator_kpr/pages/premiums/premium_plan_screen.dart';
+import 'package:kalkulator_kpr/models/financing_contract.dart';
+import 'package:kalkulator_kpr/models/simulation_history.dart';
+import 'package:kalkulator_kpr/pages/premiums/premium_paywall.dart';
+import 'package:kalkulator_kpr/pages/principle/installment_chart.dart';
 import 'package:kalkulator_kpr/shared/widgets/banner_ad_widget.dart';
+import 'package:kalkulator_kpr/shared/widgets/name_input_dialog.dart';
 import 'package:kalkulator_kpr/utils/custom_snackbar.dart';
 import 'package:kalkulator_kpr/utils/pdf_util.dart';
 import 'package:share_plus/share_plus.dart';
@@ -22,12 +27,22 @@ class PrincipalTable extends StatefulWidget {
   final List<CalculateResultModel>? results;
   final CalculateModel? calculateModel;
   final CalculatorType? type;
+
+  /// Terisi kalau layar ini dibuka dari riwayat, supaya simulasi yang sama
+  /// tidak bisa tersimpan dua kali.
+  final int? savedHistoryId;
+
+  /// Menentukan istilah yang dipakai tabel, grafik, dan PDF.
+  final FinancingContract contract;
+
   const PrincipalTable(
       {super.key,
       this.results,
       this.calculateModel,
       this.type,
-      this.tieredInterest});
+      this.tieredInterest,
+      this.savedHistoryId,
+      this.contract = FinancingContract.conventional});
 
   @override
   State<PrincipalTable> createState() => _PrincipalTableState();
@@ -37,9 +52,37 @@ class _PrincipalTableState extends State<PrincipalTable> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   List<DataRow> rows = [];
   bool _isBusy = false;
+  bool _isSaving = false;
+
+  /// Terisi setelah simulasi ini disimpan ke riwayat, supaya tombol simpan
+  /// berubah bentuk dan simulasi yang sama tidak tersimpan dua kali.
+  int? _savedId;
   late PurchaseCubit _cubit;
 
   List<CalculateResultModel> get _results => widget.results ?? const [];
+
+  /// Dihitung sekali: dipakai footer tabel, tab grafik, dan record riwayat.
+  late final InstallmentSummary _summary = summarizeInstallments(_results);
+
+  InstallmentTerms get _terms => widget.contract.terms;
+
+  /// Label skema pada kartu ringkas: jenis bunga untuk konvensional, nama akad
+  /// (berikut pola angsurannya) untuk syariah.
+  String get _schemeLabel => switch (widget.contract) {
+        FinancingContract.conventional =>
+          widget.type?.label ?? CalculatorType.anuitas.label,
+        FinancingContract.murabahah => FinancingContract.murabahah.label,
+        FinancingContract.mmq => '${FinancingContract.mmq.shortLabel} · '
+            '${mmqPatternOf(widget.type ?? CalculatorType.effective).shortLabel}',
+      };
+
+  /// Saldo yang dilunasi selama tenor — titik awal kurva sisa kewajiban.
+  ///
+  /// Untuk murabahah yang dilunasi adalah harga jual (pokok + seluruh margin),
+  /// bukan pokoknya saja seperti pada akad lain.
+  double get _openingBalance => widget.contract == FinancingContract.murabahah
+      ? _summary.totalPayment
+      : _summary.totalPrincipal;
 
   List<DataRow> setRowValue() {
     int month = 0;
@@ -87,9 +130,9 @@ class _PrincipalTableState extends State<PrincipalTable> {
   /// meng-crash layar begitu ada satu saja hasil perhitungan yang tidak wajar.
   int getTotal(String type) {
     final double total = switch (type) {
-      "principal" => sumOf(_results, (e) => e.principal),
-      "interest" => sumOf(_results, (e) => e.interestResult),
-      "installment" => sumOf(_results, (e) => e.installmentResult),
+      "principal" => _summary.totalPrincipal,
+      "interest" => _summary.totalInterest,
+      "installment" => _summary.totalPayment,
       "principal_remain" => sumOf(_results, (e) => e.principalTotalRemain),
       _ => 0,
     };
@@ -104,6 +147,8 @@ class _PrincipalTableState extends State<PrincipalTable> {
         tieredInterest: widget.tieredInterest,
         type: widget.type,
         calculateModel: widget.calculateModel,
+        contract: widget.contract,
+        schemeLabel: _schemeLabel,
       );
 
   Future<void> sharePDF() async {
@@ -137,7 +182,8 @@ class _PrincipalTableState extends State<PrincipalTable> {
     try {
       final File filePdf = await _generatePdf();
       await FlutterFileSaver().writeFileAsBytes(
-        fileName: PdfUtil.suggestedFileName(widget.type),
+        fileName:
+            PdfUtil.suggestedFileName(widget.type, contract: widget.contract),
         bytes: await filePdf.readAsBytes(),
       );
       LoadingOverlay.hide();
@@ -163,6 +209,103 @@ class _PrincipalTableState extends State<PrincipalTable> {
         title: 'Gagal', message: message, type: SnackbarType.failure);
   }
 
+  // ===========================================================================
+  // Simpan ke riwayat (F-5)
+  // ===========================================================================
+
+  Future<void> _saveSimulation() async {
+    final CalculateModel? model = widget.calculateModel;
+    final CalculatorType? type = widget.type;
+    if (model == null || type == null || _isSaving) return;
+
+    if (_savedId != null) {
+      CustomSnackbar.show(context,
+          title: 'Sudah Tersimpan',
+          message: 'Simulasi ini sudah ada di riwayat.',
+          type: SnackbarType.warning);
+      return;
+    }
+
+    _isSaving = true;
+    try {
+      final repository = SimulationHistoryRepository.instance;
+
+      // Kuota hanya berlaku untuk pengguna gratis.
+      if (!_cubit.isPremium() && await repository.isFreeQuotaFull()) {
+        if (!mounted) return;
+        await _showQuotaDialog();
+        return;
+      }
+
+      if (!mounted) return;
+      final String? name = await _askSimulationName(
+        SimulationHistory.suggestName(type, model, contract: widget.contract),
+      );
+      if (name == null || !mounted) return;
+
+      final SimulationHistory entry = SimulationHistory.fromCalculation(
+        name: name,
+        type: type,
+        model: model,
+        summary: _summary,
+        tieredInterest: widget.tieredInterest,
+        contract: widget.contract,
+      );
+      final int id = await repository.save(entry);
+
+      if (!mounted) return;
+      setState(() => _savedId = id);
+      CustomSnackbar.show(context,
+          title: 'Tersimpan',
+          message: 'Simulasi disimpan sebagai "$name".',
+          type: SnackbarType.success);
+    } catch (error, stack) {
+      ErrorReporter.report(error, stack, hint: 'saveSimulation');
+      _showFailure('Gagal menyimpan simulasi. Silakan coba lagi.');
+    } finally {
+      _isSaving = false;
+    }
+  }
+
+  Future<String?> _askSimulationName(String suggestion) {
+    return NameInputDialog.show(
+      context,
+      title: 'Simpan Simulasi',
+      initialValue: suggestion,
+      hintText: 'Mis. BTN 15 tahun',
+      allowEmpty: true,
+    );
+  }
+
+  Future<void> _showQuotaDialog() {
+    return showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Riwayat Penuh'),
+        content: Text(
+          'Pengguna gratis dapat menyimpan '
+          '${SimulationHistoryRepository.freeLimit} simulasi. Hapus salah satu '
+          'lewat menu Riwayat Simulasi, atau upgrade premium untuk menyimpan '
+          'tanpa batas.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Nanti'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              showPremiumPaywall(context);
+            },
+            child: const Text('Upgrade Premium'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _requirePremium(String action, VoidCallback onGranted) {
     if (!_cubit.isPremium()) {
       CustomSnackbar.show(context,
@@ -177,6 +320,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
   @override
   void initState() {
     _cubit = BlocProvider.of<PurchaseCubit>(context);
+    _savedId = widget.savedHistoryId;
 
     rows = setRowValue();
     addFooter();
@@ -201,6 +345,15 @@ class _PrincipalTableState extends State<PrincipalTable> {
         centerTitle: false,
         elevation: 0,
         actions: [
+          if (widget.calculateModel != null && widget.type != null)
+            IconButton(
+                tooltip: _savedId == null
+                    ? 'Simpan ke riwayat'
+                    : 'Sudah tersimpan di riwayat',
+                onPressed: _saveSimulation,
+                icon: Icon(_savedId == null
+                    ? Icons.bookmark_add_outlined
+                    : Icons.bookmark)),
           IconButton(
               tooltip: 'Download PDF',
               onPressed: () => _requirePremium('download', downloadPDF),
@@ -214,11 +367,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
               if (state is! PurchaseNothing) return const SizedBox();
               {
                 return IconButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) {
-                      return const PremiumPlanScreen();
-                    }));
-                  },
+                  onPressed: () => showPremiumPaywall(context),
                   icon: SizedBox(
                     width: 30,
                     child: Image.asset('assets/premium.png'),
@@ -456,194 +605,214 @@ class _PrincipalTableState extends State<PrincipalTable> {
               ),
             ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              width: size.width,
-              margin: const EdgeInsets.only(top: 15, left: 15, right: 15),
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withValues(alpha: 0.1),
-                    spreadRadius: 5,
-                    blurRadius: 3,
-                    offset: const Offset(0, 1), // changes position of shadow
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: Text('Jenis'),
-                        ),
-                        Text(
-                          widget.type == CalculatorType.flat
-                              ? 'Flat'
-                              : widget.type == CalculatorType.effective
-                                  ? 'Efektif'
-                                  : 'Anuitas',
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary),
-                        )
-                      ],
+        child: DefaultTabController(
+          length: 2,
+          child: Column(
+            children: [
+              Container(
+                width: size.width,
+                margin: const EdgeInsets.only(top: 15, left: 15, right: 15),
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withValues(alpha: 0.1),
+                      spreadRadius: 5,
+                      blurRadius: 3,
+                      offset: const Offset(0, 1), // changes position of shadow
                     ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: Text('Jumlah Pinjaman'),
-                        ),
-                        Text(
-                          "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      ],
-                    ),
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      children: [
-                        const Expanded(
-                          child: Text('Jangka Waktu (Tahun)'),
-                        ),
-                        Text(
-                          currencyId.format(widget.calculateModel!.year),
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        )
-                      ],
-                    ),
-                  ),
-                  if (widget.calculateModel?.floatingInterest == null)
+                  ],
+                ),
+                child: Column(
+                  children: [
                     Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       child: Row(
                         children: [
-                          const Expanded(
-                            child: Text('Bunga'),
+                          Expanded(
+                            child: Text(
+                                widget.contract.isSharia ? 'Akad' : 'Jenis'),
                           ),
                           Text(
-                            '${widget.calculateModel!.interest!}%',
+                            _schemeLabel,
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary),
+                          )
+                        ],
+                      ),
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(_terms.financing),
+                          ),
+                          Text(
+                            "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           )
                         ],
                       ),
                     ),
-                  if (widget.calculateModel?.floatingInterest != null)
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primary,
-                            side: const BorderSide(color: AppColors.primary),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(5),
-                            ),
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text('Jangka Waktu (Tahun)'),
                           ),
-                          onPressed: () {
-                            _scaffoldKey.currentState?.openDrawer();
-                          },
-                          child: Text('Selengkapnya')),
+                          Text(
+                            currencyId.format(widget.calculateModel!.year),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          )
+                        ],
+                      ),
                     ),
+                    if (widget.calculateModel?.floatingInterest == null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(_terms.rate),
+                            ),
+                            Text(
+                              '${widget.calculateModel!.interest!}%',
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold),
+                            )
+                          ],
+                        ),
+                      ),
+                    if (widget.calculateModel?.floatingInterest != null)
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary,
+                              side: const BorderSide(color: AppColors.primary),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                            ),
+                            onPressed: () {
+                              _scaffoldKey.currentState?.openDrawer();
+                            },
+                            child: Text('Selengkapnya')),
+                      ),
+                  ],
+                ),
+              ),
+              Center(
+                child: BannerAdWidget(
+                  margin: const EdgeInsets.only(left: 15, right: 15, top: 15),
+                  placement: BannerPlacement.principalTable,
+                ),
+              ),
+              const TabBar(
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.onSurface,
+                indicatorColor: AppColors.primary,
+                tabs: [
+                  Tab(text: 'Grafik'),
+                  Tab(text: 'Tabel'),
                 ],
               ),
-            ),
-            Center(
-              child: BannerAdWidget(
-                margin: const EdgeInsets.only(left: 15, right: 15, top: 15),
-                placement: BannerPlacement.principalTable,
-              ),
-            ),
-            Expanded(
-              child: Container(
-                  width: size.width,
-                  margin: const EdgeInsets.only(
-                      top: 15, left: 15, right: 15, bottom: 15),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.2),
-                        spreadRadius: 4,
-                        blurRadius: 3,
-                        offset:
-                            const Offset(0, 1), // changes position of shadow
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(5),
-                    child: DataTable2(
-                      headingRowColor: WidgetStateColor.resolveWith(
-                        (states) {
-                          return AppColors.primary;
-                        },
-                      ),
-                      minWidth: 700,
-                      headingTextStyle:
-                          const TextStyle(fontWeight: FontWeight.bold),
-                      decoration:
-                          BoxDecoration(borderRadius: BorderRadius.circular(5)),
-                      columns: const [
-                        DataColumn2(
-                          fixedWidth: 60,
-                          label: Text(
-                            'Bulan\nke',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        DataColumn2(
-                          label: Text(
-                            'Angsuran\nPokok',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        DataColumn2(
-                          size: ColumnSize.L,
-                          label: Text(
-                            'Bunga',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          // onSort: sortColumn,
-                        ),
-                        DataColumn2(
-                          size: ColumnSize.L,
-                          label: Text(
-                            'Jumlah\nAngsuran',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        DataColumn2(
-                          size: ColumnSize.L,
-                          label: Text(
-                            'Sisa\nPinjaman',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                      ],
-                      rows: rows,
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    InstallmentChart(
+                      results: _results,
+                      summary: _summary,
+                      terms: _terms,
+                      openingBalance: _openingBalance,
                     ),
-                  )),
-            ),
-          ],
+                    _buildTableCard(size),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildTableCard(Size size) {
+    return Container(
+        width: size.width,
+        margin: const EdgeInsets.only(top: 15, left: 15, right: 15, bottom: 15),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withValues(alpha: 0.2),
+              spreadRadius: 4,
+              blurRadius: 3,
+              offset: const Offset(0, 1), // changes position of shadow
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(5),
+          child: DataTable2(
+            headingRowColor: WidgetStateColor.resolveWith(
+              (states) {
+                return AppColors.primary;
+              },
+            ),
+            minWidth: 700,
+            headingTextStyle: const TextStyle(fontWeight: FontWeight.bold),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
+            columns: [
+              const DataColumn2(
+                fixedWidth: 60,
+                label: Text(
+                  'Bulan\nke',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+              DataColumn2(
+                label: Text(
+                  _terms.principalColumn,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              DataColumn2(
+                size: ColumnSize.L,
+                label: Text(
+                  _terms.chargeColumn,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
+                ),
+                // onSort: sortColumn,
+              ),
+              DataColumn2(
+                size: ColumnSize.L,
+                label: Text(
+                  _terms.installmentColumn,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+              DataColumn2(
+                size: ColumnSize.L,
+                label: Text(
+                  _terms.remainingColumn,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+            rows: rows,
+          ),
+        ));
   }
 }

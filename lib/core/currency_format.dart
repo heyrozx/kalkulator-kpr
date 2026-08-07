@@ -55,4 +55,23 @@ class CurrencyFormat {
 
   /// Format angka untuk dimasukkan kembali ke `TextEditingController`.
   static String formatNumber(num value) => inputNumberFormat.format(value);
+
+  /// Format ringkas untuk label sumbu grafik dan judul riwayat, di mana angka
+  /// penuh (`1.500.000.000`) terlalu panjang: `1,5 M`, `500 jt`, `750 rb`.
+  static String compact(num value) {
+    if (!value.isFinite) return '0';
+    final double abs = value.abs().toDouble();
+    if (abs >= 1000000000) return '${_short(value / 1000000000)} M';
+    if (abs >= 1000000) return '${_short(value / 1000000)} jt';
+    if (abs >= 1000) return '${_short(value / 1000)} rb';
+    return value.round().toString();
+  }
+
+  /// Satu angka desimal, tanpa `,0` yang tidak menambah informasi.
+  static String _short(num value) {
+    final String text = value.toStringAsFixed(value.abs() >= 100 ? 0 : 1);
+    return text.endsWith('.0')
+        ? text.substring(0, text.length - 2)
+        : text.replaceAll('.', ',');
+  }
 }

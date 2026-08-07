@@ -1,3 +1,84 @@
+## 1.5.0 (15)
+
+KPR Syariah (F-8 di `ANALISIS-IMPROVEMENT.md`).
+
+* Menu **KPR Syariah** baru di menu samping, berisi dua akad:
+* **Murabahah** — bank membeli rumah lalu menjualnya kembali dengan margin yang
+  disepakati di awal. Harga jual dan angsuran terkunci sejak akad, jadi angsuran
+  tidak pernah berubah sampai lunas
+* **Musyarakah Mutanaqisah** — kepemilikan bersama: tiap bulan Anda membeli
+  sebagian porsi bank sekaligus membayar sewa atas porsi yang masih milik bank,
+  sehingga sewanya ikut mengecil. Tersedia pola angsuran menurun dan angsuran tetap
+* Harga jual, total margin/sewa, dan angsuran per bulan langsung tampil di form
+  begitu isiannya lengkap
+* Seluruh hasil memakai istilah akad, bukan "bunga": tabel angsuran, grafik, dan
+  PDF menampilkan **Margin** / **Sewa (Ujrah)**, **Sisa Harga Jual** / **Sisa Porsi
+  Bank**, dan **Porsi Dibeli**
+* Simulasi syariah bisa disimpan ke Riwayat Simulasi seperti kalkulator lain
+* Halaman penjelasan akad murabahah & musyarakah mutanaqisah, dibuka lewat ikon
+  tanda tanya di layar KPR Syariah
+* Perbaikan: error saat menutup dialog nama pada tombol simpan simulasi di tabel
+  angsuran dan saat mengubah nama di Riwayat Simulasi
+
+**Halaman premium**
+
+* Halaman langganan premium diganti dengan paywall resmi RevenueCat: tampilan,
+  daftar paket, harga, dan tombol "kembalikan pembelian" kini mengikuti
+  konfigurasi paywall di dashboard, sehingga penawaran bisa diubah tanpa harus
+  merilis versi baru aplikasi
+* Status premium langsung disegarkan setiap kali paywall ditutup, jadi iklan dan
+  fitur premium menyesuaikan tanpa perlu menutup aplikasi
+
+**Tampilan beranda & menu**
+
+* Judul beranda kini **Kalkulator KPR**, dan pilihan **Anuitas / Efektif / Flat**
+  pindah dari menu samping ke tab di bawah judul — cukup satu ketukan untuk
+  membandingkan ketiga metode tanpa membuka menu
+* Nilai yang sudah diisi tetap dipertahankan saat berpindah tab dan hasilnya
+  langsung dihitung ulang dengan metode yang dipilih
+* Menu samping dirapikan: **Advanced**, **KPR Syariah**, dan **Riwayat Simulasi**
+  kini berbentuk daftar menu berikon dengan keterangan singkat
+* Tab yang belum dipilih kini juga bergaris (abu-abu), jadi ketiganya terlihat
+  sebagai pilihan
+* Kolom isian dan tombol dibuat lebih ringkas — seragam di beranda, Advanced,
+  dan KPR Syariah — dan panel form beranda kini menempel rapat ke tepi bawah layar
+* Menu **Pengaturan** baru menampung Bebas Iklan, Pulihkan Pembelian, Beri Rating,
+  Hubungi Kami, Disclaimer, Privacy Policy, dan versi aplikasi
+* **Pulihkan Pembelian** kini bisa diakses langsung dari Pengaturan, tidak harus
+  lewat halaman paywall
+* Menu **Hubungi Kami** baru, membuka halaman kontak Nexadream
+* Menu **Reset** dihapus
+* Perbaikan: iklan interstitial yang gagal dimuat karena id-nya bentrok kini
+  dicoba ulang otomatis, dan kegagalannya tidak lagi muncul sebagai error yang
+  tidak tertangani
+
+## 1.4.0 (14)
+
+Dua fitur baru dari `ANALISIS-IMPROVEMENT.md`: ringkasan & grafik hasil (F-3) dan
+riwayat simulasi (F-5).
+
+**Ringkasan & grafik di layar hasil**
+
+* Layar Tabel Angsuran kini punya dua tab: **Grafik** dan **Tabel**
+* Kartu ringkasan menampilkan total pembayaran, total angsuran pokok, total bunga
+  (berikut porsinya terhadap total), serta angsuran bulan pertama dan terakhir —
+  angka-angka yang sebelumnya hanya bisa dibaca dari baris terakhir tabel
+* Grafik **sisa pinjaman** memperlihatkan posisi utang di akhir tiap tahun
+* Grafik **pokok vs bunga** memperlihatkan pergeseran komposisi angsuran tiap tahun
+* Grafik tersedia untuk semua pengguna, tanpa premium
+
+**Simpan & riwayat simulasi**
+
+* Tombol simpan di layar Tabel Angsuran menyimpan simulasi beserta namanya
+* Menu **Riwayat Simulasi** di menu samping menampilkan simulasi tersimpan, lengkap
+  dengan angsuran awal, total bunga, dan total pembayaran; ketuk untuk membuka
+  kembali tabel dan grafiknya
+* Berlaku untuk semua kalkulator, termasuk Fix & Floating dan Bunga Berjenjang
+* Riwayat bisa diubah namanya dan dihapus
+* Daftar riwayat dimuat bertahap saat digulir, jadi tetap ringan walau simulasi
+  tersimpan sudah banyak
+* Pengguna gratis dapat menyimpan 3 simulasi; premium tanpa batas
+
 ## 1.3.3 (13)
 
 Perbaikan menyeluruh hasil telaah kode (lihat `ANALISIS-IMPROVEMENT.md` bagian 1 & 2).

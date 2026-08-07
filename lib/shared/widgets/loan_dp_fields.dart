@@ -88,9 +88,21 @@ class LoanDpControllers {
 }
 
 class LoanDpFields extends StatelessWidget {
-  const LoanDpFields({super.key, required this.controllers});
+  const LoanDpFields({
+    super.key,
+    required this.controllers,
+    this.loanLabel = 'Jumlah Pinjaman',
+    this.dpLabel = 'DP',
+    this.totalLabel = 'Total Pinjaman',
+  });
 
   final LoanDpControllers controllers;
+
+  // Label bisa diganti karena layar syariah memakai istilah akad: harga rumah,
+  // uang muka / porsi nasabah, dan harga pokok / porsi bank.
+  final String loanLabel;
+  final String dpLabel;
+  final String totalLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -99,8 +111,8 @@ class LoanDpFields extends StatelessWidget {
       children: [
         LabeledNumberField(
           controller: controllers.loan,
-          label: 'Jumlah Pinjaman (Rp)',
-          validator: Validators.loan,
+          label: '$loanLabel (Rp)',
+          validator: (value) => Validators.loan(value, label: loanLabel),
           onChanged: controllers.onLoanChanged,
           suffixIcon: SizedBox(
             width: 20,
@@ -115,7 +127,7 @@ class LoanDpFields extends StatelessWidget {
               flex: 2,
               child: LabeledNumberField(
                 controller: controllers.dpPercent,
-                label: 'DP',
+                label: dpLabel,
                 decimal: true,
                 onChanged: controllers.onDpPercentChanged,
                 suffixIcon: const Icon(Icons.percent, color: Colors.black54),
@@ -126,19 +138,24 @@ class LoanDpFields extends StatelessWidget {
               flex: 3,
               child: LabeledNumberField(
                 controller: controllers.dpNominal,
-                label: 'DP (Rp)',
+                label: '$dpLabel (Rp)',
                 onChanged: controllers.onDpNominalChanged,
-                validator: (value) => Validators.dpNominal(value,
-                    loanText: controllers.loan.text),
+                validator: (value) => Validators.dpNominal(
+                  value,
+                  loanText: controllers.loan.text,
+                  label: dpLabel,
+                  ofLabel: loanLabel.toLowerCase(),
+                ),
               ),
             ),
           ],
         ),
         LabeledNumberField(
           controller: controllers.loanTotal,
-          label: 'Total Pinjaman (Rp)',
+          label: '$totalLabel (Rp)',
           readOnly: true,
-          validator: Validators.loanAfterDp,
+          validator: (value) =>
+              Validators.loanAfterDp(value, label: totalLabel),
           suffixIcon: SizedBox(
             width: 20,
             height: 20,

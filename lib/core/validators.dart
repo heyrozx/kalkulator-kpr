@@ -9,9 +9,14 @@ import 'package:kalkulator_kpr/core/currency_format.dart';
 class Validators {
   const Validators._();
 
-  static String? loan(String? value) {
+  // Parameter [label] membuat pesan galat ikut memakai istilah layar yang
+  // memanggilnya — layar syariah tidak menyebut "pinjaman" atau "bunga".
+  // Semuanya punya nilai default sehingga tetap bisa dipakai sebagai tear-off
+  // (`validator: Validators.loan`) seperti sebelumnya.
+
+  static String? loan(String? value, {String label = 'Jumlah pinjaman'}) {
     final loan = CurrencyFormat.parseNumber(value);
-    if (loan <= 0) return 'Jumlah pinjaman tidak boleh kosong';
+    if (loan <= 0) return '$label tidak boleh kosong';
     return null;
   }
 
@@ -27,31 +32,36 @@ class Validators {
     return null;
   }
 
-  static String? interest(String? value) {
+  static String? interest(String? value, {String label = 'Bunga pinjaman'}) {
     final interest = CurrencyFormat.parseDecimal(value);
-    if (interest <= 0) return 'Bunga pinjaman harus lebih besar dari 0';
+    if (interest <= 0) return '$label harus lebih besar dari 0';
     if (interest > AppConfig.maxInterestPercent) {
-      return 'Bunga maksimal ${AppConfig.maxInterestPercent.toInt()}%';
+      return '$label maksimal ${AppConfig.maxInterestPercent.toInt()}%';
     }
     return null;
   }
 
   /// DP boleh kosong (dianggap 0), tetapi tidak boleh melebihi jumlah pinjaman
   /// karena akan membuat total pinjaman menjadi negatif.
-  static String? dpNominal(String? value, {required String? loanText}) {
+  static String? dpNominal(
+    String? value, {
+    required String? loanText,
+    String label = 'DP',
+    String ofLabel = 'jumlah pinjaman',
+  }) {
     final dp = CurrencyFormat.parseNumber(value);
-    if (dp < 0) return 'DP tidak boleh negatif';
+    if (dp < 0) return '$label tidak boleh negatif';
     final loanAmount = CurrencyFormat.parseNumber(loanText);
     if (loanAmount > 0 && dp > loanAmount) {
-      return 'DP tidak boleh melebihi jumlah pinjaman';
+      return '$label tidak boleh melebihi $ofLabel';
     }
     return null;
   }
 
   /// Total pinjaman setelah dikurangi DP harus tetap positif.
-  static String? loanAfterDp(String? value) {
+  static String? loanAfterDp(String? value, {String label = 'Total pinjaman'}) {
     final total = CurrencyFormat.parseNumber(value);
-    if (total <= 0) return 'Total pinjaman harus lebih besar dari 0';
+    if (total <= 0) return '$label harus lebih besar dari 0';
     return null;
   }
 }

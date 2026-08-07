@@ -38,7 +38,11 @@ Package/applicationId: `com.caraguna.kalkulator.kpr`
   per bulan), enum `CalculatorType { flat, effective, anuitas }`.
 - `blocs/purchase_cubit/` — status premium (`checkPremium`, `makePurchase`, `restorePurchase`),
   entitlement RevenueCat bernama `"premium"`.
-- `pages/home/` — form input utama + hasil ringkas + interstitial ad.
+- `pages/home/` — form input utama + hasil ringkas + interstitial ad. Metode bunga
+  dipilih lewat `TabBar` di AppBar (anuitas/efektif/flat, state `type` ikut tab);
+  drawer hanya berisi navigasi layar lain + `Pengaturan`.
+- `pages/settings/settings_screen.dart` — premium & pulihkan pembelian, beri rating,
+  disclaimer, privacy policy, versi aplikasi (dulu menumpuk di bawah drawer).
 - `pages/advanced/` — kalkulator lanjutan: fix & floating (`fix_and_floating_screen.dart`)
   dan bunga berjenjang (`tiered_screen.dart`).
 - `pages/principle/principal_table.dart` — tabel angsuran (`data_table_2`), share & download PDF.
@@ -59,6 +63,12 @@ management baru tanpa diminta.
   untuk Google Play mulai 31 Agustus 2026), `minSdkVersion` mengikuti `flutter.minSdkVersion`.
 - Signing release membaca `android/key.properties` (tidak di-commit).
 - `multiDexEnabled true`.
+- **`MainActivity` wajib turunan `FlutterFragmentActivity`** (bukan `FlutterActivity`):
+  paywall RevenueCat (`purchases_ui_flutter`) ditampilkan sebagai fragment di atas
+  activity ini. Kalau diubah, `RevenueCatUI.presentPaywall()` gagal dengan
+  `PlatformException(PAYWALLS_MISSING_WRONG_ACTIVITY)`.
+- `purchases_ui_flutter` menuntut `minSdkVersion` ≥ 24 (`flutter.minSdkVersion`
+  saat ini 24) — jangan diturunkan.
 - **Google Play Billing Library**: `com.android.billingclient:billing` dipin manual di
   `android/app/build.gradle`. Google Play mewajibkan minimal **8.0.0** mulai
   31 Agustus 2026 — jangan pernah menurunkan versinya. RevenueCat

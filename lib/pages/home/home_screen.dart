@@ -3,25 +3,23 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kalkulator_kpr/blocs/purchase_cubit/purchase_cubit.dart';
-import 'package:kalkulator_kpr/core/config.dart';
 import 'package:kalkulator_kpr/core/currency_format.dart';
-import 'package:kalkulator_kpr/core/error_reporter.dart';
 import 'package:kalkulator_kpr/core/helpers.dart';
 import 'package:kalkulator_kpr/core/interstitial_ad_manager.dart';
 import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/core/validators.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
 import 'package:kalkulator_kpr/pages/about/anuitas_description.dart';
-import 'package:kalkulator_kpr/pages/about/disclaimer.dart';
 import 'package:kalkulator_kpr/pages/about/effective_description.dart';
 import 'package:kalkulator_kpr/pages/about/flat_description.dart';
 import 'package:kalkulator_kpr/pages/advanced/advanced_screen.dart';
-import 'package:kalkulator_kpr/pages/premiums/premium_plan_screen.dart';
+import 'package:kalkulator_kpr/pages/history/history_screen.dart';
+import 'package:kalkulator_kpr/pages/premiums/premium_paywall.dart';
 import 'package:kalkulator_kpr/pages/principle/principal_table.dart';
+import 'package:kalkulator_kpr/pages/settings/settings_screen.dart';
+import 'package:kalkulator_kpr/pages/sharia/sharia_screen.dart';
 import 'package:kalkulator_kpr/shared/widgets/labeled_number_field.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -31,7 +29,21 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
+  /// Tinggi baku `TabBar` berisi teks saja di Material 2.
+  static const double _tabBarHeight = 46;
+
+  static const TextStyle _buttonStyle = TextStyle(fontSize: 14);
+
+  /// Urutan tab metode bunga di beranda. Anuitas paling depan karena skema itu
+  /// yang paling umum dipakai bank untuk KPR.
+  static const List<({CalculatorType type, String label})> _tabs = [
+    (type: CalculatorType.anuitas, label: 'Anuitas'),
+    (type: CalculatorType.effective, label: 'Efektif'),
+    (type: CalculatorType.flat, label: 'Flat'),
+  ];
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
   final _loanController = TextEditingController();
@@ -39,20 +51,27 @@ class _MyHomePageState extends State<MyHomePage> {
   final _interestController = TextEditingController();
   final InterstitialAdManager _interstitialAd = InterstitialAdManager();
 
+  late final TabController _tabController;
+
   CalculateResultModel? result;
   CalculatorType type = CalculatorType.anuitas;
   double percentIndicator = 0;
-  String _appVersion = '';
 
   @override
   void initState() {
     super.initState();
-    _loadAppVersion();
+    _tabController = TabController(
+      length: _tabs.length,
+      initialIndex: _tabs.indexWhere((tab) => tab.type == type),
+      vsync: this,
+    )..addListener(_onTabChanged);
     _preloadInterstitial();
   }
 
   @override
   void dispose() {
+    _tabController.removeListener(_onTabChanged);
+    _tabController.dispose();
     _loanController.dispose();
     _yearController.dispose();
     _interestController.dispose();
@@ -60,13 +79,13 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  Future<void> _loadAppVersion() async {
-    // Nomor versi dibaca dari paket, bukan ditulis manual — sebelumnya teks di
-    // drawer tertinggal satu rilis di belakang pubspec.yaml.
-    final info = await ErrorReporter.guard(() => PackageInfo.fromPlatform(),
-        hint: 'PackageInfo');
-    if (!mounted || info == null) return;
-    setState(() => _appVersion = info.version);
+  /// Listener ikut terpanggil di setiap frame animasi tab, jadi pekerjaan berat
+  /// hanya dijalankan ketika metodenya benar-benar berubah.
+  void _onTabChanged() {
+    final CalculatorType selected = _tabs[_tabController.index].type;
+    if (selected == type) return;
+    type = selected;
+    _recalculateIfFilled();
   }
 
   Future<void> _preloadInterstitial() async {
@@ -148,27 +167,10 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  Future<void> _launchUrl(String url) async {
-    try {
-      final launched =
-          await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      if (!launched) throw Exception('Could not launch $url');
-    } catch (error, stack) {
-      ErrorReporter.report(error, stack, hint: 'launchUrl');
-    }
-  }
-
-  void _selectType(CalculatorType selected) {
-    type = selected;
+  void _openPage(Widget page) {
     Navigator.pop(context);
-    _recalculateIfFilled();
+    Navigator.push(context, MaterialPageRoute(builder: (_) => page));
   }
-
-  String get _typeLabel => switch (type) {
-        CalculatorType.flat => 'Flat',
-        CalculatorType.effective => 'Efektif',
-        CalculatorType.anuitas => 'Anuitas',
-      };
 
   Widget get _typeDescriptionPage => switch (type) {
         CalculatorType.flat => const FlatDescription(),
@@ -181,17 +183,23 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: _buildDrawer(),
+      // AppBar harus lewat slot `appBar` Scaffold, bukan menumpang di dalam
+      // Column body: AppBar dengan `bottom` (TabBar) memakai Flexible di
+      // dalamnya, dan Column memberi tinggi tak terbatas ke anak non-flex
+      // sehingga layout-nya gagal.
+      appBar: _buildAppBar(),
       body: SafeArea(
-        // API 36 memaksa edge-to-edge; tanpa SafeArea judul dan tombol menu
-        // bisa tertimpa status bar.
+        // Inset bawah tidak dipotong di sini supaya panel form ikut mengisi
+        // area navigation bar (edge-to-edge di API 36) dan tidak terlihat
+        // "mengambang"; jaraknya ditambahkan sebagai padding di dalam panel.
+        bottom: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               child: SizedBox(
-                height: math.max(constraints.maxHeight, 480),
+                height: math.max(constraints.maxHeight, 430),
                 child: Column(
                   children: [
-                    _buildAppBar(),
                     Expanded(child: Center(child: _buildResultRing())),
                     _buildForm(),
                   ],
@@ -204,9 +212,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: Text(_typeLabel),
+      title: const Text('Kalkulator KPR'),
       leading: IconButton(
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         icon: SizedBox(
@@ -215,13 +223,42 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Image.asset('assets/menu.png'),
         ),
       ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(_tabBarHeight),
+        child: SizedBox(
+          height: _tabBarHeight,
+          child: Stack(
+            children: [
+              // Garis abu-abu selebar tab bar supaya tab yang tidak aktif tetap
+              // punya indikator. `TabBar` hanya menggambar garis pembatas kalau
+              // Material 3 aktif, dan tema aplikasi masih Material 2.
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(height: 2, color: AppColors.faintLine),
+              ),
+              TabBar(
+                controller: _tabController,
+                labelColor: AppColors.primary,
+                unselectedLabelColor: AppColors.muted,
+                indicatorColor: AppColors.primary,
+                indicatorSize: TabBarIndicatorSize.tab,
+                labelStyle:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                unselectedLabelStyle: const TextStyle(fontSize: 14),
+                tabs: [for (final tab in _tabs) Tab(text: tab.label)],
+              ),
+            ],
+          ),
+        ),
+      ),
       actions: [
         BlocBuilder<PurchaseCubit, PurchaseState>(
           builder: (context, state) {
             if (state is! PurchaseNothing) return const SizedBox();
             return IconButton(
-              onPressed: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const PremiumPlanScreen())),
+              onPressed: () => showPremiumPaywall(context),
               icon: SizedBox(
                 width: 30,
                 child: Image.asset('assets/premium.png'),
@@ -313,11 +350,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _buildForm() {
+    final double bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+
     return Form(
       key: _formKey,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(15),
+        padding: EdgeInsets.fromLTRB(14, 12, 14, 12 + bottomInset),
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: const BorderRadius.vertical(
@@ -333,11 +372,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         child: Column(
           children: [
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             LabeledNumberField(
               controller: _loanController,
               label: 'Jumlah Pinjaman (Rp)',
               validator: Validators.loan,
+              margin: const EdgeInsets.only(bottom: 8),
               suffixIcon: SizedBox(
                 width: 20,
                 height: 20,
@@ -352,7 +392,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     controller: _yearController,
                     label: 'Jangka Waktu (Tahun)',
                     validator: Validators.year,
-                    suffixIcon: Icon(Icons.alarm, color: AppColors.muted),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    suffixIcon:
+                        Icon(Icons.alarm, size: 20, color: AppColors.muted),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -362,13 +404,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     label: 'Bunga Pinjaman',
                     decimal: true,
                     validator: Validators.interest,
-                    suffixIcon: Icon(Icons.percent, color: AppColors.muted),
+                    margin: const EdgeInsets.only(bottom: 8),
+                    suffixIcon:
+                        Icon(Icons.percent, size: 20, color: AppColors.muted),
                   ),
                 ),
               ],
             ),
             Container(
-              margin: const EdgeInsets.only(top: 5),
+              margin: const EdgeInsets.only(top: 2),
               child: Row(
                 children: [
                   Expanded(
@@ -385,10 +429,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       onPressed: calculate,
                       child: Padding(
-                        padding: const EdgeInsets.all(15.0),
-                        child: Text(result != null
-                            ? 'Hitung Ulang'
-                            : 'Hitung Simulasi'),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          result != null ? 'Hitung Ulang' : 'Hitung Simulasi',
+                          style: _buttonStyle,
+                        ),
                       ),
                     ),
                   ),
@@ -406,8 +451,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         onPressed: _openInstallmentTable,
                         child: const Padding(
-                          padding: EdgeInsets.all(15.0),
-                          child: Text('Tabel Angsuran'),
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text('Tabel Angsuran', style: _buttonStyle),
                         ),
                       ),
                     ),
@@ -443,76 +488,34 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             const Divider(thickness: 0.5),
-            for (final entry in const {
-              CalculatorType.anuitas: 'Bunga Anuitas',
-              CalculatorType.effective: 'Bunga Efektif',
-              CalculatorType.flat: 'Bunga Flat',
-            }.entries)
-              ListTile(
-                selected: type == entry.key,
-                selectedColor: AppColors.primary,
-                title: Text(entry.value),
-                onTap: () => _selectType(entry.key),
+            // Metode bunga sekarang dipilih lewat tab di beranda, jadi drawer
+            // hanya menyisakan layar-layar lain.
+            ListTile(
+              leading: const Icon(Icons.tune),
+              title: const Text('Advanced'),
+              subtitle: const Text('Fix & floating, bunga berjenjang'),
+              onTap: () => _openPage(
+                AdvancedScreen(type: type == CalculatorType.flat ? null : type),
               ),
-            Container(
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              width: double.infinity,
-              child: FilledButton(
-                style:
-                    FilledButton.styleFrom(backgroundColor: AppColors.primary),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => AdvancedScreen(
-                        type: type == CalculatorType.flat ? null : type,
-                      ),
-                    ),
-                  );
-                },
-                child: const Text('Advanced'),
-              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.mosque_outlined),
+              title: const Text('KPR Syariah'),
+              subtitle: const Text('Murabahah & MMQ'),
+              onTap: () => _openPage(const ShariaScreen()),
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('Riwayat Simulasi'),
+              subtitle: const Text('Simulasi yang Anda simpan'),
+              onTap: () => _openPage(const HistoryScreen()),
             ),
             const Spacer(),
+            const Divider(thickness: 0.5),
             ListTile(
-              title: const Text('Beri Rating'),
-              leading: const Icon(Icons.star_outline),
-              onTap: () => _launchUrl(AppConfig.playStoreUrl),
-            ),
-            ListTile(
-              title: const Text('Reset'),
-              leading: const Icon(Icons.refresh),
-              onTap: () {
-                Navigator.pop(context);
-                _formKey.currentState?.reset();
-                _loanController.clear();
-                _yearController.clear();
-                _interestController.clear();
-                setState(() {
-                  result = null;
-                  percentIndicator = 0;
-                });
-              },
-            ),
-            ListTile(
-              title: const Text('Disclaimer'),
-              leading: const Icon(Icons.info_outline),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const Disclaimer()));
-              },
-            ),
-            ListTile(
-              title: const Text('Privacy Policy'),
-              leading: const Icon(Icons.gpp_maybe_outlined),
-              onTap: () => _launchUrl(AppConfig.privacyPolicyUrl),
-            ),
-            ListTile(
-              title: Text(_appVersion.isEmpty ? 'Versi' : 'Versi $_appVersion'),
-              leading: const Icon(Icons.smartphone_outlined),
+              leading: const Icon(Icons.settings_outlined),
+              title: const Text('Pengaturan'),
+              onTap: () => _openPage(const SettingsScreen()),
             ),
             const SizedBox(height: 15)
           ],

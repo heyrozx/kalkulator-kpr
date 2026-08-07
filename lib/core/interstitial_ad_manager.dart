@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:kalkulator_kpr/core/config.dart';
 import 'package:kalkulator_kpr/core/error_reporter.dart';
@@ -16,28 +17,49 @@ class InterstitialAdManager {
 
   bool get isReady => _ad != null;
 
-  void load() {
+  /// Batas percobaan saat id iklan bentrok. Hot restart biasanya hanya
+  /// menyisakan satu-dua iklan lama, jadi beberapa percobaan sudah cukup.
+  static const int _maxLoadAttempts = 4;
+
+  Future<void> load() async {
     if (_disposed || _isLoading || _ad != null) return;
     _isLoading = true;
+    await _loadAttempt(1);
+  }
 
-    InterstitialAd.load(
-      adUnitId: AdConfig.interstitial,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) {
-          _isLoading = false;
-          if (_disposed) {
-            ad.dispose();
-            return;
-          }
-          _ad = ad;
-        },
-        onAdFailedToLoad: (error) {
-          _isLoading = false;
-          ErrorReporter.report(error, null, hint: 'InterstitialAd.load');
-        },
-      ),
-    );
+  Future<void> _loadAttempt(int attempt) async {
+    try {
+      await InterstitialAd.load(
+        adUnitId: AdConfig.interstitial,
+        request: const AdRequest(),
+        adLoadCallback: InterstitialAdLoadCallback(
+          onAdLoaded: (ad) {
+            _isLoading = false;
+            if (_disposed) {
+              ad.dispose();
+              return;
+            }
+            _ad = ad;
+          },
+          onAdFailedToLoad: (error) {
+            _isLoading = false;
+            ErrorReporter.report(error, null, hint: 'InterstitialAd.load');
+          },
+        ),
+      );
+    } on PlatformException catch (error, stack) {
+      // Panggilan platform-nya sendiri bisa gagal sebelum callback di atas
+      // pernah dipanggil. Kasus yang paling sering: "Ad for following adId
+      // already exists" saat hot restart — sisi native masih memegang iklan
+      // lama sementara penghitung id di sisi Dart kembali ke 0. Percobaan
+      // berikutnya memakai objek iklan baru dengan id berikutnya, jadi
+      // bentrokannya hilang sendiri setelah id lama terlewati.
+      if (!_disposed && attempt < _maxLoadAttempts) {
+        return _loadAttempt(attempt + 1);
+      }
+      _isLoading = false;
+      ErrorReporter.report(error, stack, hint: 'InterstitialAd.load');
+    }
   }
 
   /// Menampilkan iklan bila siap, lalu menjalankan [onDone] **setelah** iklan

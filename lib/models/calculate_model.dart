@@ -55,3 +55,12 @@ class CalculateResultModel {
 }
 
 enum CalculatorType { flat, effective, anuitas }
+
+extension CalculatorTypeLabel on CalculatorType {
+  /// Nama jenis perhitungan sebagaimana ditampilkan ke pengguna.
+  String get label => switch (this) {
+        CalculatorType.flat => 'Flat',
+        CalculatorType.effective => 'Efektif',
+        CalculatorType.anuitas => 'Anuitas',
+      };
+}

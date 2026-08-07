@@ -7,6 +7,7 @@ import 'package:kalkulator_kpr/core/currency_format.dart';
 import 'package:kalkulator_kpr/core/custom_date.dart';
 import 'package:kalkulator_kpr/core/error_reporter.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
+import 'package:kalkulator_kpr/models/financing_contract.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -18,6 +19,8 @@ class PdfBuildParams {
     required this.calculates,
     required this.timestamp,
     required this.typeLabel,
+    required this.terms,
+    required this.isSharia,
     this.logoBytes,
     this.totalPrincipal,
     this.totalInterest,
@@ -29,6 +32,12 @@ class PdfBuildParams {
   final List<CalculateResultModel> calculates;
   final String timestamp;
   final String typeLabel;
+
+  /// Istilah kolom & label sesuai akad, supaya PDF yang dibagikan konsisten
+  /// dengan yang dilihat di layar.
+  final InstallmentTerms terms;
+  final bool isSharia;
+
   final Uint8List? logoBytes;
   final int? totalPrincipal;
   final int? totalInterest;
@@ -50,9 +59,13 @@ class PdfUtil {
 
   /// Nama file yang informatif dan bisa ditebak pengguna, menggantikan nama
   /// acak seperti `principal-483920.pdf`.
-  static String suggestedFileName(CalculatorType? type) {
+  static String suggestedFileName(CalculatorType? type,
+      {FinancingContract contract = FinancingContract.conventional}) {
     final stamp = DateFormat('yyyyMMdd-HHmmss').format(DateTime.now());
-    return '$filePrefix-${typeLabelOf(type)}-$stamp.pdf';
+    final label = contract.isSharia ? contract.shortLabel : typeLabelOf(type);
+    // Spasi pada nama akad ("Musyarakah MQ") diganti supaya nama berkas aman
+    // di seluruh sistem berkas dan aplikasi berbagi.
+    return '$filePrefix-${label.replaceAll(' ', '-')}-$stamp.pdf';
   }
 
   static Future<File> generatePrincipalPDF(
@@ -63,6 +76,8 @@ class PdfUtil {
     final List<double>? tieredInterest,
     CalculatorType? type,
     CalculateModel? calculateModel,
+    FinancingContract contract = FinancingContract.conventional,
+    String? schemeLabel,
   }) async {
     Uint8List? logoBytes;
     try {
@@ -75,7 +90,9 @@ class PdfUtil {
     final params = PdfBuildParams(
       calculates: calculates,
       timestamp: DateCustom.timestamp(),
-      typeLabel: typeLabelOf(type),
+      typeLabel: schemeLabel ?? typeLabelOf(type),
+      terms: contract.terms,
+      isSharia: contract.isSharia,
       logoBytes: logoBytes,
       totalPrincipal: totalPrincipal,
       totalInterest: totalInterest,
@@ -93,7 +110,8 @@ class PdfUtil {
     final Directory directory = await getTemporaryDirectory();
     await _cleanOldFiles(directory);
 
-    final file = File('${directory.path}/${suggestedFileName(type)}');
+    final file = File(
+        '${directory.path}/${suggestedFileName(type, contract: contract)}');
     await file.writeAsBytes(bytes);
     return file;
   }
@@ -123,6 +141,8 @@ Future<Uint8List> buildPrincipalPdfBytes(PdfBuildParams params) async {
   final calculateModel = params.calculateModel;
   final tieredInterest = params.tieredInterest;
   final logobytes = params.logoBytes;
+  final terms = params.terms;
+  final isSharia = params.isSharia;
 
   final pw.Document pdf = pw.Document();
   pdf.addPage(pw.MultiPage(
@@ -164,15 +184,16 @@ Future<Uint8List> buildPrincipalPdfBytes(PdfBuildParams params) async {
                   child: pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                    pw.Text("Jenis: ${params.typeLabel}"),
+                    pw.Text(
+                        "${isSharia ? 'Akad' : 'Jenis'}: ${params.typeLabel}"),
                     if (calculateModel?.initialLoan != null)
                       pw.Text(
-                          "Jumlah Pinjaman: Rp. ${currencyId.format(calculateModel?.initialLoan ?? 0)}"),
+                          "${isSharia ? 'Harga Rumah' : 'Jumlah Pinjaman'}: Rp. ${currencyId.format(calculateModel?.initialLoan ?? 0)}"),
                     if (calculateModel?.dpNominal != null)
                       pw.Text(
-                          "DP: Rp. ${currencyId.format(calculateModel?.dpNominal ?? 0)}"),
+                          "${isSharia ? 'Uang Muka' : 'DP'}: Rp. ${currencyId.format(calculateModel?.dpNominal ?? 0)}"),
                     pw.Text(
-                        "Total Pinjaman: Rp. ${currencyId.format(calculateModel?.loan ?? 0)}"),
+                        "${terms.financing}: Rp. ${currencyId.format(calculateModel?.loan ?? 0)}"),
                   ])),
               pw.Expanded(
                   child: pw.Column(
@@ -203,7 +224,7 @@ Future<Uint8List> buildPrincipalPdfBytes(PdfBuildParams params) async {
                           "Jangka Waktu (Tahun): ${currencyId.format(calculateModel?.year ?? 0)}"),
                     if (calculateModel?.floatingInterest == null)
                       pw.Text(
-                          "Bunga : ${calculateModel?.interest?.toString()}%"),
+                          "${terms.rate} : ${calculateModel?.interest?.toString()}%"),
                   ])),
             ]),
           ),
@@ -215,10 +236,10 @@ Future<Uint8List> buildPrincipalPdfBytes(PdfBuildParams params) async {
               children: [
                 pw.TableRow(children: [
                   _headerCell("Bulan ke"),
-                  _headerCell("Angsuran Pokok"),
-                  _headerCell("Bunga"),
-                  _headerCell("Jumlah Angsuran"),
-                  _headerCell("Sisa Pinjaman"),
+                  _headerCell(terms.principal),
+                  _headerCell(terms.charge),
+                  _headerCell(terms.installment),
+                  _headerCell(terms.remaining),
                 ]),
                 for (int i = 0; i < calculates.length; i++)
                   pw.TableRow(children: [
