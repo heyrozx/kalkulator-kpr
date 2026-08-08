@@ -25,7 +25,7 @@ class Disclaimer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Disclaimer'),
+        title: const Text('Disklaimer'),
       ),
       body: SafeArea(
         child: ListView(

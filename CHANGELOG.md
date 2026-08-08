@@ -1,4 +1,4 @@
-## 1.5.0 (15)
+## 1.5.0 (16) - RELEASED
 
 KPR Syariah (F-8 di `ANALISIS-IMPROVEMENT.md`).
 
@@ -52,7 +52,7 @@ KPR Syariah (F-8 di `ANALISIS-IMPROVEMENT.md`).
   dicoba ulang otomatis, dan kegagalannya tidak lagi muncul sebagai error yang
   tidak tertangani
 
-## 1.4.0 (14)
+## 1.4.0 (14) - RELEASED
 
 Dua fitur baru dari `ANALISIS-IMPROVEMENT.md`: ringkasan & grafik hasil (F-3) dan
 riwayat simulasi (F-5).
@@ -79,7 +79,7 @@ riwayat simulasi (F-5).
   tersimpan sudah banyak
 * Pengguna gratis dapat menyimpan 3 simulasi; premium tanpa batas
 
-## 1.3.3 (13)
+## 1.3.3 (13) - RELEASED
 
 Perbaikan menyeluruh hasil telaah kode (lihat `ANALISIS-IMPROVEMENT.md` bagian 1 & 2).
 
@@ -112,7 +112,7 @@ Perbaikan menyeluruh hasil telaah kode (lihat `ANALISIS-IMPROVEMENT.md` bagian 1
 * Matikan Jetifier yang sudah tidak diperlukan dan naikkan heap Gradle, supaya build
   tidak lagi gagal karena `Java heap space`
 
-## 1.3.2 (12)
+## 1.3.2 (12) - RELEASED
 
 * Update target Android SDK ke API 36 (Android 16) sesuai persyaratan Google Play
 * Rilis pertama yang memakai Google Play Billing Library 8 (persyaratan Google Play)
@@ -121,7 +121,7 @@ Perbaikan menyeluruh hasil telaah kode (lihat `ANALISIS-IMPROVEMENT.md` bagian 1
 * Tambah dokumentasi teknis (TECHNICAL.md): arsitektur, daftar fitur, paket utama, dan alur premium
 * Tambah dokumen analisis (ANALISIS-IMPROVEMENT.md): temuan potensi bug, usulan perbaikan teknis, dan ide fitur baru
 
-## 1.3.1 (11)
+## 1.3.1 (11) - RELEASED
 
 * Update ad unit id and banner widget
 * Update privacy policy link

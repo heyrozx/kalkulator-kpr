@@ -29,7 +29,7 @@ class AppConfig {
   static const String playStoreUrl =
       'https://play.google.com/store/apps/details?id=com.caraguna.kalkulator.kpr&hl=en';
   static const String privacyPolicyUrl =
-      'https://nexadream.id/privacy-policy-kalkulator-kpr-simulasi-kredit';
+      'https://nexadream.id/page/privacy-policy-kalkulator-kpr-simulasi-kredit';
   static const String contactUrl = 'https://nexadream.id/contact';
 
   // --- Batasan input ---

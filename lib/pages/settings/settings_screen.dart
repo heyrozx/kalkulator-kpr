@@ -125,9 +125,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.info_outline),
-              title: const Text('Disclaimer'),
-              onTap: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (_) => const Disclaimer())),
+              title: const Text('Disklaimer'),
+              onTap: () => Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => const Disclaimer())),
             ),
             ListTile(
               leading: const Icon(Icons.mail_outline),
@@ -136,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             ListTile(
               leading: const Icon(Icons.gpp_maybe_outlined),
-              title: const Text('Privacy Policy'),
+              title: const Text('Kebijakan Privasi'),
               onTap: () => _launchUrl(AppConfig.privacyPolicyUrl),
             ),
             ListTile(
