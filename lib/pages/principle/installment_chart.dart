@@ -34,33 +34,41 @@ class InstallmentChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final List<YearlyInstallment> years = yearlyBreakdown(results);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(15, 15, 15, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _SummaryCard(summary: summary, terms: terms),
-          if (years.isNotEmpty) ...[
-            const SizedBox(height: 15),
-            _ChartCard(
-              title: terms.remaining,
-              subtitle: 'Posisi di akhir tiap tahun',
-              child: _RemainingLoanChart(
-                years: years,
-                openingBalance: openingBalance,
-                label: terms.remaining,
+    // CustomScrollView + injector: tab ini berada di dalam NestedScrollView
+    // halaman tabel angsuran yang memakai SliverOverlapAbsorber, supaya isinya
+    // tidak tertutup TabBar yang menempel di atas.
+    return CustomScrollView(
+      key: const PageStorageKey('installment-chart'),
+      slivers: [
+        SliverOverlapInjector(
+          handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(15, 15, 15, 24),
+          sliver: SliverList.list(children: [
+            _SummaryCard(summary: summary, terms: terms),
+            if (years.isNotEmpty) ...[
+              const SizedBox(height: 15),
+              _ChartCard(
+                title: terms.remaining,
+                subtitle: 'Posisi di akhir tiap tahun',
+                child: _RemainingLoanChart(
+                  years: years,
+                  openingBalance: openingBalance,
+                  label: terms.remaining,
+                ),
               ),
-            ),
-            const SizedBox(height: 15),
-            _ChartCard(
-              title: terms.compositionTitle,
-              subtitle: 'Komposisi yang dibayar tiap tahun',
-              legend: _ChartLegend(terms: terms),
-              child: _PrincipalInterestChart(years: years, terms: terms),
-            ),
-          ],
-        ],
-      ),
+              const SizedBox(height: 15),
+              _ChartCard(
+                title: terms.compositionTitle,
+                subtitle: 'Komposisi yang dibayar tiap tahun',
+                legend: _ChartLegend(terms: terms),
+                child: _PrincipalInterestChart(years: years, terms: terms),
+              ),
+            ],
+          ]),
+        ),
+      ],
     );
   }
 }
@@ -579,7 +587,7 @@ class _Card extends StatelessWidget {
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.panel),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withValues(alpha: 0.2),

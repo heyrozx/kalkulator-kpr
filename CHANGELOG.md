@@ -23,6 +23,16 @@
   yang sama dengan beranda
 * Tombol Download dan Bagikan PDF diberi titik emas untuk user gratis sebagai
   penanda fitur premium
+* Tab baru **Kemampuan Bayar** di halaman Tabel Angsuran: isi penghasilan bersih
+  dan cicilan lain untuk melihat rasio cicilan (Aman ≤30%, Waspada ≤40%, Berat
+  >40%), sisa penghasilan, dan penghasilan minimal yang disarankan. Dihitung
+  dari angsuran tertinggi selama tenor
+* Halaman Tabel Angsuran: judul pindah dari AppBar ke atas ringkasan, bagian
+  atas kini rata tanpa sudut membulat, dan ringkasan ikut tergulung ke atas
+  saat halaman digulir sehingga tab Grafik/Tabel/Kemampuan Bayar menempel di
+  bawah AppBar. Header kolom tabel juga tetap menempel saat tabel digulir
+* Kartu di halaman Tabel Angsuran dibuat lebih membulat
+* Perbaikan: judul kolom "Bulan ke" di tabel angsuran tidak lagi terpotong
 * Perbaikan: aplikasi bisa crash saat dibuka di build rilis dengan pesan
   "Failed to create an instance of androidx.work.impl.WorkDatabase"
   (WorkManager bawaan AdMob terpangkas oleh R8)

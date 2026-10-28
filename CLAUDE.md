@@ -46,7 +46,12 @@ Package/applicationId: `com.caraguna.kalkulator.kpr`
   disclaimer, privacy policy, versi aplikasi (dulu menumpuk di bawah drawer).
 - `pages/advanced/` — kalkulator lanjutan: fix & floating (`fix_and_floating_screen.dart`)
   dan bunga berjenjang (`tiered_screen.dart`).
-- `pages/principle/principal_table.dart` — tabel angsuran (`data_table_2`), share & download PDF.
+- `pages/principle/principal_table.dart` — halaman hasil: ringkasan + tab Grafik
+  (`installment_chart.dart`), Tabel (`installment_table_view.dart`, tabel dari sliver
+  dengan header kolom menempel) dan Kemampuan Bayar (`affordability_tab.dart`, logika di
+  `core/affordability.dart`); share & download PDF. Memakai `NestedScrollView` +
+  `SliverOverlapAbsorber`, jadi tiap tab wajib berupa `CustomScrollView` dengan
+  `SliverOverlapInjector` di paling atas.
 - `pages/pdf/` + `utils/pdf_util.dart` — generate PDF tabel angsuran (package `pdf`),
   disimpan via `getDownloadsDirectory()` lalu `FlutterFileSaver` untuk download.
 - `pages/about/` — penjelasan skema bunga & disclaimer; `pages/premiums/` — paywall.

@@ -76,6 +76,9 @@ class AppRadius {
   const AppRadius._();
 
   static const double card = 5;
+
+  /// Kartu di halaman tabel angsuran (grafik, tabel, kemampuan bayar).
+  static const double panel = 12;
   static const double field = 4;
   static const double button = 30;
   static const double sheet = 15;

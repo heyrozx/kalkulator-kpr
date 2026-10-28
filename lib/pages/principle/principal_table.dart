@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:data_table_2/data_table_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_file_saver/flutter_file_saver.dart';
@@ -15,7 +14,9 @@ import 'package:kalkulator_kpr/models/calculate_model.dart';
 import 'package:kalkulator_kpr/models/financing_contract.dart';
 import 'package:kalkulator_kpr/models/simulation_history.dart';
 import 'package:kalkulator_kpr/pages/premiums/premium_paywall.dart';
+import 'package:kalkulator_kpr/pages/principle/affordability_tab.dart';
 import 'package:kalkulator_kpr/pages/principle/installment_chart.dart';
+import 'package:kalkulator_kpr/pages/principle/installment_table_view.dart';
 import 'package:kalkulator_kpr/shared/widgets/banner_ad_widget.dart';
 import 'package:kalkulator_kpr/shared/widgets/name_input_dialog.dart';
 import 'package:kalkulator_kpr/shared/widgets/premium_tab.dart';
@@ -51,7 +52,6 @@ class PrincipalTable extends StatefulWidget {
 
 class _PrincipalTableState extends State<PrincipalTable> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  List<DataRow> rows = [];
   bool _isBusy = false;
   bool _isSaving = false;
 
@@ -84,47 +84,6 @@ class _PrincipalTableState extends State<PrincipalTable> {
   double get _openingBalance => widget.contract == FinancingContract.murabahah
       ? _summary.totalPayment
       : _summary.totalPrincipal;
-
-  List<DataRow> setRowValue() {
-    int month = 0;
-    return _results.map((e) {
-      month++;
-      return DataRow(
-        cells: <DataCell>[
-          DataCell(Text(month.toString())),
-          DataCell(Text(currencyId.format(e.principal ?? 0))),
-          DataCell(Text(currencyId.format(e.interestResult ?? 0))),
-          DataCell(Text(
-            currencyId.format(e.installmentResult ?? 0),
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          )),
-          DataCell(Text(currencyId.format(
-              (e.principalTotalRemain ?? 0) < 1 ? 0 : e.principalTotalRemain))),
-        ],
-      );
-    }).toList();
-  }
-
-  void addFooter() {
-    rows.add(DataRow(
-      cells: <DataCell>[
-        DataCell(const Text(
-          "Total",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        )),
-        DataCell(Text(
-          currencyId.format(getTotal("principal")),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        )),
-        DataCell(Text(currencyId.format(getTotal("interest")),
-            style: const TextStyle(fontWeight: FontWeight.bold))),
-        DataCell(Text(currencyId.format(getTotal("installment")),
-            style: const TextStyle(fontWeight: FontWeight.bold))),
-        const DataCell(
-            Text("--", style: TextStyle(fontWeight: FontWeight.bold))),
-      ],
-    ));
-  }
 
   /// Menjumlahkan satu kolom. Memakai [sumOf] yang melewati nilai non-finite —
   /// sebelumnya `NaN.toInt()` di sini melempar `UnsupportedError` dan
@@ -333,9 +292,6 @@ class _PrincipalTableState extends State<PrincipalTable> {
     _cubit = BlocProvider.of<PurchaseCubit>(context);
     _savedId = widget.savedHistoryId;
 
-    rows = setRowValue();
-    addFooter();
-
     super.initState();
   }
 
@@ -349,15 +305,11 @@ class _PrincipalTableState extends State<PrincipalTable> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Tabel Angsuran',
-          style: TextStyle(fontSize: 16),
-        ),
-        centerTitle: false,
-        titleSpacing: 0,
+        // Judul dipindah ke ringkasan di bawah AppBar; AppBar hanya berisi
+        // tombol kembali dan aksi, sewarna dengan ringkasan supaya keduanya
+        // terlihat sebagai satu bagian kepala halaman.
         elevation: 0,
-        // Sewarna dengan ringkasan di bawahnya supaya keduanya terlihat
-        // sebagai satu bagian kepala halaman.
+        scrolledUnderElevation: 0,
         backgroundColor: _headerColor,
         actions: [
           if (widget.calculateModel != null && widget.type != null)
@@ -628,212 +580,198 @@ class _PrincipalTableState extends State<PrincipalTable> {
               ),
             ),
       body: SafeArea(
+        top: false,
         child: DefaultTabController(
-          length: 2,
-          child: Column(
-            children: [
-              // Ringkasan input menyambung langsung dari AppBar (warna sama,
-              // tanpa bayangan/kartu), lalu ditutup sudut membulat di bawah.
-              Container(
-                width: size.width,
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                decoration: const BoxDecoration(
-                  color: _headerColor,
-                  borderRadius:
-                      BorderRadius.vertical(bottom: Radius.circular(20)),
-                ),
+          length: 3,
+          // Ringkasan & banner ikut tergulung ke atas, sedangkan TabBar
+          // menempel di bawah AppBar. Absorber/injector mencegah isi tab
+          // tertutup TabBar yang menempel.
+          child: NestedScrollView(
+            headerSliverBuilder: (context, innerBoxIsScrolled) => [
+              SliverToBoxAdapter(
                 child: Column(
                   children: [
+                    // Judul + ringkasan input menyambung langsung dari AppBar
+                    // (warna sama, rata tanpa kartu maupun sudut membulat).
                     Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Row(
+                      width: size.width,
+                      color: _headerColor,
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 14),
                             child: Text(
-                                widget.contract.isSharia ? 'Akad' : 'Jenis'),
-                          ),
-                          Text(
-                            _schemeLabel,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.primary),
-                          )
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(_terms.financing),
-                          ),
-                          Text(
-                            "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          )
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: Row(
-                        children: [
-                          const Expanded(
-                            child: Text('Jangka Waktu (Tahun)'),
-                          ),
-                          Text(
-                            currencyId.format(widget.calculateModel!.year),
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          )
-                        ],
-                      ),
-                    ),
-                    if (widget.calculateModel?.floatingInterest == null)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: Text(_terms.rate),
+                              'Tabel Angsuran',
+                              style: TextStyle(
+                                  fontSize: 22, fontWeight: FontWeight.bold),
                             ),
-                            Text(
-                              '${widget.calculateModel!.interest!}%',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            )
-                          ],
-                        ),
-                      ),
-                    if (widget.calculateModel?.floatingInterest != null)
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              side: const BorderSide(color: AppColors.primary),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(widget.contract.isSharia
+                                      ? 'Akad'
+                                      : 'Jenis'),
+                                ),
+                                Text(
+                                  _schemeLabel,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.primary),
+                                )
+                              ],
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(_terms.financing),
+                                ),
+                                Text(
+                                  "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                )
+                              ],
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            child: Row(
+                              children: [
+                                const Expanded(
+                                  child: Text('Jangka Waktu (Tahun)'),
+                                ),
+                                Text(
+                                  currencyId
+                                      .format(widget.calculateModel!.year),
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                )
+                              ],
+                            ),
+                          ),
+                          if (widget.calculateModel?.floatingInterest == null)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 10),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(_terms.rate),
+                                  ),
+                                  Text(
+                                    '${widget.calculateModel!.interest!}%',
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
+                                  )
+                                ],
                               ),
                             ),
-                            onPressed: () {
-                              _scaffoldKey.currentState?.openDrawer();
-                            },
-                            child: Text('Selengkapnya')),
+                          if (widget.calculateModel?.floatingInterest != null)
+                            SizedBox(
+                              width: double.infinity,
+                              child: OutlinedButton(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: AppColors.primary,
+                                    side: const BorderSide(
+                                        color: AppColors.primary),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(5),
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    _scaffoldKey.currentState?.openDrawer();
+                                  },
+                                  child: Text('Selengkapnya')),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
-              ),
-              Center(
-                child: BannerAdWidget(
-                  margin: const EdgeInsets.only(left: 15, right: 15, top: 15),
-                  placement: BannerPlacement.principalTable,
-                ),
-              ),
-              const TabBar(
-                labelColor: AppColors.primary,
-                unselectedLabelColor: AppColors.onSurface,
-                indicatorColor: AppColors.primary,
-                tabs: [
-                  Tab(text: 'Grafik'),
-                  Tab(text: 'Tabel'),
-                ],
-              ),
-              Expanded(
-                child: TabBarView(
-                  children: [
-                    InstallmentChart(
-                      results: _results,
-                      summary: _summary,
-                      terms: _terms,
-                      openingBalance: _openingBalance,
                     ),
-                    _buildTableCard(size),
+                    Center(
+                      child: BannerAdWidget(
+                        margin:
+                            const EdgeInsets.only(left: 15, right: 15, top: 15),
+                        placement: BannerPlacement.principalTable,
+                      ),
+                    ),
                   ],
+                ),
+              ),
+              SliverOverlapAbsorber(
+                handle:
+                    NestedScrollView.sliverOverlapAbsorberHandleFor(context),
+                sliver: SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _TabBarHeader(),
                 ),
               ),
             ],
+            body: TabBarView(
+              children: [
+                InstallmentChart(
+                  results: _results,
+                  summary: _summary,
+                  terms: _terms,
+                  openingBalance: _openingBalance,
+                ),
+                InstallmentTableView(
+                  results: _results,
+                  terms: _terms,
+                  totalPrincipal: getTotal("principal"),
+                  totalInterest: getTotal("interest"),
+                  totalInstallment: getTotal("installment"),
+                ),
+                AffordabilityTab(results: _results),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildTableCard(Size size) {
-    return Container(
-        width: size.width,
-        margin: const EdgeInsets.only(top: 15, left: 15, right: 15, bottom: 15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(5),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.2),
-              spreadRadius: 4,
-              blurRadius: 3,
-              offset: const Offset(0, 1), // changes position of shadow
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(5),
-          child: DataTable2(
-            headingRowColor: WidgetStateColor.resolveWith(
-              (states) {
-                return AppColors.primary;
-              },
-            ),
-            minWidth: 700,
-            // Diturunkan dari tema supaya font header ikut font aplikasi.
-            headingTextStyle: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
-            decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
-            columns: [
-              const DataColumn2(
-                fixedWidth: 60,
-                label: Text(
-                  'Bulan\nke',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-              DataColumn2(
-                label: Text(
-                  _terms.principalColumn,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              DataColumn2(
-                size: ColumnSize.L,
-                label: Text(
-                  _terms.chargeColumn,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-                // onSort: sortColumn,
-              ),
-              DataColumn2(
-                size: ColumnSize.L,
-                label: Text(
-                  _terms.installmentColumn,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-              DataColumn2(
-                size: ColumnSize.L,
-                label: Text(
-                  _terms.remainingColumn,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-            rows: rows,
-          ),
-        ));
+/// TabBar yang menempel di bawah AppBar saat ringkasan tergulung ke atas.
+class _TabBarHeader extends SliverPersistentHeaderDelegate {
+  static const double _height = 48;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        border: Border(bottom: BorderSide(color: AppColors.gridLine)),
+      ),
+      child: const TabBar(
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.onSurface,
+        indicatorColor: AppColors.primary,
+        // Tiga tab harus muat di layar 360dp tanpa label terpotong.
+        labelPadding: EdgeInsets.symmetric(horizontal: 4),
+        labelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontSize: 13),
+        tabs: [
+          Tab(text: 'Grafik'),
+          Tab(text: 'Tabel'),
+          Tab(text: 'Kemampuan Bayar'),
+        ],
+      ),
+    );
   }
+
+  @override
+  bool shouldRebuild(_TabBarHeader oldDelegate) => false;
 }
