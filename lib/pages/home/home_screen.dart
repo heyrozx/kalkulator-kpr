@@ -21,6 +21,7 @@ import 'package:kalkulator_kpr/pages/principle/principal_table.dart';
 import 'package:kalkulator_kpr/pages/settings/settings_screen.dart';
 import 'package:kalkulator_kpr/pages/sharia/sharia_screen.dart';
 import 'package:kalkulator_kpr/shared/widgets/labeled_number_field.dart';
+import 'package:kalkulator_kpr/shared/widgets/premium_tab.dart';
 import 'package:kalkulator_kpr/shared/widgets/segmented_switch.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -316,59 +317,24 @@ class _MyHomePageState extends State<MyHomePage> {
       actions: [
         BlocBuilder<PurchaseCubit, PurchaseState>(
           builder: (context, state) {
-            // Premium: tab emas dengan lencana terisi, membuka Pengaturan untuk
-            // melihat status langganan. Free: tab ungu dengan lencana garis
-            // yang membuka paywall. Selama status belum diketahui tab
-            // disembunyikan supaya user premium tidak sempat melihat ajakan
-            // upgrade.
+            // Premium membuka Pengaturan untuk melihat status langganan, free
+            // membuka paywall. Selama status belum diketahui tab disembunyikan
+            // supaya user premium tidak sempat melihat ajakan upgrade.
             if (state is PurchaseData && state.isPremium) {
-              return _premiumTab(
-                tooltip: 'Premium aktif',
-                color: AppColors.premiumGold,
-                icon: Icons.workspace_premium,
+              return PremiumTab(
+                isPremium: true,
                 onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const SettingsScreen())),
               );
             }
             if (state is! PurchaseNothing) return const SizedBox();
-            return _premiumTab(
-              tooltip: 'Upgrade ke Premium',
-              color: AppColors.primary,
-              icon: Icons.workspace_premium_outlined,
+            return PremiumTab(
+              isPremium: false,
               onTap: () => showPremiumPaywall(context),
             );
           },
         ),
       ],
-    );
-  }
-
-  /// Tab berwarna yang membulat di sisi kiri saja dan menempel ke tepi kanan
-  /// layar (actions AppBar Material 2 tidak punya padding kanan).
-  Widget _premiumTab({
-    required String tooltip,
-    required Color color,
-    required IconData icon,
-    required VoidCallback onTap,
-  }) {
-    const BorderRadius radius =
-        BorderRadius.horizontal(left: Radius.circular(20));
-    return Center(
-      child: Tooltip(
-        message: tooltip,
-        child: Material(
-          color: color,
-          borderRadius: radius,
-          child: InkWell(
-            borderRadius: radius,
-            onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 7, 12, 7),
-              child: Icon(icon, color: AppColors.onPrimary, size: 24),
-            ),
-          ),
-        ),
-      ),
     );
   }
 

@@ -26,9 +26,13 @@ class AppColors {
   /// Latar lembut beranda: gradasi ungu sangat muda ke putih supaya panel
   /// form dan switch (putih) tetap menonjol.
   static const List<Color> dashboardGradient = [
-    Color(0xFFF3E8F7),
+    headerTint,
     Color(0xFFFBF8FC),
   ];
+
+  /// Ungu sangat muda untuk kepala halaman yang menyatu dengan AppBar (mis.
+  /// ringkasan di halaman tabel angsuran); sama dengan awal gradasi beranda.
+  static const Color headerTint = Color(0xFFF3E8F7);
 
   /// Warna porsi bunga pada indikator lingkaran di layar utama.
   static const Color interestPortion = Colors.grey;
@@ -49,8 +53,18 @@ class AppColors {
   /// Latar tooltip grafik.
   static const Color chartTooltip = Color(0xFF212121);
 
-  /// Warna emas penanda status premium aktif.
+  /// Warna emas penanda premium (status aktif, titik pada fitur premium).
   static const Color premiumGold = Color(0xFFF2A900);
+
+  /// Gradasi tab premium untuk user premium (emas) dan user gratis (ungu).
+  static const List<Color> premiumGradient = [
+    Color(0xFFFFC940),
+    Color(0xFFE08A00),
+  ];
+  static const List<Color> upgradeGradient = [
+    Color(0xFFD154E8),
+    Color(0xFF7B1FA2),
+  ];
 
   static const Color success = Color(0xFF2E7D32);
   static const Color warning = Colors.orange;

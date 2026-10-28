@@ -18,6 +18,7 @@ import 'package:kalkulator_kpr/pages/premiums/premium_paywall.dart';
 import 'package:kalkulator_kpr/pages/principle/installment_chart.dart';
 import 'package:kalkulator_kpr/shared/widgets/banner_ad_widget.dart';
 import 'package:kalkulator_kpr/shared/widgets/name_input_dialog.dart';
+import 'package:kalkulator_kpr/shared/widgets/premium_tab.dart';
 import 'package:kalkulator_kpr/utils/custom_snackbar.dart';
 import 'package:kalkulator_kpr/utils/pdf_util.dart';
 import 'package:share_plus/share_plus.dart';
@@ -317,6 +318,16 @@ class _PrincipalTableState extends State<PrincipalTable> {
     onGranted();
   }
 
+  /// Warna kepala halaman (AppBar + ringkasan), sama dengan nada latar beranda.
+  static const Color _headerColor = AppColors.headerTint;
+
+  Widget _premiumDot(bool visible, Widget icon) => Badge(
+        isLabelVisible: visible,
+        smallSize: 8,
+        backgroundColor: AppColors.premiumGold,
+        child: icon,
+      );
+
   @override
   void initState() {
     _cubit = BlocProvider.of<PurchaseCubit>(context);
@@ -343,10 +354,16 @@ class _PrincipalTableState extends State<PrincipalTable> {
           style: TextStyle(fontSize: 16),
         ),
         centerTitle: false,
+        titleSpacing: 0,
         elevation: 0,
+        // Sewarna dengan ringkasan di bawahnya supaya keduanya terlihat
+        // sebagai satu bagian kepala halaman.
+        backgroundColor: _headerColor,
         actions: [
           if (widget.calculateModel != null && widget.type != null)
             IconButton(
+                // Ringkas supaya judul tidak terpotong saat tab premium tampil.
+                visualDensity: VisualDensity.compact,
                 tooltip: _savedId == null
                     ? 'Simpan ke riwayat'
                     : 'Sudah tersimpan di riwayat',
@@ -354,31 +371,37 @@ class _PrincipalTableState extends State<PrincipalTable> {
                 icon: Icon(_savedId == null
                     ? Icons.bookmark_add_outlined
                     : Icons.bookmark)),
-          IconButton(
-              tooltip: 'Download PDF',
-              onPressed: () => _requirePremium('download', downloadPDF),
-              icon: const Icon(Icons.download_outlined)),
-          IconButton(
-              tooltip: 'Bagikan PDF',
-              onPressed: () => _requirePremium('share', sharePDF),
-              icon: const Icon(Icons.share_outlined)),
+          // Download & share khusus premium: titik emas di ikonnya memberi
+          // tahu user gratis sebelum mereka menekan tombolnya.
           BlocBuilder<PurchaseCubit, PurchaseState>(
             builder: (context, state) {
-              if (state is! PurchaseNothing) return const SizedBox();
-              {
-                return IconButton(
-                  onPressed: () => showPremiumPaywall(context),
-                  icon: SizedBox(
-                    width: 30,
-                    child: Image.asset('assets/premium.png'),
-                  ),
-                );
-              }
+              // Hanya saat status "bukan premium" sudah pasti, supaya user
+              // premium tidak sempat melihat titik saat status masih dicek.
+              final bool locked = state is PurchaseNothing;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Download PDF',
+                      onPressed: () => _requirePremium('download', downloadPDF),
+                      icon: _premiumDot(
+                          locked, const Icon(Icons.download_outlined))),
+                  IconButton(
+                      visualDensity: VisualDensity.compact,
+                      tooltip: 'Bagikan PDF',
+                      onPressed: () => _requirePremium('share', sharePDF),
+                      icon: _premiumDot(
+                          locked, const Icon(Icons.share_outlined))),
+                  if (locked)
+                    PremiumTab(
+                      isPremium: false,
+                      onTap: () => showPremiumPaywall(context),
+                    ),
+                ],
+              );
             },
           ),
-          const SizedBox(
-            width: 7,
-          )
         ],
       ),
       drawer: widget.calculateModel?.floatingInterest == null
@@ -609,21 +632,15 @@ class _PrincipalTableState extends State<PrincipalTable> {
           length: 2,
           child: Column(
             children: [
+              // Ringkasan input menyambung langsung dari AppBar (warna sama,
+              // tanpa bayangan/kartu), lalu ditutup sudut membulat di bawah.
               Container(
                 width: size.width,
-                margin: const EdgeInsets.only(top: 15, left: 15, right: 15),
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withValues(alpha: 0.1),
-                      spreadRadius: 5,
-                      blurRadius: 3,
-                      offset: const Offset(0, 1), // changes position of shadow
-                    ),
-                  ],
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                decoration: const BoxDecoration(
+                  color: _headerColor,
+                  borderRadius:
+                      BorderRadius.vertical(bottom: Radius.circular(20)),
                 ),
                 child: Column(
                   children: [

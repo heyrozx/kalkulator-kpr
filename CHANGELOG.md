@@ -15,9 +15,14 @@
   (membuka Pengaturan untuk melihat status langganan)
 * Bayangan panel form di bagian bawah beranda dibuat lebih halus dan menyatu
   dengan latar
-* Ikon premium di beranda kini berada di atas tab berwarna (ungu untuk user
+* Ikon premium di beranda kini berada di atas tab bergradasi (ungu untuk user
   gratis, emas untuk user premium) yang membulat di sisi kiri dan menempel ke
   tepi kanan layar
+* Halaman Tabel Angsuran: ringkasan pinjaman di bagian atas kini menyatu dengan
+  AppBar (latar ungu lembut, tanpa kartu), tombol premium memakai tab bergradasi
+  yang sama dengan beranda
+* Tombol Download dan Bagikan PDF diberi titik emas untuk user gratis sebagai
+  penanda fitur premium
 * Perbaikan: aplikasi bisa crash saat dibuka di build rilis dengan pesan
   "Failed to create an instance of androidx.work.impl.WorkDatabase"
   (WorkManager bawaan AdMob terpangkas oleh R8)
