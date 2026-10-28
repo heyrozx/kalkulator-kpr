@@ -767,7 +767,11 @@ class _PrincipalTableState extends State<PrincipalTable> {
               },
             ),
             minWidth: 700,
-            headingTextStyle: const TextStyle(fontWeight: FontWeight.bold),
+            // Diturunkan dari tema supaya font header ikut font aplikasi.
+            headingTextStyle: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
             decoration: BoxDecoration(borderRadius: BorderRadius.circular(5)),
             columns: [
               const DataColumn2(

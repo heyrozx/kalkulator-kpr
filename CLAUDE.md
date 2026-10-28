@@ -77,6 +77,12 @@ management baru tanpa diminta.
   Billing 8.x secara transitif, dan Gradle memakai versi tertinggi. Cek versi efektif
   yang benar-benar masuk ke AAB dengan:
   `cd android && ./gradlew :app:dependencies --configuration releaseRuntimeClasspath | grep billingclient`.
+- **WorkManager**: `androidx.work:work-runtime` dipin manual (2.11.x) di
+  `android/app/build.gradle`. AdMob membawa WorkManager 2.7.0 + Room 2.2.5 yang aturan
+  keep-nya tidak menjaga constructor `WorkDatabase_Impl`, sehingga R8 full mode membuat
+  build rilis crash saat start ("Failed to create an instance of
+  androidx.work.impl.WorkDatabase"). Jangan hapus/turunkan; aturan cadangannya ada di
+  `android/app/proguard-rules.pro`.
 - AGP `8.9.1` / Kotlin `2.1.0` di `android/settings.gradle`, Gradle wrapper `8.11.1`.
 - Saat menaikkan target SDK, cek behavior change Android terbaru yang relevan:
   edge-to-edge dipaksa aktif di API 36 (pastikan `SafeArea`/inset di layar dengan

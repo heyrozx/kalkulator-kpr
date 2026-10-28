@@ -70,6 +70,9 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.release
+            // Flutter sudah mengaktifkan R8 untuk release; aturan tambahan
+            // aplikasi ada di proguard-rules.pro (lihat catatan WorkManager di sana).
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
@@ -85,4 +88,11 @@ dependencies {
     // RevenueCat (purchases_flutter) juga sudah membawa Billing 8.x secara transitif,
     // baris di bawah hanya sebagai batas bawah eksplisit — jangan turunkan versinya.
     implementation 'com.android.billingclient:billing:8.0.0'
+    // AdMob (play-services-ads-api) membawa WorkManager 2.7.0 + Room 2.2.5 secara
+    // transitif. Aturan keep Room 2.2.5 tidak menjaga constructor WorkDatabase_Impl,
+    // sehingga R8 full mode (default AGP 8) membuangnya dan aplikasi crash saat
+    // start: "Failed to create an instance of androidx.work.impl.WorkDatabase".
+    // WorkManager 2.11 memakai Room 2.7 yang aturan keep-nya sudah benar.
+    // Jangan turunkan atau hapus baris ini.
+    implementation 'androidx.work:work-runtime:2.11.2'
 }

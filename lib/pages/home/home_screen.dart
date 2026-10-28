@@ -316,29 +316,59 @@ class _MyHomePageState extends State<MyHomePage> {
       actions: [
         BlocBuilder<PurchaseCubit, PurchaseState>(
           builder: (context, state) {
-            // Premium: lencana emas terisi, membuka Pengaturan untuk melihat
-            // status langganan. Free: lencana garis ungu yang membuka paywall.
-            // Selama status belum diketahui ikon disembunyikan supaya user
-            // premium tidak sempat melihat ajakan upgrade.
+            // Premium: tab emas dengan lencana terisi, membuka Pengaturan untuk
+            // melihat status langganan. Free: tab ungu dengan lencana garis
+            // yang membuka paywall. Selama status belum diketahui tab
+            // disembunyikan supaya user premium tidak sempat melihat ajakan
+            // upgrade.
             if (state is PurchaseData && state.isPremium) {
-              return IconButton(
+              return _premiumTab(
                 tooltip: 'Premium aktif',
-                onPressed: () => Navigator.push(context,
+                color: AppColors.premiumGold,
+                icon: Icons.workspace_premium,
+                onTap: () => Navigator.push(context,
                     MaterialPageRoute(builder: (_) => const SettingsScreen())),
-                icon: const Icon(Icons.workspace_premium,
-                    color: AppColors.premiumGold, size: 28),
               );
             }
             if (state is! PurchaseNothing) return const SizedBox();
-            return IconButton(
+            return _premiumTab(
               tooltip: 'Upgrade ke Premium',
-              onPressed: () => showPremiumPaywall(context),
-              icon: const Icon(Icons.workspace_premium_outlined,
-                  color: AppColors.primary, size: 28),
+              color: AppColors.primary,
+              icon: Icons.workspace_premium_outlined,
+              onTap: () => showPremiumPaywall(context),
             );
           },
         ),
       ],
+    );
+  }
+
+  /// Tab berwarna yang membulat di sisi kiri saja dan menempel ke tepi kanan
+  /// layar (actions AppBar Material 2 tidak punya padding kanan).
+  Widget _premiumTab({
+    required String tooltip,
+    required Color color,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    const BorderRadius radius =
+        BorderRadius.horizontal(left: Radius.circular(20));
+    return Center(
+      child: Tooltip(
+        message: tooltip,
+        child: Material(
+          color: color,
+          borderRadius: radius,
+          child: InkWell(
+            borderRadius: radius,
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(14, 7, 12, 7),
+              child: Icon(icon, color: AppColors.onPrimary, size: 24),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
