@@ -11,7 +11,7 @@ BASE_CSS = """
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { width: __W__px; height: __H__px; overflow: hidden; }
 body { font-family: 'R', sans-serif; color: #fff; position: relative;
-  background: linear-gradient(165deg, #B13BCB 0%, #8E24AA 38%, #6A1B9A 70%, #3F0D63 100%); }
+  background: linear-gradient(160deg, #D154E8 0%, #7B1FA2 100%); }
 
 /* ---------- dekorasi ---------- */
 .blob { position: absolute; border-radius: 50%; filter: blur(70px); }
@@ -21,25 +21,12 @@ body { font-family: 'R', sans-serif; color: #fff; position: relative;
   background-image: radial-gradient(rgba(255,255,255,.55) 2.2px, transparent 2.6px);
   background-size: 26px 26px; }
 .deco { position: absolute; opacity: .16; }
-.spark { position: absolute; color: #FFD54F; }
+.spark { position: absolute; color: #fff; opacity: .7; }
 
 /* ---------- teks ---------- */
-.eyebrow { display: inline-flex; align-items: center; gap: 10px; padding: 10px 22px;
-  border-radius: 40px; background: rgba(255,255,255,.16); border: 1.5px solid rgba(255,255,255,.28);
-  font-weight: 700; font-size: 26px; letter-spacing: .5px; }
-.eyebrow i { width: 12px; height: 12px; border-radius: 50%; background: #FFC940; display: block; }
 h1 { font-weight: 900; line-height: 1.05; letter-spacing: -1px; }
 .sub { font-weight: 400; color: rgba(255,255,255,.88); line-height: 1.35; }
-.hl { color: #FFD166; }
-
-/* ---------- kartu kecil melayang ---------- */
-.chip { position: absolute; display: flex; align-items: center; gap: 16px; padding: 18px 24px;
-  border-radius: 26px; background: rgba(255,255,255,.96); color: #2b123a;
-  box-shadow: 0 24px 50px rgba(30,0,50,.35); }
-.chip .ic { width: 58px; height: 58px; border-radius: 18px; display: flex; align-items: center;
-  justify-content: center; }
-.chip .t1 { font-size: 20px; color: #7a6a85; font-weight: 500; }
-.chip .t2 { font-size: 28px; font-weight: 900; color: #2b123a; }
+.hl { color: #fff; font-weight: 900; }
 
 /* ---------- mockup HP ---------- */
 .phone { --w: 600px; position: absolute; width: var(--w);
@@ -106,9 +93,8 @@ def decorations(variant=0):
     flip = variant % 2 == 1
     l, r = ('right', 'left') if flip else ('left', 'right')
     return f"""
-<div class="blob" style="width:620px;height:620px;{r}:-220px;top:-180px;background:rgba(255,128,214,.55)"></div>
-<div class="blob" style="width:520px;height:520px;{l}:-200px;top:820px;background:rgba(255,201,64,.32)"></div>
-<div class="blob" style="width:700px;height:700px;{r}:-260px;bottom:-300px;background:rgba(120,40,220,.55)"></div>
+<div class="blob" style="width:620px;height:620px;{r}:-240px;top:-200px;background:rgba(255,255,255,.16)"></div>
+<div class="blob" style="width:700px;height:700px;{l}:-300px;bottom:-320px;background:rgba(40,0,80,.25)"></div>
 <div class="ring" style="width:540px;height:540px;{r}:-240px;top:280px"></div>
 <div class="ring thick" style="width:420px;height:420px;{l}:-210px;top:-120px"></div>
 <div class="ring" style="width:300px;height:300px;{l}:-120px;bottom:120px"></div>
@@ -137,55 +123,43 @@ def write(name, html):
 # ---------------------------------------------------------------- slide intro
 intro = f"""
 {decorations(0)}
-<div style="position:absolute;left:0;right:0;top:118px;text-align:center;z-index:5">
-  <div style="display:inline-flex;align-items:center;gap:22px">
-    <img src="logo.png" style="width:104px;height:104px;border-radius:28px;background:#fff;box-shadow:0 18px 40px rgba(30,0,50,.35)">
-    <h1 style="font-size:84px;text-align:left">Kalkulator<br>KPR</h1>
+<div style="position:absolute;left:0;right:0;top:96px;text-align:center;z-index:5">
+  <div style="display:inline-flex;align-items:center;gap:18px">
+    <img src="logo.png" style="width:84px;height:84px;border-radius:22px;background:#fff;box-shadow:0 14px 32px rgba(30,0,50,.3)">
+    <h1 style="font-size:60px">Kalkulator KPR</h1>
   </div>
-  <p class="sub" style="font-size:40px;margin-top:34px">Simulasi cicilan rumah<br><b class="hl" style="font-weight:900">cepat, lengkap & akurat</b></p>
+  <p class="sub" style="font-size:36px;margin-top:24px">Simulasi cicilan rumah<br><b class="hl">cepat, lengkap & akurat</b></p>
 </div>
-{phone('grafik', 520, 'left:470px;top:700px;z-index:2', 8)}
-{phone('home', 560, 'left:96px;top:640px;z-index:3', -6)}
-<div class="chip" style="left:40px;top:1748px;z-index:6">
-  <div class="ic" style="background:linear-gradient(135deg,#D154E8,#7B1FA2)">
-    <svg width="34" viewBox="0 0 24 24" fill="#fff"><path d="M3 11 L12 3 L21 11 V21 H14 V15 H10 V21 H3Z"/></svg></div>
-  <div><div class="t1">Angsuran per bulan</div><div class="t2">Rp 4.635.062</div></div>
-</div>
-<div class="chip" style="right:44px;top:560px;z-index:6;padding:16px 22px">
-  <div class="ic" style="background:linear-gradient(135deg,#FFC940,#E08A00)">
-    <svg width="32" viewBox="0 0 24 24" fill="#fff"><path d="M12 2 L14.6 8.6 L21.6 9.2 L16.3 13.8 L17.9 20.6 L12 17 L6.1 20.6 L7.7 13.8 L2.4 9.2 L9.4 8.6Z"/></svg></div>
-  <div><div class="t1">Metode bunga</div><div class="t2" style="font-size:24px">Anuitas · Efektif · Flat</div></div>
-</div>
+{phone('grafik', 580, 'left:430px;top:440px;z-index:2', 7)}
+{phone('home', 620, 'left:80px;top:390px;z-index:3', -5)}
 """
 write('slide_01.html', page(1080, 1920, intro))
 
 # ------------------------------------------------------------- slide fitur
 FEATURES = [
-    ('home', 'Tiga Metode Bunga', 'Anuitas, efektif, dan flat<br>cukup <b class="hl">satu ketukan</b>', '3 METODE'),
-    ('grafik', 'Grafik Angsuran', 'Total bayar, sisa pinjaman, dan<br><b class="hl">pokok vs bunga</b> tiap tahun', 'VISUAL'),
-    ('tabel', 'Tabel Angsuran', 'Rincian pokok, bunga, dan sisa<br>pinjaman <b class="hl">sampai lunas</b>', 'DETAIL'),
-    ('daya_bayar', 'Cek Daya Bayar', 'Pastikan cicilan masih <b class="hl">aman</b><br>untuk penghasilan Anda', 'BARU'),
-    ('advanced', 'Fix & Floating', 'Simulasi bunga fix, floating,<br>dan <b class="hl">bunga berjenjang</b>', 'LANJUTAN'),
-    ('syariah', 'KPR Syariah', 'Akad <b class="hl">murabahah</b> &<br>musyarakah mutanaqisah', 'TANPA BUNGA'),
-    ('riwayat', 'Simpan Riwayat', 'Simpan simulasi, bandingkan,<br>lalu <b class="hl">ekspor ke PDF</b>', 'PRAKTIS'),
+    ('home', 'Tiga Metode Bunga', 'Anuitas, efektif, dan flat<br>cukup <b class="hl">satu ketukan</b>'),
+    ('grafik', 'Grafik Angsuran', 'Total bayar, sisa pinjaman, dan<br><b class="hl">pokok vs bunga</b> tiap tahun'),
+    ('tabel', 'Tabel Angsuran', 'Rincian pokok, bunga, dan sisa<br>pinjaman <b class="hl">sampai lunas</b>'),
+    ('daya_bayar', 'Cek Daya Bayar', 'Pastikan cicilan masih <b class="hl">aman</b><br>untuk penghasilan Anda'),
+    ('advanced', 'Fix & Floating', 'Simulasi bunga fix, floating,<br>dan <b class="hl">bunga berjenjang</b>'),
+    ('syariah', 'KPR Syariah', 'Akad <b class="hl">murabahah</b> &<br>musyarakah mutanaqisah'),
+    ('riwayat', 'Simpan Riwayat', 'Simpan simulasi, bandingkan,<br>lalu <b class="hl">ekspor ke PDF</b>'),
 ]
-for i, (shot, title, sub, eyebrow) in enumerate(FEATURES, start=2):
+for i, (shot, title, sub) in enumerate(FEATURES, start=2):
     body = f"""
 {decorations(i)}
-<div style="position:absolute;left:0;right:0;top:110px;text-align:center;z-index:5">
-  <span class="eyebrow"><i></i>{eyebrow}</span>
-  <h1 style="font-size:88px;margin-top:30px">{title}</h1>
-  <p class="sub" style="font-size:40px;margin-top:22px">{sub}</p>
+<div style="position:absolute;left:0;right:0;top:84px;text-align:center;z-index:5">
+  <h1 style="font-size:76px">{title}</h1>
+  <p class="sub" style="font-size:36px;margin-top:18px">{sub}</p>
 </div>
-{phone(shot, 620, 'left:230px;top:560px;z-index:3')}
+{phone(shot, 700, 'left:190px;top:338px;z-index:3')}
 """
     write(f'slide_{i:02d}.html', page(1080, 1920, body))
 
 # ---------------------------------------------------------- feature graphic
 fg = f"""
-<div class="blob" style="width:420px;height:420px;right:-60px;top:-160px;background:rgba(255,128,214,.6)"></div>
-<div class="blob" style="width:360px;height:360px;left:-140px;bottom:-200px;background:rgba(255,201,64,.35)"></div>
-<div class="blob" style="width:420px;height:420px;right:120px;bottom:-260px;background:rgba(120,40,220,.6)"></div>
+<div class="blob" style="width:420px;height:420px;right:-60px;top:-180px;background:rgba(255,255,255,.16)"></div>
+<div class="blob" style="width:420px;height:420px;left:-160px;bottom:-240px;background:rgba(40,0,80,.25)"></div>
 <div class="ring" style="width:380px;height:380px;right:-120px;top:120px"></div>
 <div class="ring thick" style="width:300px;height:300px;left:-150px;top:-150px;border-width:20px"></div>
 <div class="dots" style="width:170px;height:120px;left:560px;top:30px;background-size:22px 22px"></div>
@@ -200,13 +174,9 @@ fg = f"""
     <h1 style="font-size:58px">Kalkulator KPR</h1>
   </div>
   <p class="sub" style="font-size:28px;margin-top:20px">Simulasi cicilan rumah<br><b class="hl" style="font-weight:900">cepat, lengkap & akurat</b></p>
-  <div style="display:flex;gap:10px;margin-top:26px;flex-wrap:wrap;max-width:440px">
-    <span class="eyebrow" style="font-size:18px;padding:8px 16px"><i></i>Anuitas · Efektif · Flat</span>
-    <span class="eyebrow" style="font-size:18px;padding:8px 16px"><i></i>KPR Syariah</span>
-  </div>
 </div>
-{phone('grafik', 270, 'left:800px;top:70px;z-index:2', 9)}
-{phone('home', 290, 'left:610px;top:44px;z-index:3', -5)}
+{phone('grafik', 300, 'left:780px;top:60px;z-index:2', 9)}
+{phone('home', 320, 'left:580px;top:36px;z-index:3', -5)}
 """
 write('feature_graphic.html', page(1024, 500, fg))
 print('ok')
