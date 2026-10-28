@@ -287,6 +287,28 @@ class _PrincipalTableState extends State<PrincipalTable> {
         child: icon,
       );
 
+  /// Satu baris ringkasan di kepala halaman, dengan garis pemisah tipis di
+  /// bawahnya.
+  Widget _summaryRow(String label, String value, {Color? valueColor}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.primary.withValues(alpha: 0.12)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: Text(label)),
+          Text(
+            value,
+            style: TextStyle(fontWeight: FontWeight.bold, color: valueColor),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     _cubit = BlocProvider.of<PurchaseCubit>(context);
@@ -596,83 +618,38 @@ class _PrincipalTableState extends State<PrincipalTable> {
                     Container(
                       width: size.width,
                       color: _headerColor,
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Padding(
-                            padding: EdgeInsets.only(bottom: 14),
+                            padding: EdgeInsets.only(bottom: 4),
                             child: Text(
                               'Tabel Angsuran',
                               style: TextStyle(
                                   fontSize: 22, fontWeight: FontWeight.bold),
                             ),
                           ),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(widget.contract.isSharia
-                                      ? 'Akad'
-                                      : 'Jenis'),
-                                ),
-                                Text(
-                                  _schemeLabel,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColors.primary),
-                                )
-                              ],
-                            ),
+                          _summaryRow(
+                            widget.contract.isSharia ? 'Akad' : 'Jenis',
+                            _schemeLabel,
+                            valueColor: AppColors.primary,
                           ),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(_terms.financing),
-                                ),
-                                Text(
-                                  "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                )
-                              ],
-                            ),
+                          _summaryRow(
+                            _terms.financing,
+                            "Rp. ${currencyId.format(widget.calculateModel!.loan)}",
                           ),
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 10),
-                            child: Row(
-                              children: [
-                                const Expanded(
-                                  child: Text('Jangka Waktu (Tahun)'),
-                                ),
-                                Text(
-                                  currencyId
-                                      .format(widget.calculateModel!.year),
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                )
-                              ],
-                            ),
+                          _summaryRow(
+                            'Jangka Waktu (Tahun)',
+                            currencyId.format(widget.calculateModel!.year),
                           ),
                           if (widget.calculateModel?.floatingInterest == null)
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 10),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(_terms.rate),
-                                  ),
-                                  Text(
-                                    '${widget.calculateModel!.interest!}%',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
-                                  )
-                                ],
-                              ),
+                            _summaryRow(
+                              _terms.rate,
+                              '${widget.calculateModel!.interest!}%',
                             ),
+                          if (widget.calculateModel?.floatingInterest != null)
+                            const SizedBox(height: 10),
                           if (widget.calculateModel?.floatingInterest != null)
                             SizedBox(
                               width: double.infinity,

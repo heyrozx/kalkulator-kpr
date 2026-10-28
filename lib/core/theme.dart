@@ -84,6 +84,21 @@ class AppRadius {
   static const double sheet = 15;
 }
 
+/// Bayangan yang dipakai berulang.
+class AppShadows {
+  const AppShadows._();
+
+  /// Bayangan lebar & tipis bernuansa ungu untuk kartu di halaman tabel
+  /// angsuran, supaya kartu terlihat mengambang halus, bukan bergaris abu-abu.
+  static List<BoxShadow> get soft => [
+        BoxShadow(
+          color: AppColors.primary.withValues(alpha: 0.07),
+          blurRadius: 18,
+          offset: const Offset(0, 4),
+        ),
+      ];
+}
+
 class AppTheme {
   const AppTheme._();
 

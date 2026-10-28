@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:kalkulator_kpr/blocs/purchase_cubit/purchase_cubit.dart';
+import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/pages/home/home_screen.dart';
 
+/// Layar konfirmasi setelah pembelian premium berhasil.
 class PaymentSuccess extends StatefulWidget {
   const PaymentSuccess({super.key});
 
@@ -13,76 +15,155 @@ class PaymentSuccess extends StatefulWidget {
 class _PaymentSuccessState extends State<PaymentSuccess> {
   late PurchaseCubit _cubit;
 
+  /// Fitur yang terbuka setelah upgrade.
+  static const List<({IconData icon, String label})> _benefits = [
+    (icon: Icons.block, label: 'Bebas iklan di seluruh aplikasi'),
+    (icon: Icons.picture_as_pdf_outlined, label: 'Download & bagikan PDF'),
+    (icon: Icons.history, label: 'Simpan riwayat simulasi tanpa batas'),
+  ];
+
   @override
   void initState() {
     _cubit = BlocProvider.of<PurchaseCubit>(context);
     super.initState();
   }
 
+  void _backToHome() {
+    _cubit.checkPremium();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+          builder: (BuildContext context) =>
+              const MyHomePage(title: 'Kalkulator KPR')),
+      ModalRoute.withName('/dashboard'),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        padding: const EdgeInsets.all(20),
+        width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Color(0xFF3CA55C),
-              Color(0xFFB5AC49),
-            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: AppColors.upgradeGradient,
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.check_circle,
-              size: 100,
-              color: Colors.white,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Column(
+              children: [
+                const Spacer(),
+                _buildBadge(),
+                const SizedBox(height: 24),
+                const Text(
+                  'Upgrade Premium Berhasil!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                      color: AppColors.onPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Terima kasih! Sekarang Anda bisa menikmati Kalkulator KPR '
+                  'tanpa iklan dan memakai semua fitur.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.onPrimary.withValues(alpha: 0.85),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 28),
+                _buildBenefits(),
+                const Spacer(flex: 2),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      backgroundColor: AppColors.surface,
+                      foregroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.button),
+                      ),
+                    ),
+                    onPressed: _backToHome,
+                    child: const Text(
+                      'Kembali ke Beranda',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(
-              height: 10,
-            ),
-            const Text(
-              'Upgrade Premium Berhasil!',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            const Text(
-              'Selamat sekarang anda bisa menikmati layanan Kalkulator KPR bebas iklan dan bisa akses semua fitur.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Lencana premium emas (gaya yang sama dengan tab premium di AppBar) di
+  /// dalam lingkaran putih transparan.
+  Widget _buildBadge() {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.onPrimary.withValues(alpha: 0.15),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: AppColors.premiumGradient,
+          ),
+        ),
+        child: const Icon(
+          Icons.workspace_premium,
+          size: 64,
+          color: AppColors.onPrimary,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBenefits() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.onPrimary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppRadius.panel),
+      ),
+      child: Column(
+        children: [
+          for (final benefit in _benefits)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                children: [
+                  Icon(benefit.icon, color: AppColors.onPrimary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      benefit.label,
+                      style: const TextStyle(color: AppColors.onPrimary),
+                    ),
+                  ),
+                  const Icon(Icons.check_circle,
+                      color: AppColors.onPrimary, size: 18),
+                ],
               ),
             ),
-            const SizedBox(
-              height: 10,
-            ),
-            OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                    // backgroundColor: Colors.white,
-                    foregroundColor: Colors.white),
-                onPressed: () {
-                  _cubit.checkPremium();
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                        builder: (BuildContext context) =>
-                            const MyHomePage(title: 'Kalkulator KPR')),
-                    ModalRoute.withName('/dashboard'),
-                  );
-                },
-                child: const Text('Kembali ke Dashboard'))
-          ],
-        ),
+        ],
       ),
     );
   }

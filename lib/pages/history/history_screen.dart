@@ -12,6 +12,7 @@ import 'package:kalkulator_kpr/models/simulation_history.dart';
 import 'package:kalkulator_kpr/pages/premiums/premium_paywall.dart';
 import 'package:kalkulator_kpr/pages/principle/principal_table.dart';
 import 'package:kalkulator_kpr/shared/widgets/name_input_dialog.dart';
+import 'package:kalkulator_kpr/shared/widgets/premium_tab.dart';
 import 'package:kalkulator_kpr/utils/custom_snackbar.dart';
 
 /// Daftar simulasi tersimpan (F-5).
@@ -202,16 +203,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
           BlocBuilder<PurchaseCubit, PurchaseState>(
             builder: (context, state) {
               if (state is! PurchaseNothing) return const SizedBox();
-              return IconButton(
-                onPressed: () => showPremiumPaywall(context),
-                icon: SizedBox(
-                  width: 30,
-                  child: Image.asset('assets/premium.png'),
-                ),
+              return PremiumTab(
+                isPremium: false,
+                onTap: () => showPremiumPaywall(context),
               );
             },
           ),
-          const SizedBox(width: 7),
         ],
       ),
       body: SafeArea(child: _buildBody()),
@@ -337,11 +334,11 @@ class _HistoryTile extends StatelessWidget {
       margin: const EdgeInsets.only(top: 10),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.panel),
         side: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppRadius.card),
+        borderRadius: BorderRadius.circular(AppRadius.panel),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(14, 12, 4, 12),

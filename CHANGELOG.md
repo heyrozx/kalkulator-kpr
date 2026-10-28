@@ -33,6 +33,16 @@
   bawah AppBar. Header kolom tabel juga tetap menempel saat tabel digulir
 * Kartu di halaman Tabel Angsuran dibuat lebih membulat
 * Perbaikan: judul kolom "Bulan ke" di tabel angsuran tidak lagi terpotong
+* Ringkasan di bagian atas halaman Tabel Angsuran diberi garis pemisah di bawah
+  tiap baris
+* Tab Daya Bayar kini menjelaskan apa itu daya bayar dan batas rasio cicilan
+  (Aman / Waspada / Berat)
+* Bayangan kartu di semua tab halaman Tabel Angsuran dibuat lebih lembut
+* Kartu di Riwayat Simulasi lebih membulat
+* Ikon premium lama (gambar mahkota) di Riwayat Simulasi diganti tab premium
+  bergradasi seperti di beranda
+* Halaman Upgrade Premium Berhasil didesain ulang dengan gradasi ungu khas
+  aplikasi, lencana premium emas, dan daftar fitur yang terbuka
 * Perbaikan: aplikasi bisa crash saat dibuka di build rilis dengan pesan
   "Failed to create an instance of androidx.work.impl.WorkDatabase"
   (WorkManager bawaan AdMob terpangkas oleh R8)

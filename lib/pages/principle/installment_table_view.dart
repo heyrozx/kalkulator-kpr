@@ -68,14 +68,7 @@ class InstallmentTableView extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppColors.surface,
                     borderRadius: BorderRadius.circular(AppRadius.panel),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(alpha: 0.2),
-                        spreadRadius: 4,
-                        blurRadius: 3,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
+                    boxShadow: AppShadows.soft,
                   ),
                   sliver: SliverMainAxisGroup(
                     slivers: [
