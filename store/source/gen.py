@@ -29,15 +29,15 @@ h1 { font-weight: 900; line-height: 1.05; letter-spacing: -1px; }
 .hl { color: #fff; font-weight: 900; }
 
 /* ---------- kartu melayang ---------- */
-.float { position: absolute; z-index: 6; display: flex; align-items: center; gap: 16px;
-  padding: 16px 26px 16px 16px; border-radius: 28px; background: #fff; color: #2b123a;
+.float { position: absolute; z-index: 6; display: flex; align-items: center; gap: 22px;
+  padding: 22px 36px 22px 22px; border-radius: 34px; background: #fff; color: #2b123a;
   box-shadow: 0 26px 60px rgba(40,0,70,.35), 0 6px 14px rgba(40,0,70,.15); }
-.float .ic { width: 56px; height: 56px; border-radius: 20px; flex: none;
+.float .ic { width: 80px; height: 80px; border-radius: 24px; flex: none;
   display: flex; align-items: center; justify-content: center;
   background: linear-gradient(160deg, #D154E8, #7B1FA2); }
-.float .ic svg { width: 30px; height: 30px; fill: #fff; }
-.float .t1 { font-size: 20px; color: #7d6b88; font-weight: 500; }
-.float .t2 { font-size: 29px; font-weight: 900; color: #2b123a; margin-top: 2px; }
+.float .ic svg { width: 42px; height: 42px; fill: #fff; }
+.float .t1 { font-size: 26px; color: #7d6b88; font-weight: 500; }
+.float .t2 { font-size: 40px; font-weight: 900; color: #2b123a; margin-top: 2px; }
 
 /* ---------- mockup HP ---------- */
 .phone { --w: 600px; position: absolute; width: var(--w);
@@ -162,35 +162,40 @@ intro = f"""
 </div>
 {phone('grafik', 580, 'left:430px;top:470px;z-index:2', 7)}
 {phone('home', 620, 'left:80px;top:420px;z-index:3', -5)}
-{floating('home', 'Angsuran per bulan', 'Rp 4.635.062', 'left:36px;top:1745px')}
-{floating('layers', 'Metode bunga', 'Anuitas · Efektif · Flat', 'right:36px;top:400px')}
+{floating('home', 'Angsuran per bulan', 'Rp 4.635.062', 'left:30px;top:1720px')}
+{floating('layers', 'Metode bunga', '3 pilihan', 'right:30px;top:380px')}
 """
 write('slide_01.html', page(1080, 1920, intro))
 
 # ------------------------------------------------------------- slide fitur
 FEATURES = [
     ('home', 'Tiga Metode Bunga', 'Anuitas, efektif, dan flat<br>cukup <b class="hl">satu ketukan</b>', [
-        ('layers', 'Pilih metode', 'Anuitas · Efektif · Flat', 'right:30px;top:600px'),
-        ('home', 'Angsuran per bulan', 'Rp 4.635.062', 'left:24px;top:1010px'),
+        ('home', 'Angsuran per bulan', 'Rp 4,6 jt', 'left:24px;top:1000px'),
+        ('layers', 'Pilih metode', '3 pilihan', 'right:24px;top:1560px'),
     ]),
     ('grafik', 'Grafik Angsuran', 'Total bayar, sisa pinjaman, dan<br><b class="hl">pokok vs bunga</b> tiap tahun', [
-        ('pie', 'Porsi bunga', '40% dari total', 'right:24px;top:1345px'),
+        ('chart', 'Total bayar', 'Rp 834 jt', 'left:24px;top:1620px'),
+        ('pie', 'Porsi bunga', '40%', 'right:24px;top:1330px'),
     ]),
     ('tabel', 'Tabel Angsuran', 'Rincian pokok, bunga, dan sisa<br>pinjaman <b class="hl">sampai lunas</b>', [
-        ('list', 'Rincian lengkap', '180 bulan', 'right:16px;top:1700px'),
+        ('list', 'Rincian lengkap', '180 bulan', 'left:24px;top:1560px'),
+        ('pie', 'Total bunga', 'Rp 334 jt', 'right:24px;top:1000px'),
     ]),
     ('daya_bayar', 'Cek Daya Bayar', 'Pastikan cicilan masih <b class="hl">aman</b><br>untuk penghasilan Anda', [
-        ('check', 'Rasio cicilan', '28,5% · Aman', 'right:24px;top:1450px'),
+        ('wallet', 'Sisa penghasilan', 'Rp 12,8 jt', 'left:24px;top:1700px'),
+        ('check', 'Rasio cicilan', '28,5% Aman', 'right:24px;top:1440px'),
     ]),
     ('advanced', 'Fix & Floating', 'Simulasi bunga fix, floating,<br>dan <b class="hl">bunga berjenjang</b>', [
-        ('percent', 'Bunga fix 3 tahun', '6,5%', 'right:24px;top:1205px'),
+        ('layers', 'Juga tersedia', 'Berjenjang', 'left:24px;top:1580px'),
+        ('percent', 'Bunga fix 3 tahun', '6,5%', 'right:24px;top:1190px'),
     ]),
     ('syariah', 'KPR Syariah', 'Akad <b class="hl">murabahah</b> &<br>musyarakah mutanaqisah', [
-        ('home', 'Angsuran tetap', 'Rp 6.050.000', 'right:24px;top:1210px'),
+        ('percent', 'Margin', '8% / tahun', 'left:24px;top:1700px'),
+        ('home', 'Angsuran tetap', 'Rp 6,05 jt', 'right:24px;top:1190px'),
     ]),
     ('riwayat', 'Simpan Riwayat', 'Simpan simulasi, bandingkan,<br>lalu <b class="hl">ekspor ke PDF</b>', [
-        ('save', 'Tersimpan', '3 simulasi', 'right:24px;top:600px'),
-        ('pdf', 'Bagikan', 'Ekspor ke PDF', 'left:30px;top:1660px'),
+        ('pdf', 'Bagikan', 'Ekspor PDF', 'left:24px;top:1640px'),
+        ('save', 'Tersimpan', '3 simulasi', 'right:24px;top:580px'),
     ]),
 ]
 for i, (shot, title, sub, floats) in enumerate(FEATURES, start=2):
