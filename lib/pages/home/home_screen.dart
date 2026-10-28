@@ -290,7 +290,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      title: const Text('Kalkulator KPR'),
+      title: const Text(
+        'Kalkulator KPR',
+        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+      ),
       leading: IconButton(
         onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         icon: SizedBox(
@@ -521,19 +524,24 @@ class _MyHomePageState extends State<MyHomePage> {
       child: SafeArea(
         child: Column(
           children: [
-            const ListTile(
+            ListTile(
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 10),
+                    child: Image.asset('assets/ic_launcher.png',
+                        width: 56, height: 56),
+                  ),
+                  const Text(
                     'Kalkulator KPR',
                     style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 20),
                   ),
-                  SizedBox(height: 5),
-                  Text('Simulasi Kredit'),
+                  const SizedBox(height: 5),
+                  const Text('Simulasi Kredit'),
                 ],
               ),
             ),

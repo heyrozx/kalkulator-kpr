@@ -8,6 +8,8 @@
 * Ikon tanda tanya di pojok kanan atas beranda dipindah ke menu samping sebagai
   **Bantuan**, berisi daftar penjelasan bunga anuitas, efektif, flat, KPR
   Syariah, dan disklaimer
+* Judul "Kalkulator KPR" di beranda dibuat lebih kecil
+* Logo aplikasi tampil di bagian atas menu samping
 
 ## 1.5.0 (16) - RELEASED
 
