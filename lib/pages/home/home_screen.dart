@@ -19,6 +19,7 @@ import 'package:kalkulator_kpr/pages/principle/principal_table.dart';
 import 'package:kalkulator_kpr/pages/settings/settings_screen.dart';
 import 'package:kalkulator_kpr/pages/sharia/sharia_screen.dart';
 import 'package:kalkulator_kpr/shared/widgets/labeled_number_field.dart';
+import 'package:kalkulator_kpr/shared/widgets/segmented_switch.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -29,19 +30,18 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage>
-    with SingleTickerProviderStateMixin {
-  /// Tinggi baku `TabBar` berisi teks saja di Material 2.
-  static const double _tabBarHeight = 46;
+class _MyHomePageState extends State<MyHomePage> {
+  /// Tinggi area switch metode bunga di bawah judul AppBar.
+  static const double _switchAreaHeight = 54;
 
   static const TextStyle _buttonStyle = TextStyle(fontSize: 14);
 
-  /// Urutan tab metode bunga di beranda. Anuitas paling depan karena skema itu
+  /// Urutan pilihan metode bunga di beranda. Anuitas paling depan karena skema itu
   /// yang paling umum dipakai bank untuk KPR.
-  static const List<({CalculatorType type, String label})> _tabs = [
-    (type: CalculatorType.anuitas, label: 'Anuitas'),
-    (type: CalculatorType.effective, label: 'Efektif'),
-    (type: CalculatorType.flat, label: 'Flat'),
+  static const List<({CalculatorType value, String label})> _methods = [
+    (value: CalculatorType.anuitas, label: 'Anuitas'),
+    (value: CalculatorType.effective, label: 'Efektif'),
+    (value: CalculatorType.flat, label: 'Flat'),
   ];
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -51,8 +51,6 @@ class _MyHomePageState extends State<MyHomePage>
   final _interestController = TextEditingController();
   final InterstitialAdManager _interstitialAd = InterstitialAdManager();
 
-  late final TabController _tabController;
-
   CalculateResultModel? result;
   CalculatorType type = CalculatorType.anuitas;
   double percentIndicator = 0;
@@ -60,18 +58,11 @@ class _MyHomePageState extends State<MyHomePage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: _tabs.length,
-      initialIndex: _tabs.indexWhere((tab) => tab.type == type),
-      vsync: this,
-    )..addListener(_onTabChanged);
     _preloadInterstitial();
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
     _loanController.dispose();
     _yearController.dispose();
     _interestController.dispose();
@@ -79,10 +70,7 @@ class _MyHomePageState extends State<MyHomePage>
     super.dispose();
   }
 
-  /// Listener ikut terpanggil di setiap frame animasi tab, jadi pekerjaan berat
-  /// hanya dijalankan ketika metodenya benar-benar berubah.
-  void _onTabChanged() {
-    final CalculatorType selected = _tabs[_tabController.index].type;
+  void _onTypeChanged(CalculatorType selected) {
     if (selected == type) return;
     type = selected;
     _recalculateIfFilled();
@@ -184,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage>
       key: _scaffoldKey,
       drawer: _buildDrawer(),
       // AppBar harus lewat slot `appBar` Scaffold, bukan menumpang di dalam
-      // Column body: AppBar dengan `bottom` (TabBar) memakai Flexible di
+      // Column body: AppBar dengan `bottom` (switch metode) memakai Flexible di
       // dalamnya, dan Column memberi tinggi tak terbatas ke anak non-flex
       // sehingga layout-nya gagal.
       appBar: _buildAppBar(),
@@ -224,32 +212,13 @@ class _MyHomePageState extends State<MyHomePage>
         ),
       ),
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(_tabBarHeight),
-        child: SizedBox(
-          height: _tabBarHeight,
-          child: Stack(
-            children: [
-              // Garis abu-abu selebar tab bar supaya tab yang tidak aktif tetap
-              // punya indikator. `TabBar` hanya menggambar garis pembatas kalau
-              // Material 3 aktif, dan tema aplikasi masih Material 2.
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(height: 2, color: AppColors.faintLine),
-              ),
-              TabBar(
-                controller: _tabController,
-                labelColor: AppColors.primary,
-                unselectedLabelColor: AppColors.muted,
-                indicatorColor: AppColors.primary,
-                indicatorSize: TabBarIndicatorSize.tab,
-                labelStyle:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                unselectedLabelStyle: const TextStyle(fontSize: 14),
-                tabs: [for (final tab in _tabs) Tab(text: tab.label)],
-              ),
-            ],
+        preferredSize: const Size.fromHeight(_switchAreaHeight),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          child: SegmentedSwitch<CalculatorType>(
+            segments: _methods,
+            selected: type,
+            onChanged: _onTypeChanged,
           ),
         ),
       ),
@@ -488,7 +457,7 @@ class _MyHomePageState extends State<MyHomePage>
               ),
             ),
             const Divider(thickness: 0.5),
-            // Metode bunga sekarang dipilih lewat tab di beranda, jadi drawer
+            // Metode bunga sekarang dipilih lewat switch di beranda, jadi drawer
             // hanya menyisakan layar-layar lain.
             ListTile(
               leading: const Icon(Icons.tune),

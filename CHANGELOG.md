@@ -1,3 +1,8 @@
+## 1.5.1 (17)
+
+* Pilihan metode bunga di beranda (Anuitas / Efektif / Flat) kini berupa switch
+  berbentuk pil dengan penanda ungu yang bergeser, menggantikan tab bergaris
+
 ## 1.5.0 (16) - RELEASED
 
 KPR Syariah (F-8 di `ANALISIS-IMPROVEMENT.md`).

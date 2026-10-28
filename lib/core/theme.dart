@@ -24,7 +24,7 @@ class AppColors {
   static Color get subtle => Colors.grey.shade300;
 
   /// Garis tipis yang hanya berperan sebagai jalur/latar, bukan pembatas tegas
-  /// — mis. garis tab yang tidak aktif di beranda.
+  /// — mis. lintasan switch metode bunga di beranda.
   static Color get faintLine => Colors.grey.shade200;
 
   /// Warna porsi bunga pada indikator lingkaran di layar utama.

@@ -39,7 +39,7 @@ Package/applicationId: `com.caraguna.kalkulator.kpr`
 - `blocs/purchase_cubit/` — status premium (`checkPremium`, `makePurchase`, `restorePurchase`),
   entitlement RevenueCat bernama `"premium"`.
 - `pages/home/` — form input utama + hasil ringkas + interstitial ad. Metode bunga
-  dipilih lewat `TabBar` di AppBar (anuitas/efektif/flat, state `type` ikut tab);
+  dipilih lewat `SegmentedSwitch` (`shared/widgets/segmented_switch.dart`) di bagian bawah AppBar (anuitas/efektif/flat, state `type`);
   drawer hanya berisi navigasi layar lain + `Pengaturan`.
 - `pages/settings/settings_screen.dart` — premium & pulihkan pembelian, beri rating,
   disclaimer, privacy policy, versi aplikasi (dulu menumpuk di bawah drawer).
