@@ -424,12 +424,13 @@ class _MyHomePageState extends State<MyHomePage> {
           color: AppColors.surface,
           borderRadius: const BorderRadius.vertical(
               top: Radius.circular(AppRadius.sheet)),
+          // Bayangan lebar & tipis yang naik ke atas supaya panel terlihat
+          // melayang halus di atas latar ungu, bukan bergaris tegas.
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.3),
-              spreadRadius: 2,
-              blurRadius: 3,
-              offset: const Offset(0, 1),
+              color: AppColors.primary.withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, -6),
             ),
           ],
         ),

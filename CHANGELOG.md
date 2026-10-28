@@ -13,6 +13,8 @@
 * Ikon premium di pojok kanan atas beranda kini berupa ikon lencana: garis ungu
   untuk user gratis (membuka halaman upgrade), emas terisi untuk user premium
   (membuka Pengaturan untuk melihat status langganan)
+* Bayangan panel form di bagian bawah beranda dibuat lebih halus dan menyatu
+  dengan latar
 
 ## 1.5.0 (16) - RELEASED
 
