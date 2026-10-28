@@ -475,14 +475,23 @@ FlTitlesData _titlesData({
           showTitles: true,
           reservedSize: 46,
           interval: yInterval,
-          getTitlesWidget: (value, meta) => SideTitleWidget(
-            meta: meta,
-            space: 6,
-            child: Text(
-              CurrencyFormat.compact(value),
-              style: TextStyle(fontSize: 10, color: AppColors.muted),
-            ),
-          ),
+          getTitlesWidget: (value, meta) {
+            // fl_chart selalu menambahkan label di nilai maksimum sumbu. Nilai
+            // itu bukan kelipatan interval sehingga labelnya bisa menumpuk
+            // dengan label terdekat (mis. "61 jt" di atas "60 jt").
+            final double steps = value / yInterval;
+            if ((steps - steps.round()).abs() > 0.001) {
+              return const SizedBox.shrink();
+            }
+            return SideTitleWidget(
+              meta: meta,
+              space: 6,
+              child: Text(
+                CurrencyFormat.compact(value),
+                style: TextStyle(fontSize: 10, color: AppColors.muted),
+              ),
+            );
+          },
         ),
       ),
       bottomTitles: AxisTitles(

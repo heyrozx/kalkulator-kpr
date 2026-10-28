@@ -46,6 +46,10 @@
 * Perbaikan: aplikasi bisa crash saat dibuka di build rilis dengan pesan
   "Failed to create an instance of androidx.work.impl.WorkDatabase"
   (WorkManager bawaan AdMob terpangkas oleh R8)
+* Perbaikan: label sumbu grafik Pokok vs Bunga tidak lagi bertumpuk (mis. "61 jt"
+  di atas "60 jt")
+* Aset listing Google Play baru di folder `store/`: ikon 512, grafis fitur, dan
+  8 screenshot ponsel dengan mockup
 
 ## 1.5.0 (16) - RELEASED
 
