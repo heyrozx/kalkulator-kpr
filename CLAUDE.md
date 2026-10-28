@@ -48,7 +48,7 @@ Package/applicationId: `com.caraguna.kalkulator.kpr`
   dan bunga berjenjang (`tiered_screen.dart`).
 - `pages/principle/principal_table.dart` — halaman hasil: ringkasan + tab Grafik
   (`installment_chart.dart`), Tabel (`installment_table_view.dart`, tabel dari sliver
-  dengan header kolom menempel) dan Kemampuan Bayar (`affordability_tab.dart`, logika di
+  dengan header kolom menempel) dan Daya Bayar (`affordability_tab.dart`, logika di
   `core/affordability.dart`); share & download PDF. Memakai `NestedScrollView` +
   `SliverOverlapAbsorber`, jadi tiap tab wajib berupa `CustomScrollView` dengan
   `SliverOverlapInjector` di paling atas.

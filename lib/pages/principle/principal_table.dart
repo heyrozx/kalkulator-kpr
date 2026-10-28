@@ -759,14 +759,12 @@ class _TabBarHeader extends SliverPersistentHeaderDelegate {
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.onSurface,
         indicatorColor: AppColors.primary,
-        // Tiga tab harus muat di layar 360dp tanpa label terpotong.
-        labelPadding: EdgeInsets.symmetric(horizontal: 4),
-        labelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: TextStyle(fontSize: 13),
+        labelStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontSize: 14),
         tabs: [
           Tab(text: 'Grafik'),
           Tab(text: 'Tabel'),
-          Tab(text: 'Kemampuan Bayar'),
+          Tab(text: 'Daya Bayar'),
         ],
       ),
     );

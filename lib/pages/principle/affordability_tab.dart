@@ -5,7 +5,7 @@ import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
 import 'package:kalkulator_kpr/shared/widgets/labeled_number_field.dart';
 
-/// Tab "Kemampuan Bayar" di halaman tabel angsuran: membandingkan angsuran
+/// Tab "Daya Bayar" di halaman tabel angsuran: membandingkan angsuran
 /// terberat dengan penghasilan pengguna memakai batas rasio cicilan yang umum
 /// dipakai bank (30%).
 ///
@@ -78,7 +78,7 @@ class _AffordabilityTabState extends State<AffordabilityTab>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Cek Kemampuan Bayar',
+          'Cek Daya Bayar',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 4),
