@@ -316,13 +316,25 @@ class _MyHomePageState extends State<MyHomePage> {
       actions: [
         BlocBuilder<PurchaseCubit, PurchaseState>(
           builder: (context, state) {
+            // Premium: lencana emas terisi, membuka Pengaturan untuk melihat
+            // status langganan. Free: lencana garis ungu yang membuka paywall.
+            // Selama status belum diketahui ikon disembunyikan supaya user
+            // premium tidak sempat melihat ajakan upgrade.
+            if (state is PurchaseData && state.isPremium) {
+              return IconButton(
+                tooltip: 'Premium aktif',
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                icon: const Icon(Icons.workspace_premium,
+                    color: AppColors.premiumGold, size: 28),
+              );
+            }
             if (state is! PurchaseNothing) return const SizedBox();
             return IconButton(
+              tooltip: 'Upgrade ke Premium',
               onPressed: () => showPremiumPaywall(context),
-              icon: SizedBox(
-                width: 30,
-                child: Image.asset('assets/premium.png'),
-              ),
+              icon: const Icon(Icons.workspace_premium_outlined,
+                  color: AppColors.primary, size: 28),
             );
           },
         ),

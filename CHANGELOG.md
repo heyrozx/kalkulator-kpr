@@ -10,6 +10,9 @@
   Syariah, dan disklaimer
 * Judul "Kalkulator KPR" di beranda dibuat lebih kecil
 * Logo aplikasi tampil di bagian atas menu samping
+* Ikon premium di pojok kanan atas beranda kini berupa ikon lencana: garis ungu
+  untuk user gratis (membuka halaman upgrade), emas terisi untuk user premium
+  (membuka Pengaturan untuk melihat status langganan)
 
 ## 1.5.0 (16) - RELEASED
 

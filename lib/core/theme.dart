@@ -49,6 +49,9 @@ class AppColors {
   /// Latar tooltip grafik.
   static const Color chartTooltip = Color(0xFF212121);
 
+  /// Warna emas penanda status premium aktif.
+  static const Color premiumGold = Color(0xFFF2A900);
+
   static const Color success = Color(0xFF2E7D32);
   static const Color warning = Colors.orange;
   static const Color danger = Color(0xFFC62828);
