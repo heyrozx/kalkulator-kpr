@@ -40,7 +40,8 @@ Package/applicationId: `com.caraguna.kalkulator.kpr`
   entitlement RevenueCat bernama `"premium"`.
 - `pages/home/` — form input utama + hasil ringkas + interstitial ad. Metode bunga
   dipilih lewat `SegmentedSwitch` (`shared/widgets/segmented_switch.dart`) di bagian bawah AppBar (anuitas/efektif/flat, state `type`);
-  drawer hanya berisi navigasi layar lain + `Pengaturan`.
+  drawer berisi navigasi layar lain, `Bantuan` (bottom sheet daftar halaman
+  penjelasan di `pages/about/`), dan `Pengaturan`.
 - `pages/settings/settings_screen.dart` — premium & pulihkan pembelian, beri rating,
   disclaimer, privacy policy, versi aplikasi (dulu menumpuk di bawah drawer).
 - `pages/advanced/` — kalkulator lanjutan: fix & floating (`fix_and_floating_screen.dart`)

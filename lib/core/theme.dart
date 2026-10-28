@@ -23,9 +23,12 @@ class AppColors {
   /// Warna latar tombol sekunder.
   static Color get subtle => Colors.grey.shade300;
 
-  /// Garis tipis yang hanya berperan sebagai jalur/latar, bukan pembatas tegas
-  /// — mis. lintasan switch metode bunga di beranda.
-  static Color get faintLine => Colors.grey.shade200;
+  /// Latar lembut beranda: gradasi ungu sangat muda ke putih supaya panel
+  /// form dan switch (putih) tetap menonjol.
+  static const List<Color> dashboardGradient = [
+    Color(0xFFF3E8F7),
+    Color(0xFFFBF8FC),
+  ];
 
   /// Warna porsi bunga pada indikator lingkaran di layar utama.
   static const Color interestPortion = Colors.grey;

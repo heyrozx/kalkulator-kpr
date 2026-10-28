@@ -10,8 +10,10 @@ import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/core/validators.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
 import 'package:kalkulator_kpr/pages/about/anuitas_description.dart';
+import 'package:kalkulator_kpr/pages/about/disclaimer.dart';
 import 'package:kalkulator_kpr/pages/about/effective_description.dart';
 import 'package:kalkulator_kpr/pages/about/flat_description.dart';
+import 'package:kalkulator_kpr/pages/about/sharia_description.dart';
 import 'package:kalkulator_kpr/pages/advanced/advanced_screen.dart';
 import 'package:kalkulator_kpr/pages/history/history_screen.dart';
 import 'package:kalkulator_kpr/pages/premiums/premium_paywall.dart';
@@ -32,7 +34,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   /// Tinggi area switch metode bunga di bawah judul AppBar.
-  static const double _switchAreaHeight = 54;
+  static const double _switchAreaHeight = 46;
 
   static const TextStyle _buttonStyle = TextStyle(fontSize: 14);
 
@@ -160,16 +162,102 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.push(context, MaterialPageRoute(builder: (_) => page));
   }
 
-  Widget get _typeDescriptionPage => switch (type) {
-        CalculatorType.flat => const FlatDescription(),
-        CalculatorType.effective => const EffectiveDescription(),
-        CalculatorType.anuitas => const AnuitasDescription(),
-      };
+  /// Daftar halaman bantuan yang bisa dibuka dari menu samping. Dulu hanya
+  /// penjelasan metode yang sedang aktif lewat ikon tanda tanya di AppBar.
+  static const List<
+          ({IconData icon, String title, String subtitle, Widget page})>
+      _helpItems = [
+    (
+      icon: Icons.trending_down,
+      title: 'Bunga Anuitas',
+      subtitle: 'Angsuran tetap, porsi pokok makin besar',
+      page: AnuitasDescription(),
+    ),
+    (
+      icon: Icons.stacked_line_chart,
+      title: 'Bunga Efektif',
+      subtitle: 'Bunga dihitung dari sisa pokok',
+      page: EffectiveDescription(),
+    ),
+    (
+      icon: Icons.horizontal_rule,
+      title: 'Bunga Flat',
+      subtitle: 'Bunga dihitung dari pokok awal',
+      page: FlatDescription(),
+    ),
+    (
+      icon: Icons.mosque_outlined,
+      title: 'KPR Syariah',
+      subtitle: 'Akad murabahah & musyarakah mutanaqisah',
+      page: ShariaDescription(),
+    ),
+    (
+      icon: Icons.gavel_outlined,
+      title: 'Disklaimer',
+      subtitle: 'Batasan hasil simulasi',
+      page: Disclaimer(),
+    ),
+  ];
+
+  void _openHelp() {
+    Navigator.pop(context);
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppRadius.sheet)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                'Bantuan',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            for (final item in _helpItems)
+              ListTile(
+                leading: Icon(item.icon, color: AppColors.primary),
+                title: Text(item.title),
+                subtitle: Text(item.subtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  Navigator.push(
+                      context, MaterialPageRoute(builder: (_) => item.page));
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: AppColors.dashboardGradient,
+        ),
+      ),
+      child: _buildScaffold(),
+    );
+  }
+
+  Widget _buildScaffold() {
     return Scaffold(
       key: _scaffoldKey,
+      // Transparan supaya gradasi latar dari DecoratedBox di atas terlihat.
+      backgroundColor: Colors.transparent,
       drawer: _buildDrawer(),
       // AppBar harus lewat slot `appBar` Scaffold, bukan menumpang di dalam
       // Column body: AppBar dengan `bottom` (switch metode) memakai Flexible di
@@ -214,7 +302,7 @@ class _MyHomePageState extends State<MyHomePage> {
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(_switchAreaHeight),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+          padding: const EdgeInsets.only(top: 2, bottom: 10),
           child: SegmentedSwitch<CalculatorType>(
             segments: _methods,
             selected: type,
@@ -235,15 +323,6 @@ class _MyHomePageState extends State<MyHomePage> {
             );
           },
         ),
-        IconButton(
-          onPressed: () => Navigator.push(
-              context, MaterialPageRoute(builder: (_) => _typeDescriptionPage)),
-          icon: SizedBox(
-            width: 25,
-            height: 25,
-            child: Image.asset('assets/question.png'),
-          ),
-        )
       ],
     );
   }
@@ -387,6 +466,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
+                        elevation: 0,
                         backgroundColor: result != null
                             ? AppColors.subtle
                             : AppColors.primary,
@@ -411,6 +491,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
+                          elevation: 0,
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
@@ -481,6 +562,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const Spacer(),
             const Divider(thickness: 0.5),
+            ListTile(
+              leading: const Icon(Icons.help_outline),
+              title: const Text('Bantuan'),
+              onTap: _openHelp,
+            ),
             ListTile(
               leading: const Icon(Icons.settings_outlined),
               title: const Text('Pengaturan'),

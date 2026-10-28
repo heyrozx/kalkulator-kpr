@@ -10,13 +10,18 @@ class SegmentedSwitch<T> extends StatelessWidget {
     required this.segments,
     required this.selected,
     required this.onChanged,
-    this.height = 38,
+    this.height = 34,
+    this.segmentWidth = 80,
   });
 
   final List<({T value, String label})> segments;
   final T selected;
   final ValueChanged<T> onChanged;
   final double height;
+
+  /// Lebar tiap segmen. Switch tidak merentang selebar layar supaya tetap
+  /// ringkas di bawah judul.
+  final double segmentWidth;
 
   static const Duration _duration = Duration(milliseconds: 220);
 
@@ -28,10 +33,18 @@ class SegmentedSwitch<T> extends StatelessWidget {
 
     return Container(
       height: height,
+      width: segmentWidth * segments.length + 6,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.faintLine,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(radius),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Stack(
         children: [
@@ -54,8 +67,8 @@ class SegmentedSwitch<T> extends StatelessWidget {
                   borderRadius: BorderRadius.circular(radius),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 6,
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                      blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -89,7 +102,7 @@ class SegmentedSwitch<T> extends StatelessWidget {
             // Digabung dengan gaya warisan supaya font tema tetap terpakai;
             // AnimatedDefaultTextStyle mengganti gaya secara utuh.
             style: DefaultTextStyle.of(context).style.merge(TextStyle(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   color: isSelected ? AppColors.onPrimary : AppColors.muted,
                 )),

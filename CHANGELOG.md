@@ -1,7 +1,13 @@
 ## 1.5.1 (17)
 
 * Pilihan metode bunga di beranda (Anuitas / Efektif / Flat) kini berupa switch
-  berbentuk pil dengan penanda ungu yang bergeser, menggantikan tab bergaris
+  berbentuk pil dengan penanda ungu yang bergeser, menggantikan tab bergaris.
+  Ukurannya ringkas di tengah, tidak lagi selebar layar
+* Beranda kini memakai latar ungu lembut; tombol Hitung dan Tabel Angsuran
+  tampil datar tanpa bayangan
+* Ikon tanda tanya di pojok kanan atas beranda dipindah ke menu samping sebagai
+  **Bantuan**, berisi daftar penjelasan bunga anuitas, efektif, flat, KPR
+  Syariah, dan disklaimer
 
 ## 1.5.0 (16) - RELEASED
 
