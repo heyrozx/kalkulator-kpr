@@ -1,5 +1,7 @@
 ## 1.5.1 (17)
 
+* Perbaikan build Android: Gradle, Android Gradle Plugin, dan Kotlin dinaikkan
+  ke versi yang diwajibkan Flutter 3.47 (build appbundle sebelumnya gagal)
 * Pilihan metode bunga di beranda (Anuitas / Efektif / Flat) kini berupa switch
   berbentuk pil dengan penanda ungu yang bergeser, menggantikan tab bergaris.
   Ukurannya ringkas di tengah, tidak lagi selebar layar
