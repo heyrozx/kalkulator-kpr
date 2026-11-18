@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kalkulator KPR – Promo</title>
+<style>
+@font-face { font-family: 'R'; src: url('fonts/Roboto-Regular.ttf'); font-weight: 400; }
+@font-face { font-family: 'R'; src: url('fonts/Roboto-Medium.ttf'); font-weight: 500; }
+@font-face { font-family: 'R'; src: url('fonts/Roboto-Bold.ttf'); font-weight: 700; }
+@font-face { font-family: 'R'; src: url('fonts/Roboto-Black.ttf'); font-weight: 900; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { overflow: hidden; background: #6a1b9a; }
+body { font-family: 'R', sans-serif; color: #fff; }
+#stage { position: relative; overflow: hidden;
+  background: linear-gradient(160deg, #D154E8 0%, #9C27B0 45%, #6A1B9A 100%); }
+.abs { position: absolute; }
+
+/* ---------- latar ---------- */
+.blob { position: absolute; border-radius: 50%; filter: blur(90px); will-change: transform; }
+.dots { position: absolute; inset: -200px; opacity: .35;
+  background-image: radial-gradient(rgba(255,255,255,.55) 2.2px, transparent 2.6px);
+  background-size: 34px 34px; }
+.ring { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,.14); }
+
+/* ---------- dunia (kamera) ---------- */
+#world { position: absolute; left: 0; top: 0; transform-origin: 0 0; will-change: transform; }
+
+/* ---------- mockup HP (lebar layar = 1080 unit dunia) ---------- */
+.phone { position: absolute; width: 1139.2px; padding: 29.6px; border-radius: 165px;
+  background: linear-gradient(150deg, #4a4a52 0%, #1b1b1f 22%, #0d0d10 55%, #2c2c33 100%);
+  box-shadow: 0 100px 200px rgba(25,0,45,.55), 0 24px 60px rgba(0,0,0,.35),
+    inset 0 0 0 2px rgba(255,255,255,.18), inset 0 0 0 6px #070708;
+  transform-origin: 50% 50%; }
+.phone::before { content: ''; position: absolute; inset: 3px; border-radius: 160px; pointer-events: none;
+  background: linear-gradient(135deg, rgba(255,255,255,.22), transparent 18%, transparent 82%, rgba(255,255,255,.10)); }
+.btn { position: absolute; width: 12px; border-radius: 4px; right: -10px;
+  background: linear-gradient(90deg, #2a2a30, #5b5b63 50%, #1d1d22); }
+.btn.power { top: 27%; height: 9%; } .btn.vol { top: 15%; height: 9.5%; }
+.screen { position: relative; width: 1080px; height: 2340px; overflow: hidden; border-radius: 134px; background: #fff; }
+.screen::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 20;
+  background: linear-gradient(115deg, rgba(255,255,255,.13) 0%, rgba(255,255,255,0) 30%); }
+.layer { position: absolute; left: 0; top: 0; width: 1080px; height: 2340px; overflow: hidden; background: #fff; }
+.layer > img.app { position: absolute; left: 0; top: 0; width: 1080px; height: 2340px; }
+.cam { position: absolute; top: 30px; left: 50%; margin-left: -24px; width: 48px; height: 48px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #3a3f5c 0 18%, #0b0b10 30%, #000 70%);
+  box-shadow: 0 0 0 2px #111; z-index: 22; }
+.status { position: absolute; top: 0; left: 0; right: 0; height: 90px; z-index: 21;
+  display: flex; align-items: center; justify-content: space-between; padding: 0 81px;
+  color: #1d1b20; font-weight: 700; font-size: 41px; }
+.status .icons { display: flex; align-items: center; gap: 16px; }
+.status svg { height: 41px; width: auto; fill: #1d1b20; }
+.gesture { position: absolute; bottom: 18px; left: 50%; width: 324px; margin-left: -162px; height: 10px;
+  border-radius: 10px; background: rgba(0,0,0,.55); z-index: 21; }
+
+/* ---------- elemen UI yang dianimasikan (koordinat px screenshot) ---------- */
+.val { position: absolute; white-space: pre; color: #222; font-weight: 400; font-size: 48px; line-height: normal; }
+.caret { display: inline-block; width: 4px; height: 56px; background: #9C27B0; vertical-align: -10px; margin-left: 3px; }
+.focus { position: absolute; border: 6px solid #9C27B0; border-radius: 14px; }
+.flabel { position: absolute; background: #fff; color: #9C27B0; font-size: 36px; padding: 0 9px; line-height: 1; white-space: pre; }
+.tap { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%;
+  background: rgba(60,0,80,.22); border: 4px solid rgba(255,255,255,.95);
+  box-shadow: 0 0 0 10px rgba(156,39,176,.18), 0 10px 30px rgba(0,0,0,.25); z-index: 30; }
+.seg { position: absolute; left: 172px; top: 264px; width: 738px; height: 102px; border-radius: 51px; background: #fff;
+  box-shadow: 0 8px 26px rgba(156,39,176,.10); }
+.seg .ind { position: absolute; top: 9px; width: 240px; height: 84px; border-radius: 42px; background: #9C27B0;
+  box-shadow: 0 6px 16px rgba(156,39,176,.25); }
+.seg .lb { position: absolute; top: 9px; width: 240px; height: 84px; line-height: 84px; text-align: center; font-size: 39px; }
+.total { position: absolute; left: 0; width: 1080px; text-align: center; color: #212021; font-weight: 700; font-size: 81px; white-space: pre; }
+.legv { position: absolute; color: #212021; font-weight: 700; font-size: 45px; white-space: pre; }
+
+/* ---------- teks overlay ---------- */
+.ov { position: absolute; z-index: 50; }
+.typed { white-space: pre; }
+.tcaret { display: inline-block; width: .08em; height: .95em; background: currentColor; vertical-align: -.1em; margin-left: .04em; border-radius: 2px; }
+.hl { background: linear-gradient(transparent 58%, #FFC83D 58%, #FFC83D 92%, transparent 92%); color: #fff; }
+.chip { display: inline-flex; align-items: center; gap: .45em; background: #fff; color: #7B1FA2; border-radius: 999px;
+  font-weight: 900; padding: .42em .9em .42em .55em; box-shadow: 0 24px 60px rgba(40,0,70,.35), 0 6px 14px rgba(40,0,70,.15); white-space: pre; }
+.chip .num { display: inline-flex; align-items: center; justify-content: center; width: 1.55em; height: 1.55em; border-radius: 50%;
+  background: linear-gradient(160deg, #D154E8, #7B1FA2); color: #fff; font-size: .8em; }
+.float { display: flex; align-items: center; gap: 24px; padding: 24px 40px 24px 24px; border-radius: 36px; background: #fff; color: #2b123a;
+  box-shadow: 0 26px 60px rgba(40,0,70,.35), 0 6px 14px rgba(40,0,70,.15); white-space: nowrap; }
+.float .ic { width: 88px; height: 88px; border-radius: 26px; flex: none; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, #D154E8, #7B1FA2); }
+.float .ic svg { width: 48px; height: 48px; fill: #fff; }
+.float .t1 { font-size: 28px; color: #7d6b88; font-weight: 500; }
+.float .t2 { font-size: 46px; font-weight: 900; color: #2b123a; margin-top: 2px; }
+.badge { display: inline-flex; align-items: center; gap: 22px; background: #111; color: #fff; border-radius: 22px;
+  padding: 20px 40px 20px 30px; box-shadow: 0 20px 50px rgba(0,0,0,.35); border: 2px solid rgba(255,255,255,.25); }
+.badge .s { font-size: 24px; font-weight: 500; letter-spacing: .5px; opacity: .85; }
+.badge .b { font-size: 46px; font-weight: 700; line-height: 1; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg">
+    <div class="dots" id="dots"></div>
+    <div class="blob" id="b1" style="width:900px;height:900px;background:#F48FF8;opacity:.45"></div>
+    <div class="blob" id="b2" style="width:1000px;height:1000px;background:#4A0072;opacity:.55"></div>
+    <div class="blob" id="b3" style="width:700px;height:700px;background:#FFC83D;opacity:.18"></div>
+    <div class="ring" id="r1" style="width:1300px;height:1300px"></div>
+    <div class="ring" id="r2" style="width:800px;height:800px;border-width:24px;border-color:rgba(255,255,255,.05)"></div>
+  </div>
+  <div id="world"></div>
+  <div id="overlay"></div>
+</div>
+
+<script>
+// =====================================================================
+//  Parameter & util
+// =====================================================================
+const Q = new URLSearchParams(location.search);
+const ORI = Q.get('o') === 'h' ? 'h' : 'v';
+const W = ORI === 'h' ? 1920 : 1080, H = ORI === 'h' ? 1080 : 1920;
+const V = ORI === 'v';
+const stage = document.getElementById('stage');
+stage.style.width = W + 'px'; stage.style.height = H + 'px';
+
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const prog = (t, a, b) => clamp((t - a) / (b - a));
+const lerp = (a, b, k) => a + (b - a) * k;
+const E = {
+  inOut: x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2,
+  out: x => 1 - Math.pow(1 - x, 3),
+  out5: x => 1 - Math.pow(1 - x, 5),
+  in: x => x * x * x,
+  back: x => { const c1 = 1.9, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); },
+  lin: x => x,
+};
+const rp = n => Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const el = (tag, cls, parent, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; parent.appendChild(e); return e; };
+const css = (e, o) => { for (const k in o) e.style[k] = o[k]; return e; };
+
+// Event audio (dibaca render.js → mixing SFX)
+const EVENTS = [];
+const ev = (t, type, gain = 1) => EVENTS.push({ t: +t.toFixed(3), type, gain });
+
+// =====================================================================
+//  Timeline adegan (detik). Bisa di-override lewat ?cues=JSON
+// =====================================================================
+const S = Object.assign({
+  hook: 0.0, logo: 4.4, input: 8.4, result: 16.4, sw: 19.6, tabel: 24.4, grafik: 29.0, daya: 33.0, more: 39.6, outro: 45.6, end: 51.0,
+}, JSON.parse(Q.get('cues') || '{}'));
+const DURATION = S.end;
+
+// =====================================================================
+//  Latar
+// =====================================================================
+const bgEls = ['b1', 'b2', 'b3', 'r1', 'r2', 'dots'].map(id => document.getElementById(id));
+function renderBg(t) {
+  const [b1, b2, b3, r1, r2, dots] = bgEls;
+  css(b1, { left: (W * .7 + Math.sin(t * .35) * 120 - 450) + 'px', top: (-250 + Math.cos(t * .3) * 90) + 'px' });
+  css(b2, { left: (-350 + Math.cos(t * .25) * 140) + 'px', top: (H - 600 + Math.sin(t * .28) * 100) + 'px' });
+  css(b3, { left: (W * .15 + Math.sin(t * .2) * 200) + 'px', top: (H * .35 + Math.cos(t * .22) * 150) + 'px' });
+  css(r1, { left: (W - 650 + Math.sin(t * .15) * 40) + 'px', top: (H * .55 - 650) + 'px', transform: `rotate(${t * 6}deg)` });
+  css(r2, { left: (-300) + 'px', top: (-260 + Math.sin(t * .3) * 30) + 'px' });
+  css(dots, { transform: `translate(${(t * 8) % 34}px, ${(t * 5) % 34}px)` });
+}
+
+// =====================================================================
+//  Dunia + HP
+// =====================================================================
+const world = document.getElementById('world');
+const STATUS = `<span>9:41</span><span class="icons">
+<svg viewBox="0 0 20 16"><rect x="0" y="11" width="3.4" height="5" rx="1"/><rect x="5.4" y="7.5" width="3.4" height="8.5" rx="1"/><rect x="10.8" y="4" width="3.4" height="12" rx="1"/><rect x="16.2" y="0" width="3.4" height="16" rx="1"/></svg>
+<svg viewBox="0 0 22 16"><path d="M11 15.5 L0.6 4.6 A15.5 15.5 0 0 1 21.4 4.6 Z"/></svg>
+<svg viewBox="0 0 30 16"><rect x="0.8" y="0.8" width="25" height="14.4" rx="3.5" fill="none" stroke="#1d1b20" stroke-width="1.6"/><rect x="3" y="3" width="17.5" height="10" rx="1.8"/><rect x="27" y="5" width="2.6" height="6" rx="1.2"/></svg></span>`;
+
+function makePhone(x, y) {
+  const wrap = el('div', 'abs', world);
+  css(wrap, { left: x + 'px', top: y + 'px', width: '1080px', height: '2340px' });
+  const ph = el('div', 'phone', wrap);
+  css(ph, { left: '-29.6px', top: '-29.6px' });
+  el('div', 'btn vol', ph); el('div', 'btn power', ph);
+  const scr = el('div', 'screen', ph);
+  el('div', 'cam', scr); el('div', 'status', scr, STATUS); el('div', 'gesture', scr);
+  return { wrap, ph, scr };
+}
+function layer(scr, img) {
+  const l = el('div', 'layer', scr);
+  if (img) { const i = el('img', 'app', l); i.src = 'assets/' + img; }
+  return l;
+}
+
+// --- HP utama (koordinat layar = koordinat dunia)
+const P = makePhone(0, 0);
+const L = { home: layer(P.scr, 'home_clean.png'), tabel: layer(P.scr, 'tabel.png'), grafik: layer(P.scr, 'grafik.png'), daya: layer(P.scr, 'daya_clean.png') };
+
+// --- elemen beranda
+const H_ = L.home;
+const svgNS = 'http://www.w3.org/2000/svg';
+const donut = document.createElementNS(svgNS, 'svg');
+donut.setAttribute('width', 1080); donut.setAttribute('height', 2340);
+donut.style.position = 'absolute'; donut.style.left = 0; donut.style.top = 0;
+H_.appendChild(donut);
+const mkC = (stroke) => { const c = document.createElementNS(svgNS, 'circle'); c.setAttribute('cx', 539.5); c.setAttribute('cy', 944.5); c.setAttribute('r', 341);
+  c.setAttribute('fill', 'none'); c.setAttribute('stroke', stroke); c.setAttribute('stroke-width', 38); c.setAttribute('transform', 'rotate(-90 539.5 944.5)'); donut.appendChild(c); return c; };
+const RC = 2 * Math.PI * 341;
+const track = mkC('rgb(184,199,203)'); const arc = mkC('#9C27B0'); arc.setAttribute('stroke-linecap', 'round');
+const total = el('div', 'total', H_); css(total, { top: (970 - .9277 * 81 + 0) + 'px' });
+const legP = el('div', 'legv', H_); css(legP, { left: '241px', top: (1481 - .9277 * 45) + 'px' });
+const legB = el('div', 'legv', H_); css(legB, { left: '651px', top: (1481 - .9277 * 45) + 'px' });
+const seg = el('div', 'seg', H_);
+const segInd = el('div', 'ind', seg);
+const segLb = ['Anuitas', 'Efektif', 'Flat'].map((s, i) => { const d = el('div', 'lb', seg, s); d.style.left = (9 + i * 240) + 'px'; return d; });
+
+const FIELDS = {
+  pinjaman: { x: 42, y: 1758, w: 995, h: 150, tx: 82, base: 1848, label: 'Jumlah Pinjaman (Rp)', lx: 70, layer: H_ },
+  tenor: { x: 42, y: 1932, w: 482, h: 150, tx: 82, base: 2022, label: 'Jangka Waktu (Tahun)', lx: 70, layer: H_ },
+  bunga: { x: 555, y: 1932, w: 482, h: 150, tx: 593, base: 2022, label: 'Bunga Pinjaman', lx: 584, layer: H_ },
+  income: { x: 90, y: 1176, w: 899, h: 150, tx: 130, base: 1266, label: 'Penghasilan Bersih per Bulan (Rp)', lx: 118, layer: L.daya },
+};
+for (const k in FIELDS) {
+  const f = FIELDS[k];
+  f.focus = el('div', 'focus', f.layer); css(f.focus, { left: f.x + 'px', top: f.y + 'px', width: f.w + 'px', height: f.h + 'px' });
+  f.lab = el('div', 'flabel', f.layer, f.label); css(f.lab, { left: f.lx + 'px', top: (f.y - 17) + 'px' });
+  f.val = el('div', 'val', f.layer); css(f.val, { left: f.tx + 'px', top: (f.base - .9277 * 48) + 'px' });
+}
+// penutup hasil rasio daya bayar (di-wipe saat muncul)
+const dayaCover = el('div', 'abs', L.daya); css(dayaCover, { left: '70px', top: '1760px', width: '940px', height: '230px', background: '#fff' });
+
+const taps = [];
+for (let i = 0; i < 3; i++) { const tp = el('div', 'tap', P.scr); tp.style.opacity = 0; taps.push(tp); }
+
+// --- HP tambahan (fitur lain)
+const EXTRA = [
+  { img: 'advanced.png', x: 1700, y: 120, rot: -4, label: 'Fix & Floating' },
+  { img: 'syariah.png', x: 3050, y: 0, rot: 0, label: 'KPR Syariah' },
+  { img: 'riwayat.png', x: 4400, y: 120, rot: 4, label: 'Riwayat Simulasi' },
+].map(e => { const p = makePhone(e.x, e.y); layer(p.scr, e.img); p.wrap.style.transform = `rotate(${e.rot}deg)`; return Object.assign(e, p); });
+
+// =====================================================================
+//  Overlay teks
+// =====================================================================
+const ov = document.getElementById('overlay');
+function typedNode(parent, cls, styles) { const d = el('div', 'ov ' + (cls || ''), parent); css(d, styles || {}); return d; }
+// Teks diketik: kembalikan html sesuai waktu. segs: [{s:'teks', c:'kelas'}]
+function typer(segs, t0, cps, sfx = 'type', gain = .55) {
+  const flat = segs.map(s => typeof s === 'string' ? { s } : s);
+  const n = flat.reduce((a, s) => a + s.s.length, 0);
+  let k = 0;
+  for (const s of flat) for (const ch of s.s) { if (ch !== ' ' && sfx) ev(t0 + k / cps, sfx, gain); k++; }
+  return {
+    t0, t1: t0 + n / cps, n,
+    html(t, caretUntil = Infinity) {
+      let shown = Math.floor(clamp((t - t0) * cps, 0, n)); let out = '';
+      for (const s of flat) { const part = s.s.slice(0, Math.max(0, shown)); shown -= s.s.length;
+        if (part) out += s.c ? `<span class="${s.c}">${part}</span>` : part; }
+      const typing = t < t0 + n / cps;
+      const caretOn = t >= t0 - .4 && t < caretUntil && (typing || Math.floor(t * 2.2) % 2 === 0);
+      return out + (caretOn ? '<span class="tcaret"></span>' : '<span class="tcaret" style="opacity:0"></span>');
+    },
+  };
+}
+
+// ---------- 1. HOOK
+const hk = typedNode(ov, '', {});
+const hk1 = typer(['Mau beli rumah?'], S.hook + .5, 16);
+const hk2 = typer(['Tapi bingung ', { s: 'cicilannya', c: 'hl' }, '?'], S.hook + 1.9, 18);
+const hkHouse = el('div', 'ov', ov, `<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="#fff" d="M12 3 2 11.5h3V21h5.5v-6h3v6H19v-9.5h3z"/></svg>`);
+ev(S.hook + .15, 'pop', .8);
+
+// ---------- 2. LOGO
+const lg = el('div', 'ov', ov);
+lg.innerHTML = `<img src="assets/logo.png" style="width:100%;height:100%;border-radius:22%;background:#fff;box-shadow:0 30px 70px rgba(30,0,50,.4)">`;
+const lgTitle = typedNode(ov, '', {});
+const lgT = typer(['Kalkulator ', { s: 'KPR', c: 'hl' }], S.logo + .75, 14);
+const lgSub = typedNode(ov, '', {});
+ev(S.logo, 'whoosh', .8); ev(S.logo + .3, 'pop', 1);
+
+// ---------- captions per adegan
+function caption(text, num, t0) {
+  const d = typedNode(ov, '', {});
+  const ty = typer([text], t0, 22, 'type', .45);
+  return { d, ty, num, t0 };
+}
+const CAP = {
+  input: caption('Isi data pinjaman', 1, S.input + 1.2),
+  result: caption('Cicilan langsung muncul', 2, S.result + .3),
+  sw: caption('Anuitas · Efektif · Flat', 3, S.sw + .2),
+  tabel: caption('Tabel angsuran lengkap', 4, S.tabel + 1.0),
+  grafik: caption('Grafik sisa pinjaman', 5, S.grafik + .5),
+  daya: caption('Cek daya bayar', 6, S.daya + .5),
+  more: caption('Fitur lanjutan', 7, S.more + .6),
+};
+const CAP_ORDER = ['input', 'result', 'sw', 'tabel', 'grafik', 'daya', 'more'];
+const CAP_END = { input: S.result, result: S.sw, sw: S.tabel, tabel: S.grafik, grafik: S.daya, daya: S.more, more: S.outro };
+
+// float card hasil
+const fc = el('div', 'ov', ov, `<div class="float"><div class="ic"><svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg></div><div><div class="t1">Angsuran per bulan</div><div class="t2">Rp 4.635.062</div></div></div>`);
+// chip fitur lanjutan
+const moreChips = EXTRA.map(e => el('div', 'ov', ov, `<div class="chip" style="font-size:${V ? 44 : 34}px">${e.label}</div>`));
+
+// ---------- OUTRO
+const oLogo = el('div', 'ov', ov, `<img src="assets/logo.png" style="width:100%;height:100%;border-radius:22%;background:#fff;box-shadow:0 26px 60px rgba(30,0,50,.4)">`);
+const oTitle = typedNode(ov, '', {});
+const oT = typer(['Kalkulator ', { s: 'KPR', c: 'hl' }], S.outro + .6, 14);
+const oSub = typedNode(ov, '', {});
+const oSubT = typer(['Hitung cicilan rumah dalam hitungan detik'], S.outro + 1.6, 34, 'type', .3);
+const oBadge = el('div', 'ov', ov, `<div class="badge"><svg viewBox="0 0 24 24" width="62" height="62"><path fill="#00D7FE" d="M3.6 2.2 13.4 12l-9.8 9.8c-.4-.2-.6-.6-.6-1.1V3.3c0-.5.2-.9.6-1.1z"/><path fill="#FFCE00" d="m16.7 15.3-3.3-3.3 3.3-3.3 3.8 2.2c1 .6 1 1.6 0 2.2z"/><path fill="#FF3A44" d="M16.7 15.3 13.4 12l-9.8 9.8c.4.2.9.2 1.5-.1z"/><path fill="#00F076" d="M16.7 8.7 5.1 2.3c-.6-.3-1.1-.3-1.5-.1l9.8 9.8z"/></svg><div><div class="s">DOWNLOAD GRATIS DI</div><div class="b">Google Play</div></div></div>`);
+ev(S.outro, 'whoosh', .9); ev(S.outro + .25, 'pop', 1); ev(S.outro + 3.1, 'ding', .8);
+
+// =====================================================================
+//  Aksi di dalam HP (tap, ketik, transisi)
+// =====================================================================
+const TAPS = [];   // {t, x, y, layer}
+const tap = (t, x, y) => { TAPS.push({ t, x, y }); ev(t, 'tap', 1); };
+const TYPES = [];  // {field, t0, keys:[strings], dt}
+function typeField(field, t0, steps, dt) { TYPES.push({ f: FIELDS[field], t0, steps, dt }); steps.forEach((_, i) => ev(t0 + i * dt, 'key', .9)); return t0 + steps.length * dt; }
+const FOCUS = []; // {f, t0, t1}
+const focus = (field, t0, t1) => FOCUS.push({ f: FIELDS[field], t0, t1 });
+
+// --- input
+const tI = S.input;
+tap(tI + 2.05, 400, 1832); focus('pinjaman', tI + 2.1, tI + 4.6);
+typeField('pinjaman', tI + 2.4, ['5', '50', '500', '5.000', '50.000', '500.000', '5.000.000', '50.000.000', '500.000.000'], .17);
+tap(tI + 4.7, 280, 2006); focus('tenor', tI + 4.75, tI + 5.9);
+typeField('tenor', tI + 5.0, ['1', '15'], .2);
+tap(tI + 6.0, 790, 2006); focus('bunga', tI + 6.05, tI + 7.4);
+typeField('bunga', tI + 6.3, ['7', '7.', '7.5'], .2);
+// --- hasil
+const tR = S.result;
+ev(tR + .25, 'swoosh', .6); ev(tR + 2.0, 'ding', 1); ev(tR + .6, 'count', .5);
+// --- switch
+const tS = S.sw;
+const SW = [{ t: tS + .9, i: 1 }, { t: tS + 2.2, i: 2 }, { t: tS + 3.5, i: 0 }];
+SW.forEach(s => tap(s.t, 181 + s.i * 240 + 120, 315));
+// --- tabel
+const tT = S.tabel;
+tap(tT + .75, 796, 2184);
+ev(tT + 1.0, 'whoosh', .7);
+// --- grafik / daya
+tap(S.grafik + .2, 178, 327); ev(S.grafik + .4, 'swoosh', .5);
+tap(S.daya + .2, 900, 898); ev(S.daya + .4, 'swoosh', .5);
+tap(S.daya + 1.7, 540, 1250); focus('income', S.daya + 1.75, S.daya + 4.1);
+typeField('income', S.daya + 2.0, ['1', '18', '180', '1.800', '18.000', '180.000', '1.800.000', '18.000.000'], .16);
+ev(S.daya + 3.75, 'ding', .9);
+ev(S.more + .1, 'whoosh', .9);
+EXTRA.forEach((e, i) => ev(S.more + 1.3 + i * (V ? 1.35 : .35), 'pop', .7));
+
+// =====================================================================
+//  Kamera: keyframe {t, x, y, s} — titik dunia (x,y) ditaruh di anchor
+// =====================================================================
+const AX = V ? 540 : 1330, AY = V ? 1060 : 540;
+function K(t, x, y, s, ease = 'inOut') { return { t, x, y, s, ease }; }
+let CAM;
+if (V) CAM = [
+  K(0, 540, 3200, .55),
+  K(tI, 540, 3000, .55), K(tI + .9, 540, 1250, .62, 'out'), K(tI + 1.3, 540, 1300, .66),
+  K(tI + 2.0, 540, 1870, 1.04), K(tI + 4.4, 540, 1870, 1.08),
+  K(tI + 5.0, 300, 2000, 1.75), K(tI + 5.8, 300, 2000, 1.78),
+  K(tI + 6.3, 790, 2000, 1.75), K(tI + 7.6, 790, 2000, 1.8),
+  K(tR + .3, 540, 1000, 1.25), K(tR + 2.6, 540, 1000, 1.32),
+  K(tS + .6, 540, 640, 1.2), K(tS + 4.4, 540, 640, 1.25),
+  K(tT + .5, 790, 2000, 1.35), K(tT + .95, 790, 2000, 1.42),
+  K(tT + 1.8, 560, 900, 1.25), K(S.grafik - .2, 560, 1700, 1.3, 'lin'),
+  K(S.grafik + .1, 300, 600, 1.4), K(S.grafik + 1.1, 400, 1100, 1.6), K(S.daya - .1, 500, 1750, 1.45),
+  K(S.daya + .4, 700, 950, 1.4), K(S.daya + 1.5, 540, 1250, 1.16), K(S.daya + 3.4, 540, 1250, 1.2),
+  K(S.daya + 4.2, 540, 1850, 1.15), K(S.more - .1, 540, 1850, 1.2),
+  K(S.more + .8, 2200, 1200, .5), K(S.more + 1.2, 2290, 1290, .62), K(S.more + 2.4, 2290, 1290, .65),
+  K(S.more + 2.9, 3590, 1170, .62), K(S.more + 3.8, 3590, 1170, .65),
+  K(S.more + 4.3, 4940, 1290, .62), K(S.outro - .1, 4940, 1290, .66),
+  K(S.outro + .9, 540, 330, .62), K(S.end, 540, 300, .64),
+]; else CAM = [
+  K(0, 540, 3400, .4),
+  K(tI, 540, 3200, .4), K(tI + .9, 540, 1170, .4, 'out'), K(tI + 1.3, 540, 1170, .42),
+  K(tI + 2.0, 560, 1830, 1.0), K(tI + 4.4, 560, 1830, 1.05),
+  K(tI + 5.0, 300, 2000, 1.25), K(tI + 5.8, 300, 2000, 1.28),
+  K(tI + 6.3, 790, 2000, 1.25), K(tI + 7.6, 790, 2000, 1.3),
+  K(tR + .3, 540, 1000, .85), K(tR + 2.6, 540, 1000, .9),
+  K(tS + .6, 540, 600, 1.0), K(tS + 4.4, 540, 600, 1.05),
+  K(tT + .5, 790, 2100, .95), K(tT + .95, 790, 2100, 1.0),
+  K(tT + 1.8, 540, 800, 1.05), K(S.grafik - .2, 540, 1500, 1.08, 'lin'),
+  K(S.grafik + .1, 300, 560, 1.05), K(S.grafik + 1.1, 540, 1100, 1.2), K(S.daya - .1, 540, 1600, 1.1),
+  K(S.daya + .4, 700, 900, 1.05), K(S.daya + 1.5, 540, 1250, 1.2), K(S.daya + 3.4, 540, 1250, 1.22),
+  K(S.daya + 4.2, 540, 1880, 1.15), K(S.more - .1, 540, 1880, 1.2),
+  K(S.more + .9, 4450, 1170, .3), K(S.more + 2.0, 4650, 1170, .34), K(S.outro - .1, 4700, 1170, .355, 'lin'),
+  K(S.outro + .9, 540, 1170, .4), K(S.end, 540, 1170, .42),
+];
+function camAt(t) {
+  if (t <= CAM[0].t) return CAM[0];
+  for (let i = 1; i < CAM.length; i++) {
+    const a = CAM[i - 1], b = CAM[i];
+    if (t <= b.t) { const k = E[b.ease]((t - a.t) / (b.t - a.t));
+      return { x: lerp(a.x, b.x, k), y: lerp(a.y, b.y, k), s: Math.exp(lerp(Math.log(a.s), Math.log(b.s), k)) }; }
+  }
+  return CAM[CAM.length - 1];
+}
+
+// =====================================================================
+//  Render per frame
+// =====================================================================
+function fieldText(f, t) {
+  let txt = ''; let typing = false;
+  for (const ty of TYPES) if (ty.f === f && t >= ty.t0) {
+    const i = Math.min(ty.steps.length - 1, Math.floor((t - ty.t0) / ty.dt));
+    txt = ty.steps[i];
+  }
+  return txt;
+}
+function render(t) {
+  renderBg(t);
+  // ---- kamera
+  const c = camAt(t);
+  // sedikit "handheld" drift saat zoom dekat
+  const dx = Math.sin(t * .9) * 6, dy = Math.cos(t * .7) * 6;
+  world.style.transform = `translate(${AX - c.x * c.s + dx}px, ${AY - c.y * c.s + dy}px) scale(${c.s})`;
+  world.style.opacity = t < S.input - .05 ? 0 : 1;
+  // HP masuk sedikit miring
+  const tilt = (1 - E.out(prog(t, S.input, S.input + 1.4))) * 14;
+  P.ph.style.transform = `perspective(4000px) rotateX(${tilt}deg) rotateZ(${-tilt * .25}deg)`;
+
+  // ---- layar beranda: field
+  for (const k in FIELDS) {
+    const f = FIELDS[k]; let on = 0;
+    for (const fo of FOCUS) if (fo.f === f && t >= fo.t0 && t < fo.t1) on = 1;
+    f.focus.style.opacity = on; f.lab.style.opacity = on;
+    const txt = fieldText(f, t);
+    f.val.innerHTML = txt + (on && Math.floor(t * 2.4) % 2 === 0 ? '<span class="caret"></span>' : '<span class="caret" style="opacity:0"></span>');
+  }
+  // ---- donut & angka
+  const tR = S.result;
+  const trackK = E.out(prog(t, tR, tR + .5));
+  const swIdx = (() => { let i = 0; for (const s of SW) if (t >= s.t + .05) i = s.i; return i; })();
+  const RES = [{ tot: 4635062, p: 1510062, b: 3125000 }, { tot: 5902778, p: 2777778, b: 3125000 }, { tot: 5902778, p: 2777778, b: 3125000 }];
+  // nilai dihitung naik (hasil pertama) atau transisi cepat (ganti metode)
+  let cur = { tot: 0, p: 0, b: 0 };
+  const k0 = E.out5(prog(t, tR + .45, tR + 2.0));
+  cur = { tot: RES[0].tot * k0, p: RES[0].p * k0, b: RES[0].b * k0 };
+  let prev = RES[0];
+  for (const s of SW) {
+    if (t >= s.t) { const kk = E.out(prog(t, s.t + .05, s.t + .55)); const to = RES[s.i];
+      cur = { tot: lerp(prev.tot, to.tot, kk), p: lerp(prev.p, to.p, kk), b: lerp(prev.b, to.b, kk) }; prev = to; }
+  }
+  track.setAttribute('stroke-dasharray', `${RC * trackK} ${RC}`);
+  const frac = cur.tot ? cur.p / cur.tot : 0;
+  arc.setAttribute('stroke-dasharray', `${Math.max(0.01, RC * frac)} ${RC}`);
+  arc.style.opacity = t > tR + .45 ? 1 : 0;
+  total.textContent = t > tR + .4 ? 'Rp ' + rp(cur.tot) : '';
+  legP.textContent = t > tR + .4 ? 'Rp ' + rp(cur.p) : '';
+  legB.textContent = t > tR + .4 ? 'Rp ' + rp(cur.b) : '';
+  const popK = prog(t, tR + 1.95, tR + 2.35);
+  total.style.transform = `scale(${1 + Math.sin(popK * Math.PI) * .08})`;
+  // switch: posisi indikator
+  let indX = 0; let pv = 0;
+  for (const s of SW) if (t >= s.t) { const kk = E.out(prog(t, s.t + .05, s.t + .4)); indX = lerp(pv, s.i, kk); pv = s.i; }
+  segInd.style.left = (9 + indX * 240) + 'px';
+  segLb.forEach((lb, i) => { const sel = Math.abs(indX - i) < .5; lb.style.color = sel ? '#fff' : 'rgb(117,117,117)'; lb.style.fontWeight = sel ? 700 : 400; });
+
+  // ---- pergantian layar (push)
+  const tT = S.tabel;
+  const push = E.inOut(prog(t, tT + 1.0, tT + 1.45));
+  L.home.style.transform = `translateX(${-push * 35}%)`; L.home.style.filter = `brightness(${1 - push * .25})`;
+  L.tabel.style.transform = `translateX(${(1 - push) * 100}%)`; L.tabel.style.boxShadow = '-30px 0 60px rgba(0,0,0,.15)';
+  const g = E.out(prog(t, S.grafik + .35, S.grafik + .75));
+  L.grafik.style.opacity = g; L.grafik.style.transform = `translateX(${(1 - g) * -6}%)`;
+  const d = E.out(prog(t, S.daya + .35, S.daya + .75));
+  L.daya.style.opacity = d; L.daya.style.transform = `translateX(${(1 - d) * 6}%)`;
+  L.home.style.visibility = push >= 1 ? 'hidden' : 'visible';
+  // outro: kembali ke beranda (layar hasil lengkap)
+  const back = t >= S.outro + .3;
+  if (back) { L.tabel.style.opacity = 0; L.grafik.style.opacity = 0; L.daya.style.opacity = 0; L.home.style.visibility = 'visible'; L.home.style.transform = 'none'; L.home.style.filter = 'none'; }
+  else L.tabel.style.opacity = 1;
+  // rasio daya bayar muncul
+  const wipe = E.inOut(prog(t, S.daya + 3.6, S.daya + 4.2));
+  dayaCover.style.clipPath = `inset(0 0 0 ${wipe * 100}%)`;
+
+  // ---- tap
+  let ti = 0;
+  for (const tp of taps) tp.style.opacity = 0;
+  for (const tp of TAPS) {
+    const k = (t - tp.t + .12) / .55;
+    if (k < 0 || k > 1 || ti >= taps.length) continue;
+    const e = taps[ti++];
+    e.style.left = tp.x + 'px'; e.style.top = tp.y + 'px';
+    e.style.opacity = k < .25 ? k / .25 : 1 - (k - .25) / .75;
+    e.style.transform = `scale(${k < .25 ? .7 + k : .95 + (k - .25) * .6})`;
+  }
+
+  // ---- HP tambahan
+  P.wrap.style.opacity = 1 - prog(t, S.more + .15, S.more + .6) + prog(t, S.outro + .1, S.outro + .5);
+  EXTRA.forEach((e, i) => { e.wrap.style.opacity = t > S.more - .2 && t < S.outro + .9 ? 1 : 0; });
+
+  renderOverlay(t);
+}
+
+// =====================================================================
+//  Overlay
+// =====================================================================
+function show(e, on, k = 1, extra = '') { e.style.display = on ? 'block' : 'none'; if (on) e.style.transform = extra; e.style.opacity = on ? k : 0; }
+function renderOverlay(t) {
+  // HOOK
+  const hookOn = t < S.logo + .3;
+  const hOut = E.in(prog(t, S.logo - .25, S.logo + .25));
+  const hz = V ? 110 : 150;
+  show(hk, hookOn, 1 - hOut, `translateY(${-hOut * 120}px)`);
+  css(hk, { left: (V ? 90 : 0) + 'px', width: (V ? W - 180 : W) + 'px', top: (V ? 820 : 470) + 'px', textAlign: 'center', fontWeight: 900, fontSize: hz + 'px', lineHeight: 1.15, letterSpacing: '-2px' });
+  if (hookOn) hk.innerHTML = `<div class="typed">${hk1.html(t, hk2.t0)}</div><div class="typed" style="font-size:${V ? .62 : .58}em;font-weight:700;margin-top:${V ? 34 : 20}px;opacity:.95">${t >= hk2.t0 - .05 ? hk2.html(t) : ''}</div>`;
+  const hs = E.back(prog(t, S.hook + .05, S.hook + .6));
+  show(hkHouse, hookOn, 1 - hOut, `scale(${hs}) rotate(${Math.sin(t * 2) * 4}deg)`);
+  css(hkHouse, { left: (W / 2 - 110) + 'px', top: (V ? 530 : 170) + 'px', width: '220px', height: '220px', filter: 'drop-shadow(0 20px 40px rgba(40,0,70,.35))' });
+
+  // LOGO
+  const lOn = t >= S.logo && t < S.input + .8;
+  const lin = E.back(prog(t, S.logo + .1, S.logo + .7));
+  const lout = E.inOut(prog(t, S.input - .2, S.input + .6));
+  const ls = V ? 340 : 300;
+  show(lg, lOn, 1 - lout, `scale(${lin * (1 + lout * .6)}) rotate(${(1 - lin) * -20}deg)`);
+  css(lg, { left: (W / 2 - ls / 2) + 'px', top: (V ? 560 : 170) + 'px', width: ls + 'px', height: ls + 'px' });
+  show(lgTitle, lOn, 1 - lout, `translateY(${-lout * 80}px)`);
+  css(lgTitle, { left: 0, width: W + 'px', textAlign: 'center', top: (V ? 990 : 530) + 'px', fontWeight: 900, fontSize: (V ? 118 : 120) + 'px', letterSpacing: '-2px' });
+  if (lOn) lgTitle.innerHTML = `<span class="typed">${lgT.html(t, S.logo + 3.0)}</span>`;
+  const sk = E.out(prog(t, S.logo + 1.9, S.logo + 2.5));
+  show(lgSub, lOn, sk * (1 - lout), `translateY(${(1 - sk) * 30}px)`);
+  css(lgSub, { left: 0, width: W + 'px', textAlign: 'center', top: (V ? 1160 : 700) + 'px', fontWeight: 500, fontSize: (V ? 48 : 46) + 'px', color: 'rgba(255,255,255,.92)' });
+  lgSub.innerHTML = V ? 'Simulasi cicilan rumah<br>cepat, akurat, gratis' : 'Simulasi cicilan rumah — cepat, akurat, gratis';
+
+  // CAPTIONS
+  for (const key of CAP_ORDER) {
+    const cp = CAP[key]; const t1 = CAP_END[key];
+    const on = t >= cp.t0 - .35 && t < t1;
+    const kin = E.back(prog(t, cp.t0 - .35, cp.t0));
+    const kout = E.in(prog(t, t1 - .35, t1));
+    show(cp.d, on, 1 - kout, V ? `translateY(${(1 - kin) * -60 - kout * 40}px) scale(${.85 + kin * .15})` : `translateX(${(1 - kin) * -80 - kout * 60}px)`);
+    if (!on) continue;
+    if (V) css(cp.d, { left: 0, width: W + 'px', top: '150px', textAlign: 'center' });
+    else css(cp.d, key === 'more' ? { left: '90px', top: '70px' } : { left: '80px', top: (H / 2 - 70) + 'px' });
+    cp.d.innerHTML = `<div class="chip" style="font-size:${V ? 54 : 52}px"><span class="num">${cp.num}</span><span class="typed">${cp.ty.html(t, t1 - .4)}</span></div>`;
+  }
+
+  // float hasil
+  const fOn = t >= S.result + 2.0 && t < S.sw + .1;
+  const fk = E.back(prog(t, S.result + 2.0, S.result + 2.45));
+  const fo = E.in(prog(t, S.sw - .3, S.sw + .1));
+  show(fc, fOn, 1 - fo, `scale(${fk}) rotate(${V ? -3 : -2}deg)`);
+  css(fc, V ? { left: '170px', top: (H - 330) + 'px' } : { left: '80px', top: (H / 2 + 80) + 'px' });
+
+  // chip fitur lanjutan
+  EXTRA.forEach((e, i) => {
+    const c = moreChips[i];
+    const tIn = S.more + 1.3 + i * (V ? 1.35 : .35);
+    const on = t >= tIn && t < S.outro;
+    const k = E.back(prog(t, tIn, tIn + .4)); const ko = E.in(prog(t, S.outro - .35, S.outro));
+    let tr = `scale(${k})`;
+    if (V) { show(c, on && (i === 2 || t < tIn + 1.35 + .05), 1 - ko, tr);
+      css(c, { left: 0, width: W + 'px', textAlign: 'center', top: (H - 300) + 'px' }); }
+    else { show(c, on, 1 - ko, tr);
+      // posisi di bawah tiap HP (perkiraan dari kamera akhir)
+      const cam = camAt(t); const sx = AX + (e.x + 540 - cam.x) * cam.s;
+      css(c, { left: (sx - 260) + 'px', width: '520px', textAlign: 'center', top: (H - 150) + 'px' }); }
+  });
+
+  // OUTRO
+  const oOn = t >= S.outro;
+  const oi = E.back(prog(t, S.outro + .2, S.outro + .75));
+  const os = V ? 230 : 200;
+  show(oLogo, oOn, 1, `scale(${oi})`);
+  css(oLogo, V ? { left: (W / 2 - os / 2) + 'px', top: '170px', width: os + 'px', height: os + 'px' } : { left: '150px', top: '170px', width: os + 'px', height: os + 'px' });
+  show(oTitle, oOn, 1);
+  css(oTitle, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '440px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' }
+    : { left: '150px', top: '410px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' });
+  if (oOn) oTitle.innerHTML = `<span class="typed">${oT.html(t, S.outro + 2.6)}</span>`;
+  show(oSub, oOn, 1);
+  css(oSub, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '590px', fontSize: '44px', fontWeight: 500, color: 'rgba(255,255,255,.92)' }
+    : { left: '150px', top: '560px', fontSize: '42px', fontWeight: 500, color: 'rgba(255,255,255,.92)' });
+  if (oOn) oSub.innerHTML = `<span class="typed">${oSubT.html(t, S.outro + 3.0)}</span>`;
+  const bk = E.back(prog(t, S.outro + 3.0, S.outro + 3.5));
+  const pulse = 1 + Math.max(0, Math.sin((t - S.outro - 3.6) * 5)) * .03 * (t > S.outro + 3.6 ? 1 : 0);
+  show(oBadge, t >= S.outro + 3.0, 1, `scale(${bk * pulse})`);
+  css(oBadge, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '700px' } : { left: '150px', top: '680px' });
+}
+
+window.DURATION = DURATION;
+window.EVENTS = EVENTS.sort((a, b) => a.t - b.t);
+window.render = render;
+window.READY = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => {}))]);
+render(Number(Q.get('t') || 0));
+</script>
+</body>
+</html>
