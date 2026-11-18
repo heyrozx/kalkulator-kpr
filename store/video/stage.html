@@ -239,8 +239,54 @@ function typer(segs, t0, cps, sfx = 'type', gain = .55) {
 const hk = typedNode(ov, '', {});
 const hk1 = typer(['Mau beli rumah?'], S.hook + .4, 16);
 const hk2 = typer(['Tapi bingung ', { s: 'cicilannya', c: 'hl' }, '?'], S.hook + 1.45, 18);
-const hkHouse = el('div', 'ov', ov, `<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="#fff" d="M12 3 2 11.5h3V21h5.5v-6h3v6H19v-9.5h3z"/></svg>`);
-ev(S.hook + .15, 'pop', .8);
+const hkHouse = el('div', 'ov', ov, `<svg viewBox="0 0 520 440" width="100%" height="100%">
+<defs>
+ <linearGradient id="hwall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3E5F5"/></linearGradient>
+ <linearGradient id="hside" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9D3F0"/><stop offset="1" stop-color="#D7B8E2"/></linearGradient>
+ <linearGradient id="hroof" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF8A65"/><stop offset="1" stop-color="#E64A19"/></linearGradient>
+ <linearGradient id="hroof2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D84315"/><stop offset="1" stop-color="#BF360C"/></linearGradient>
+ <linearGradient id="hwin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF59D"/><stop offset="1" stop-color="#FFC83D"/></linearGradient>
+ <linearGradient id="hdoor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#AB47BC"/><stop offset="1" stop-color="#6A1B9A"/></linearGradient>
+ <linearGradient id="htree" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#81C784"/><stop offset="1" stop-color="#2E7D32"/></linearGradient>
+ <linearGradient id="hcoin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE082"/><stop offset="1" stop-color="#FFA000"/></linearGradient>
+</defs>
+<ellipse cx="260" cy="404" rx="210" ry="22" fill="#3a0050" opacity=".28"/>
+<g id="ill-house">
+ <!-- pohon -->
+ <rect x="452" y="300" width="14" height="96" rx="6" fill="#6D4C41"/>
+ <circle cx="459" cy="274" r="46" fill="url(#htree)"/><circle cx="436" cy="300" r="26" fill="#66BB6A"/><circle cx="484" cy="304" r="24" fill="#43A047"/>
+ <!-- dinding samping -->
+ <path d="M340 214 L424 172 L424 396 L340 396 Z" fill="url(#hside)"/>
+ <path d="M362 262 L402 242 L402 296 L362 316 Z" fill="url(#hwin)" stroke="#fff" stroke-width="5" stroke-linejoin="round"/>
+ <!-- cerobong -->
+ <rect x="318" y="70" width="34" height="80" rx="4" fill="#8D6E63"/><rect x="312" y="62" width="46" height="16" rx="4" fill="#6D4C41"/>
+ <!-- atap samping -->
+ <path d="M225 92 L309 50 L450 190 Q454 198 446 202 L366 244 L366 232 Z" fill="url(#hroof2)"/>
+ <!-- dinding depan -->
+ <rect x="110" y="214" width="230" height="182" rx="6" fill="url(#hwall)"/>
+ <!-- atap depan -->
+ <path d="M84 232 L225 92 L366 232 Q370 240 360 244 L90 244 Q80 240 84 232 Z" fill="url(#hroof)"/>
+ <circle cx="225" cy="176" r="24" fill="#fff"/><circle cx="225" cy="176" r="16" fill="url(#hwin)"/>
+ <path d="M225 160 V192 M209 176 H241" stroke="#fff" stroke-width="4"/>
+ <!-- jendela -->
+ <rect x="134" y="262" width="62" height="58" rx="8" fill="url(#hwin)" stroke="#fff" stroke-width="6"/>
+ <path d="M165 262 V320 M134 291 H196" stroke="#fff" stroke-width="5"/>
+ <!-- pintu -->
+ <rect x="236" y="290" width="68" height="106" rx="10" fill="url(#hdoor)"/>
+ <circle cx="290" cy="346" r="5" fill="#FFC83D"/>
+ <rect x="226" y="390" width="88" height="10" rx="4" fill="#CE93D8"/>
+ <!-- semak -->
+ <ellipse cx="128" cy="396" rx="34" ry="18" fill="#66BB6A"/><ellipse cx="102" cy="398" rx="22" ry="13" fill="#43A047"/>
+</g>
+<g id="ill-coin1"><circle cx="60" cy="150" r="34" fill="url(#hcoin)"/><circle cx="60" cy="150" r="25" fill="none" stroke="#FFF3C4" stroke-width="4"/><text x="60" y="161" text-anchor="middle" font-family="R" font-weight="900" font-size="28" fill="#8D5300">Rp</text></g>
+<g id="ill-coin2"><circle cx="470" cy="96" r="24" fill="url(#hcoin)"/><text x="470" y="105" text-anchor="middle" font-family="R" font-weight="900" font-size="20" fill="#8D5300">Rp</text></g>
+<g id="ill-bubble">
+ <path d="M150 20 h86 a26 26 0 0 1 26 26 v40 a26 26 0 0 1 -26 26 h-50 l-22 20 v-20 h-14 a26 26 0 0 1 -26 -26 v-40 a26 26 0 0 1 26 -26 z" fill="#fff"/>
+ <text x="193" y="96" text-anchor="middle" font-family="R" font-weight="900" font-size="76" fill="#9C27B0">?</text>
+</g>
+</svg>`);
+const [illHouse, illC1, illC2, illBub] = ['ill-house', 'ill-coin1', 'ill-coin2', 'ill-bubble'].map(id => hkHouse.querySelector('#' + id));
+ev(S.hook + .15, 'pop', .8); ev(S.hook + .4, 'pop', .5); ev(S.hook + 1.5, 'pop', .7);
 
 // ---------- 2. LOGO
 const lg = el('div', 'ov', ov);
@@ -489,11 +535,19 @@ function renderOverlay(t) {
   const hOut = E.in(prog(t, S.logo - .25, S.logo + .25));
   const hz = V ? 110 : 150;
   show(hk, hookOn, 1 - hOut, `translateY(${-hOut * 120}px)`);
-  css(hk, { left: (V ? 90 : 0) + 'px', width: (V ? W - 180 : W) + 'px', top: (V ? 820 : 470) + 'px', textAlign: 'center', fontWeight: 900, fontSize: hz + 'px', lineHeight: 1.15, letterSpacing: '-2px' });
+  css(hk, { left: (V ? 90 : 0) + 'px', width: (V ? W - 180 : W) + 'px', top: (V ? 1010 : 470) + 'px', textAlign: 'center', fontWeight: 900, fontSize: hz + 'px', lineHeight: 1.15, letterSpacing: '-2px' });
   if (hookOn) hk.innerHTML = `<div class="typed">${hk1.html(t, hk2.t0)}</div><div class="typed" style="font-size:${V ? .62 : .58}em;font-weight:700;margin-top:${V ? 34 : 20}px;opacity:.95">${t >= hk2.t0 - .05 ? hk2.html(t) : ''}</div>`;
   const hs = E.back(prog(t, S.hook + .05, S.hook + .6));
-  show(hkHouse, hookOn, 1 - hOut, `scale(${hs}) rotate(${Math.sin(t * 2) * 4}deg)`);
-  css(hkHouse, { left: (W / 2 - 110) + 'px', top: (V ? 530 : 170) + 'px', width: '220px', height: '220px', filter: 'drop-shadow(0 20px 40px rgba(40,0,70,.35))' });
+  show(hkHouse, hookOn, 1 - hOut, `scale(${hs})`);
+  const iw = V ? 600 : 470, ih = iw * 440 / 520;
+  css(hkHouse, { left: (W / 2 - iw / 2) + 'px', top: (V ? 1010 - ih - 30 : 455 - ih) + 'px', width: iw + 'px', height: ih + 'px', transformOrigin: '50% 90%', filter: 'drop-shadow(0 24px 40px rgba(40,0,70,.30))' });
+  if (hookOn) {
+    illHouse.setAttribute('transform', `translate(0 ${Math.sin(t * 2.4) * 3})`);
+    const c1 = E.back(prog(t, .35, .8)), c2 = E.back(prog(t, .55, 1.0)), bb = E.back(prog(t, 1.45, 1.85));
+    illC1.setAttribute('transform', `translate(60 150) scale(${c1}) translate(-60 -150) translate(0 ${Math.sin(t * 3) * 8})`);
+    illC2.setAttribute('transform', `translate(470 96) scale(${c2}) translate(-470 -96) translate(0 ${Math.cos(t * 3.2) * 7})`);
+    illBub.setAttribute('transform', `translate(186 132) scale(${bb}) rotate(${Math.sin(t * 4) * 4}) translate(-186 -132)`);
+  }
 
   // LOGO
   const lOn = t >= S.logo && t < S.input + .8;
