@@ -1,5 +1,7 @@
 # Video Promo Kalkulator KPR
 
+Konsep lengkap, preferensi gaya, dan storyboard: lihat [`docs/video-promo/`](../../docs/video-promo/README.md).
+
 Dua versi, ±32 detik, 30 fps: `export/kalkulator-kpr-promo-vertical-1080x1920.mp4`
 (Reels/TikTok/Shorts) dan `export/kalkulator-kpr-promo-horizontal-1920x1080.mp4`
 (YouTube/Play Store promo).

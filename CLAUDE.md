@@ -99,6 +99,12 @@ management baru tanpa diminta.
   edge-to-edge dipaksa aktif di API 36 (pastikan `SafeArea`/inset di layar dengan
   tabel & tombol bawah masih benar) dan predictive back.
 
+## Video promo
+
+Konsep, preferensi gaya, storyboard, pipeline, audio, dan metadata YouTube video promo
+ada di `docs/video-promo/` (mulai dari `README.md` dan `PREFERENSI.md`). Kode & aset di
+`store/video/`. Baca folder itu dulu sebelum mengerjakan permintaan video.
+
 ## Perintah
 
 Build/run dijalankan manual oleh pemilik project — **jangan** menjalankan `flutter run`,

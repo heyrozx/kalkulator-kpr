@@ -6,6 +6,7 @@
   (1080×1920) dan horizontal (1920×1080) di `store/video/export/`: mockup HP dari
   screenshot asli, animasi zoom, efek ketik, voice-over, serta efek suara & musik
   dari ElevenLabs
+* (Dokumentasi) Konsep & panduan video promo disimpan di `docs/video-promo/`
 * Pilihan metode bunga di beranda (Anuitas / Efektif / Flat) kini berupa switch
   berbentuk pil dengan penanda ungu yang bergeser, menggantikan tab bergaris.
   Ukurannya ringkas di tengah, tidak lagi selebar layar
