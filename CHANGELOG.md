@@ -5,7 +5,6 @@
 * (Aset promosi, tidak memengaruhi aplikasi) Draft video promo vertikal & horizontal
   berbasis mockup HP di `store/video/` — animasi zoom, efek ketik, dan penanda waktu
   efek suara; voice-over & SFX ElevenLabs menyusul
-
 * Pilihan metode bunga di beranda (Anuitas / Efektif / Flat) kini berupa switch
   berbentuk pil dengan penanda ungu yang bergeser, menggantikan tab bergaris.
   Ukurannya ringkas di tengah, tidak lagi selebar layar
