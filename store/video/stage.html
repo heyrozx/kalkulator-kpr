@@ -278,9 +278,7 @@ const oLogo = el('div', 'ov', ov, `<img src="assets/logo.png" style="width:100%;
 const oTitle = typedNode(ov, '', {});
 const oT = typer(['Kalkulator ', { s: 'KPR', c: 'hl' }], S.outro + .5, 14);
 const oSub = typedNode(ov, '', {});
-const oSubT = typer(['Hitung cicilan rumah dalam hitungan detik'], S.outro + 1.2, 40, 'type', .3);
-const oBadge = el('div', 'ov', ov, `<div class="badge"><div><div class="s">DOWNLOAD GRATIS DI</div><div class="b">Google Play</div></div></div>`);
-ev(S.outro, 'whoosh', .9); ev(S.outro + .25, 'pop', 1); ev(S.outro + 2.1, 'ding', .8);
+ev(S.outro, 'whoosh', .9); ev(S.outro + .25, 'pop', 1);
 
 // =====================================================================
 //  Aksi di dalam HP (tap, ketik, transisi)
@@ -555,19 +553,16 @@ function renderOverlay(t) {
   const oi = E.back(prog(t, S.outro + .2, S.outro + .75));
   const os = V ? 230 : 200;
   show(oLogo, oOn, 1, `scale(${oi})`);
-  css(oLogo, V ? { left: (W / 2 - os / 2) + 'px', top: '170px', width: os + 'px', height: os + 'px' } : { left: '150px', top: '170px', width: os + 'px', height: os + 'px' });
+  css(oLogo, V ? { left: (W / 2 - os / 2) + 'px', top: '170px', width: os + 'px', height: os + 'px' } : { left: '150px', top: '260px', width: os + 'px', height: os + 'px' });
   show(oTitle, oOn, 1);
   css(oTitle, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '440px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' }
-    : { left: '150px', top: '410px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' });
+    : { left: '150px', top: '500px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' });
   if (oOn) oTitle.innerHTML = `<span class="typed">${oT.html(t, S.outro + 2.0)}</span>`;
-  show(oSub, oOn, 1);
+  const sk2 = E.out(prog(t, S.outro + 1.1, S.outro + 1.6));
+  show(oSub, oOn, sk2, `translateY(${(1 - sk2) * 24}px)`);
   css(oSub, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '590px', fontSize: '44px', fontWeight: 500, color: 'rgba(255,255,255,.92)' }
-    : { left: '150px', top: '560px', fontSize: '42px', fontWeight: 500, color: 'rgba(255,255,255,.92)' });
-  if (oOn) oSub.innerHTML = `<span class="typed">${oSubT.html(t, S.outro + 2.4)}</span>`;
-  const bk = E.back(prog(t, S.outro + 2.0, S.outro + 2.5));
-  const pulse = 1 + Math.max(0, Math.sin((t - S.outro - 2.6) * 5)) * .03 * (t > S.outro + 2.6 ? 1 : 0);
-  show(oBadge, t >= S.outro + 2.0, 1, `scale(${bk * pulse})`);
-  css(oBadge, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '700px' } : { left: '150px', top: '680px' });
+    : { left: '150px', top: '650px', fontSize: '42px', fontWeight: 500, color: 'rgba(255,255,255,.92)' });
+  oSub.textContent = 'Hitung cicilan rumah dalam hitungan detik';
 }
 
 window.DURATION = DURATION;
