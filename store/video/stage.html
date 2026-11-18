@@ -353,7 +353,7 @@ if (V) CAM = [
   K(S.more + .6, 2200, 1200, .5), K(S.more + .9, 2290, 1290, .62), K(S.more + 1.8, 2290, 1290, .65),
   K(S.more + 2.2, 3590, 1170, .62), K(S.more + 3.0, 3590, 1170, .65),
   K(S.more + 3.45, 4940, 1290, .62), K(S.outro - .05, 4940, 1290, .66),
-  K(S.outro + .7, 540, 330, .62), K(S.end, 540, 300, .64),
+  K(S.outro + .7, 540, 828, .5), K(S.end, 540, 828, .5),
 ]; else CAM = [
   K(0, 540, -1050, .4),
   K(tI - .45, 540, -1050, .4),
@@ -553,15 +553,15 @@ function renderOverlay(t) {
   const oi = E.back(prog(t, S.outro + .2, S.outro + .75));
   const os = V ? 230 : 200;
   show(oLogo, oOn, 1, `scale(${oi})`);
-  css(oLogo, V ? { left: (W / 2 - os / 2) + 'px', top: '170px', width: os + 'px', height: os + 'px' } : { left: '150px', top: '260px', width: os + 'px', height: os + 'px' });
+  css(oLogo, V ? { left: (W / 2 - os / 2) + 'px', top: '89px', width: os + 'px', height: os + 'px' } : { left: '150px', top: '320px', width: os + 'px', height: os + 'px' });
   show(oTitle, oOn, 1);
-  css(oTitle, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '440px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' }
-    : { left: '150px', top: '500px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' });
+  css(oTitle, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '359px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' }
+    : { left: '150px', top: '560px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' });
   if (oOn) oTitle.innerHTML = `<span class="typed">${oT.html(t, S.outro + 2.0)}</span>`;
   const sk2 = E.out(prog(t, S.outro + 1.1, S.outro + 1.6));
   show(oSub, oOn, sk2, `translateY(${(1 - sk2) * 24}px)`);
-  css(oSub, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '590px', fontSize: '44px', fontWeight: 500, color: 'rgba(255,255,255,.92)' }
-    : { left: '150px', top: '650px', fontSize: '42px', fontWeight: 500, color: 'rgba(255,255,255,.92)' });
+  css(oSub, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '509px', fontSize: '44px', fontWeight: 500, color: 'rgba(255,255,255,.92)' }
+    : { left: '150px', top: '710px', fontSize: '42px', fontWeight: 500, color: 'rgba(255,255,255,.92)' });
   oSub.textContent = 'Hitung cicilan rumah dalam hitungan detik';
 }
 
