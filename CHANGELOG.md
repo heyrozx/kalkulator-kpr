@@ -1,5 +1,7 @@
 ## 1.5.1 (17)
 
+* Perbaikan build Android: Gradle, Android Gradle Plugin, dan Kotlin dinaikkan
+  ke versi yang diwajibkan Flutter 3.47 (build appbundle sebelumnya gagal)
 * (Aset promosi, tidak memengaruhi aplikasi) Draft video promo vertikal & horizontal
   berbasis mockup HP di `store/video/` — animasi zoom, efek ketik, dan penanda waktu
   efek suara; voice-over & SFX ElevenLabs menyusul

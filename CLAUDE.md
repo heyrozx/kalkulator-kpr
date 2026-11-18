@@ -88,7 +88,13 @@ management baru tanpa diminta.
   build rilis crash saat start ("Failed to create an instance of
   androidx.work.impl.WorkDatabase"). Jangan hapus/turunkan; aturan cadangannya ada di
   `android/app/proguard-rules.pro`.
-- AGP `8.9.1` / Kotlin `2.1.0` di `android/settings.gradle`, Gradle wrapper `8.11.1`.
+- AGP `9.1.0` / Kotlin `2.4.0` di `android/settings.gradle`, Gradle wrapper `9.3.1`
+  (seragam dengan project Flutter lain di `Nexadream/Flutter/`). Flutter 3.47 menolak
+  Gradle < 8.14, AGP < 8.11.1, Kotlin < 2.2.20 — dan error-nya muncul menyesatkan
+  sebagai "Starting AGP 9+, only the new DSL interface will be read", padahal
+  `android.newDsl=false` sudah ada di `gradle.properties`.
+- Kotlin `jvmTarget` diatur lewat blok `kotlin { compilerOptions { … } }` di luar blok
+  `android` (`kotlinOptions` deprecated di Kotlin 2.x). Java & Kotlin target 17.
 - Saat menaikkan target SDK, cek behavior change Android terbaru yang relevan:
   edge-to-edge dipaksa aktif di API 36 (pastikan `SafeArea`/inset di layar dengan
   tabel & tombol bawah masih benar) dan predictive back.

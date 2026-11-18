@@ -34,12 +34,8 @@ android {
     ndkVersion flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = '1.8'
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     sourceSets {
@@ -77,12 +73,18 @@ android {
     }
 }
 
+// Pengganti kotlinOptions di dalam blok android (deprecated sejak Kotlin 2.x).
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
+}
+
 flutter {
     source '../..'
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"
     implementation 'com.google.android.material:material:1.8.0'
     // Google Play mewajibkan Billing Library >= 8.0.0 mulai 31 Agustus 2026.
     // RevenueCat (purchases_flutter) juga sudah membawa Billing 8.x secara transitif,
