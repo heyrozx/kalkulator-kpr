@@ -4,8 +4,8 @@
   ke versi yang diwajibkan Flutter 3.47 (build appbundle sebelumnya gagal)
 * (Aset promosi, tidak memengaruhi aplikasi) Video promo 51 detik versi vertikal
   (1080×1920) dan horizontal (1920×1080) di `store/video/export/`: mockup HP dari
-  screenshot asli, animasi zoom, efek ketik, serta efek suara & musik dari ElevenLabs.
-  Voice-over menyusul
+  screenshot asli, animasi zoom, efek ketik, voice-over, serta efek suara & musik
+  dari ElevenLabs
 * Pilihan metode bunga di beranda (Anuitas / Efektif / Flat) kini berupa switch
   berbentuk pil dengan penanda ungu yang bergeser, menggantikan tab bergaris.
   Ukurannya ringkas di tengah, tidak lagi selebar layar

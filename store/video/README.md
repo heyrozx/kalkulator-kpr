@@ -25,9 +25,14 @@ daya, more, outro, end.
 Semua SFX dan musik di `sfx/` dibuat dengan ElevenLabs Sound Effects v3 (tap, ketikan
 HP, ketikan keyboard mekanik, whoosh, pop, ding, musik latar 30 dtk yang di-loop).
 
-Voice-over belum ada: generate TTS ElevenLabs ditolak karena akses Free Tier akun
-dinonaktifkan ("unusual activity"). Naskah siap pakai (voice "Finn – Expressive & Ads
-Indonesian", model eleven_v4):
+Voice-over: `vo/voiceover_siti.mp3` (ElevenLabs, voice "Siti – Clean Chill Expressive
+Casual", eleven_v4). File dipotong per kalimat di titik jeda lalu ditempatkan per
+adegan — jadwalnya di konstanta `VO` pada `stage.html` (`src` = potongan detik di file,
+`t` = waktu tampil). Musik otomatis di-duck saat narasi. Kalau voice-over diganti, ukur
+ulang jedanya (`ffmpeg -i vo.mp3 -af silencedetect=n=-25dB:d=0.18 -f null -`) dan
+sesuaikan `VO`.
+
+Naskah:
 
 > Mau beli rumah, tapi bingung berapa cicilannya? / Kenalin, Kalkulator KPR! /
 > Cukup masukkan jumlah pinjaman, jangka waktu, dan suku bunga. / Angsuran per bulan

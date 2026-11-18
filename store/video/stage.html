@@ -337,6 +337,19 @@ ev(S.daya + 3.75, 'ding', .9);
 ev(S.more + .1, 'whoosh', .9);
 EXTRA.forEach((e, i) => ev(S.more + 1.3 + i * (V ? 1.35 : .35), 'pop', .7));
 
+// --- voice-over: potongan [mulai, selesai] di vo/voiceover_siti.mp3 → waktu tampil
+const VO = [
+  { src: [0.00, 3.15], t: S.hook + .3 },
+  { src: [3.30, 5.65], t: S.logo + .35 },
+  { src: [5.75, 9.30], t: S.input + 1.0 },
+  { src: [9.30, 11.27], t: S.result + .2 },
+  { src: [11.27, 14.07], t: S.sw + .45 },
+  { src: [14.07, 16.04], t: S.tabel + 1.2 },
+  { src: [16.04, 17.39], t: S.grafik + .4 },
+  { src: [17.39, 20.38], t: S.daya + .5 },
+  { src: [20.38, 24.94], t: S.more + .5 },
+  { src: [24.94, 28.92], t: S.outro + .45 },
+];
 // =====================================================================
 //  Kamera: keyframe {t, x, y, s} — titik dunia (x,y) ditaruh di anchor
 // =====================================================================
@@ -571,6 +584,7 @@ function renderOverlay(t) {
 
 window.DURATION = DURATION;
 window.EVENTS = EVENTS.sort((a, b) => a.t - b.t);
+window.VO = VO;
 window.render = render;
 window.READY = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => {}))]);
 render(Number(Q.get('t') || 0));

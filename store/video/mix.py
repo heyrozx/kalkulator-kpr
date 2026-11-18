@@ -58,7 +58,20 @@ def mix(ori):
     bed = bed[:n] * .17
     fi = int(.8 * SR); bed[:fi] *= np.linspace(0, 1, fi)[:, None]
     end = int(dur * SR); fo = int(2.5 * SR); bed[end - fo:end] *= np.linspace(1, 0, fo)[:, None]; bed[end:] = 0
-    out += bed
+    # voice-over per potongan + ducking musik
+    vo_env = np.zeros(n, np.float32)
+    if data.get('vo') and os.path.exists(f'{HERE}/vo/voiceover_siti.mp3'):
+        v = norm(load('../vo/voiceover_siti.mp3'), .95)
+        for seg in data['vo']:
+            a, b = int(seg['src'][0] * SR), int(seg['src'][1] * SR)
+            piece = v[a:b].copy(); f = int(.02 * SR)
+            piece[:f] *= np.linspace(0, 1, f)[:, None]; piece[-f:] *= np.linspace(1, 0, f)[:, None]
+            i = int(seg['t'] * SR); piece = piece[: max(0, n - i)]
+            out[i:i + len(piece)] += piece * .9
+            vo_env[i:i + len(piece)] = 1
+        k = int(.25 * SR); vo_env = np.convolve(vo_env, np.ones(k) / k, 'same')
+    duck = 1 - .6 * np.clip(vo_env, 0, 1)
+    out += bed * duck[:, None]
     out = out[: end]
     pk = np.abs(out).max(); out = out / pk * .89 if pk > .89 else out
     path = f'{HERE}/out/audio_{ori}.wav'
