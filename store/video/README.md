@@ -1,6 +1,6 @@
 # Video Promo Kalkulator KPR
 
-Dua versi, ±51 detik, 30 fps: `export/kalkulator-kpr-promo-vertical-1080x1920.mp4`
+Dua versi, ±32 detik, 30 fps: `export/kalkulator-kpr-promo-vertical-1080x1920.mp4`
 (Reels/TikTok/Shorts) dan `export/kalkulator-kpr-promo-horizontal-1920x1080.mp4`
 (YouTube/Play Store promo).
 

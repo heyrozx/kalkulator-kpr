@@ -92,14 +92,6 @@ body { font-family: 'R', sans-serif; color: #fff; }
 </head>
 <body>
 <div id="stage">
-  <div id="bg">
-    <div class="dots" id="dots"></div>
-    <div class="blob" id="b1" style="width:900px;height:900px;background:#F48FF8;opacity:.45"></div>
-    <div class="blob" id="b2" style="width:1000px;height:1000px;background:#4A0072;opacity:.55"></div>
-    <div class="blob" id="b3" style="width:700px;height:700px;background:#FFC83D;opacity:.18"></div>
-    <div class="ring" id="r1" style="width:1300px;height:1300px"></div>
-    <div class="ring" id="r2" style="width:800px;height:800px;border-width:24px;border-color:rgba(255,255,255,.05)"></div>
-  </div>
   <div id="world"></div>
   <div id="overlay"></div>
 </div>
@@ -138,23 +130,14 @@ const ev = (t, type, gain = 1) => EVENTS.push({ t: +t.toFixed(3), type, gain });
 //  Timeline adegan (detik). Bisa di-override lewat ?cues=JSON
 // =====================================================================
 const S = Object.assign({
-  hook: 0.0, logo: 4.4, input: 8.4, result: 16.4, sw: 19.6, tabel: 24.4, grafik: 29.0, daya: 33.0, more: 39.6, outro: 45.6, end: 51.0,
+  hook: 0.0, logo: 3.4, input: 5.9, result: 9.65, sw: 11.8, tabel: 14.8, grafik: 17.1, daya: 18.7, more: 22.0, outro: 26.85, end: 31.8,
 }, JSON.parse(Q.get('cues') || '{}'));
 const DURATION = S.end;
 
 // =====================================================================
 //  Latar
 // =====================================================================
-const bgEls = ['b1', 'b2', 'b3', 'r1', 'r2', 'dots'].map(id => document.getElementById(id));
-function renderBg(t) {
-  const [b1, b2, b3, r1, r2, dots] = bgEls;
-  css(b1, { left: (W * .7 + Math.sin(t * .35) * 120 - 450) + 'px', top: (-250 + Math.cos(t * .3) * 90) + 'px' });
-  css(b2, { left: (-350 + Math.cos(t * .25) * 140) + 'px', top: (H - 600 + Math.sin(t * .28) * 100) + 'px' });
-  css(b3, { left: (W * .15 + Math.sin(t * .2) * 200) + 'px', top: (H * .35 + Math.cos(t * .22) * 150) + 'px' });
-  css(r1, { left: (W - 650 + Math.sin(t * .15) * 40) + 'px', top: (H * .55 - 650) + 'px', transform: `rotate(${t * 6}deg)` });
-  css(r2, { left: (-300) + 'px', top: (-260 + Math.sin(t * .3) * 30) + 'px' });
-  css(dots, { transform: `translate(${(t * 8) % 34}px, ${(t * 5) % 34}px)` });
-}
+function renderBg() {}  // latar cukup gradien statis pada #stage
 
 // =====================================================================
 //  Dunia + HP
@@ -254,8 +237,8 @@ function typer(segs, t0, cps, sfx = 'type', gain = .55) {
 
 // ---------- 1. HOOK
 const hk = typedNode(ov, '', {});
-const hk1 = typer(['Mau beli rumah?'], S.hook + .5, 16);
-const hk2 = typer(['Tapi bingung ', { s: 'cicilannya', c: 'hl' }, '?'], S.hook + 1.9, 18);
+const hk1 = typer(['Mau beli rumah?'], S.hook + .4, 16);
+const hk2 = typer(['Tapi bingung ', { s: 'cicilannya', c: 'hl' }, '?'], S.hook + 1.45, 18);
 const hkHouse = el('div', 'ov', ov, `<svg viewBox="0 0 24 24" width="100%" height="100%"><path fill="#fff" d="M12 3 2 11.5h3V21h5.5v-6h3v6H19v-9.5h3z"/></svg>`);
 ev(S.hook + .15, 'pop', .8);
 
@@ -263,7 +246,7 @@ ev(S.hook + .15, 'pop', .8);
 const lg = el('div', 'ov', ov);
 lg.innerHTML = `<img src="assets/logo.png" style="width:100%;height:100%;border-radius:22%;background:#fff;box-shadow:0 30px 70px rgba(30,0,50,.4)">`;
 const lgTitle = typedNode(ov, '', {});
-const lgT = typer(['Kalkulator ', { s: 'KPR', c: 'hl' }], S.logo + .75, 14);
+const lgT = typer(['Kalkulator ', { s: 'KPR', c: 'hl' }], S.logo + .45, 16);
 const lgSub = typedNode(ov, '', {});
 ev(S.logo, 'whoosh', .8); ev(S.logo + .3, 'pop', 1);
 
@@ -274,13 +257,13 @@ function caption(text, num, t0) {
   return { d, ty, num, t0 };
 }
 const CAP = {
-  input: caption('Isi data pinjaman', 1, S.input + 1.2),
-  result: caption('Cicilan langsung muncul', 2, S.result + .3),
-  sw: caption('Anuitas · Efektif · Flat', 3, S.sw + .2),
-  tabel: caption('Tabel angsuran lengkap', 4, S.tabel + 1.0),
-  grafik: caption('Grafik sisa pinjaman', 5, S.grafik + .5),
-  daya: caption('Cek daya bayar', 6, S.daya + .5),
-  more: caption('Fitur lanjutan', 7, S.more + .6),
+  input: caption('Isi data pinjaman', 1, S.input + .6),
+  result: caption('Cicilan langsung muncul', 2, S.result + .15),
+  sw: caption('Anuitas · Efektif · Flat', 3, S.sw + .1),
+  tabel: caption('Tabel angsuran lengkap', 4, S.tabel + .6),
+  grafik: caption('Grafik sisa pinjaman', 5, S.grafik + .2),
+  daya: caption('Cek daya bayar', 6, S.daya + .2),
+  more: caption('Fitur lanjutan', 7, S.more + .3),
 };
 const CAP_ORDER = ['input', 'result', 'sw', 'tabel', 'grafik', 'daya', 'more'];
 const CAP_END = { input: S.result, result: S.sw, sw: S.tabel, tabel: S.grafik, grafik: S.daya, daya: S.more, more: S.outro };
@@ -293,11 +276,11 @@ const moreChips = EXTRA.map(e => el('div', 'ov', ov, `<div class="chip" style="f
 // ---------- OUTRO
 const oLogo = el('div', 'ov', ov, `<img src="assets/logo.png" style="width:100%;height:100%;border-radius:22%;background:#fff;box-shadow:0 26px 60px rgba(30,0,50,.4)">`);
 const oTitle = typedNode(ov, '', {});
-const oT = typer(['Kalkulator ', { s: 'KPR', c: 'hl' }], S.outro + .6, 14);
+const oT = typer(['Kalkulator ', { s: 'KPR', c: 'hl' }], S.outro + .5, 14);
 const oSub = typedNode(ov, '', {});
-const oSubT = typer(['Hitung cicilan rumah dalam hitungan detik'], S.outro + 1.6, 34, 'type', .3);
+const oSubT = typer(['Hitung cicilan rumah dalam hitungan detik'], S.outro + 1.2, 40, 'type', .3);
 const oBadge = el('div', 'ov', ov, `<div class="badge"><svg viewBox="0 0 24 24" width="62" height="62"><path fill="#00D7FE" d="M3.6 2.2 13.4 12l-9.8 9.8c-.4-.2-.6-.6-.6-1.1V3.3c0-.5.2-.9.6-1.1z"/><path fill="#FFCE00" d="m16.7 15.3-3.3-3.3 3.3-3.3 3.8 2.2c1 .6 1 1.6 0 2.2z"/><path fill="#FF3A44" d="M16.7 15.3 13.4 12l-9.8 9.8c.4.2.9.2 1.5-.1z"/><path fill="#00F076" d="M16.7 8.7 5.1 2.3c-.6-.3-1.1-.3-1.5-.1l9.8 9.8z"/></svg><div><div class="s">DOWNLOAD GRATIS DI</div><div class="b">Google Play</div></div></div>`);
-ev(S.outro, 'whoosh', .9); ev(S.outro + .25, 'pop', 1); ev(S.outro + 3.1, 'ding', .8);
+ev(S.outro, 'whoosh', .9); ev(S.outro + .25, 'pop', 1); ev(S.outro + 2.1, 'ding', .8);
 
 // =====================================================================
 //  Aksi di dalam HP (tap, ketik, transisi)
@@ -311,44 +294,44 @@ const focus = (field, t0, t1) => FOCUS.push({ f: FIELDS[field], t0, t1 });
 
 // --- input
 const tI = S.input;
-tap(tI + 2.05, 400, 1832); focus('pinjaman', tI + 2.1, tI + 4.6);
-typeField('pinjaman', tI + 2.4, ['5', '50', '500', '5.000', '50.000', '500.000', '5.000.000', '50.000.000', '500.000.000'], .17);
-tap(tI + 4.7, 280, 2006); focus('tenor', tI + 4.75, tI + 5.9);
-typeField('tenor', tI + 5.0, ['1', '15'], .2);
-tap(tI + 6.0, 790, 2006); focus('bunga', tI + 6.05, tI + 7.4);
-typeField('bunga', tI + 6.3, ['7', '7.', '7.5'], .2);
+tap(tI + 1.15, 400, 1832); focus('pinjaman', tI + 1.2, tI + 2.4);
+typeField('pinjaman', tI + 1.35, ['5', '50', '500', '5.000', '50.000', '500.000', '5.000.000', '50.000.000', '500.000.000'], .1);
+tap(tI + 2.45, 280, 2006); focus('tenor', tI + 2.5, tI + 2.95);
+typeField('tenor', tI + 2.6, ['1', '15'], .15);
+tap(tI + 3.0, 790, 2006); focus('bunga', tI + 3.05, tI + 3.75);
+typeField('bunga', tI + 3.15, ['7', '7.', '7.5'], .11);
 // --- hasil
 const tR = S.result;
-ev(tR + .25, 'swoosh', .6); ev(tR + 2.0, 'ding', 1); ev(tR + .6, 'count', .5);
+ev(tR + .15, 'swoosh', .6); ev(tR + 1.3, 'ding', 1); ev(tR + .35, 'count', .5);
 // --- switch
 const tS = S.sw;
-const SW = [{ t: tS + .9, i: 1 }, { t: tS + 2.2, i: 2 }, { t: tS + 3.5, i: 0 }];
+const SW = [{ t: tS + 1.25, i: 1 }, { t: tS + 2.05, i: 2 }, { t: tS + 2.7, i: 0 }];
 SW.forEach(s => tap(s.t, 181 + s.i * 240 + 120, 315));
 // --- tabel
 const tT = S.tabel;
-tap(tT + .75, 796, 2184);
-ev(tT + 1.0, 'whoosh', .7);
+tap(tT + .35, 796, 2184);
+ev(tT + .5, 'whoosh', .7);
 // --- grafik / daya
-tap(S.grafik + .2, 178, 327); ev(S.grafik + .4, 'swoosh', .5);
-tap(S.daya + .2, 900, 898); ev(S.daya + .4, 'swoosh', .5);
-tap(S.daya + 1.7, 540, 1250); focus('income', S.daya + 1.75, S.daya + 4.1);
-typeField('income', S.daya + 2.0, ['1', '18', '180', '1.800', '18.000', '180.000', '1.800.000', '18.000.000'], .16);
-ev(S.daya + 3.75, 'ding', .9);
+tap(S.grafik + .15, 178, 327); ev(S.grafik + .3, 'swoosh', .5);
+tap(S.daya + .15, 900, 898); ev(S.daya + .3, 'swoosh', .5);
+tap(S.daya + .85, 540, 1250); focus('income', S.daya + .9, S.daya + 2.3);
+typeField('income', S.daya + 2.0, ['1', '18', '180', '1.800', '18.000', '180.000', '1.800.000', '18.000.000'], .1);
+ev(S.daya + 2.1, 'ding', .9);
 ev(S.more + .1, 'whoosh', .9);
-EXTRA.forEach((e, i) => ev(S.more + 1.3 + i * (V ? 1.35 : .35), 'pop', .7));
+EXTRA.forEach((e, i) => ev(S.more + .9 + i * (V ? 1.3 : .35), 'pop', .7));
 
 // --- voice-over: potongan [mulai, selesai] di vo/voiceover_siti.mp3 → waktu tampil
 const VO = [
-  { src: [0.00, 3.15], t: S.hook + .3 },
-  { src: [3.30, 5.65], t: S.logo + .35 },
-  { src: [5.75, 9.30], t: S.input + 1.0 },
-  { src: [9.30, 11.27], t: S.result + .2 },
-  { src: [11.27, 14.07], t: S.sw + .45 },
-  { src: [14.07, 16.04], t: S.tabel + 1.2 },
-  { src: [16.04, 17.39], t: S.grafik + .4 },
-  { src: [17.39, 20.38], t: S.daya + .5 },
-  { src: [20.38, 24.94], t: S.more + .5 },
-  { src: [24.94, 28.92], t: S.outro + .45 },
+  { src: [0.00, 3.15], t: S.hook + .2 },
+  { src: [3.30, 5.65], t: S.logo + .05 },
+  { src: [5.75, 9.30], t: S.input + .15 },
+  { src: [9.30, 11.27], t: S.result + .1 },
+  { src: [11.27, 14.07], t: S.sw + .05 },
+  { src: [14.07, 16.04], t: S.tabel + .15 },
+  { src: [16.04, 17.39], t: S.grafik + .1 },
+  { src: [17.39, 20.38], t: S.daya + .1 },
+  { src: [20.38, 24.94], t: S.more + .15 },
+  { src: [24.94, 28.92], t: S.outro + .2 },
 ];
 // =====================================================================
 //  Kamera: keyframe {t, x, y, s} — titik dunia (x,y) ditaruh di anchor
@@ -358,36 +341,36 @@ function K(t, x, y, s, ease = 'inOut') { return { t, x, y, s, ease }; }
 let CAM;
 if (V) CAM = [
   K(0, 540, 3200, .55),
-  K(tI, 540, 3000, .55), K(tI + .9, 540, 1250, .62, 'out'), K(tI + 1.3, 540, 1300, .66),
-  K(tI + 2.0, 540, 1870, 1.04), K(tI + 4.4, 540, 1870, 1.08),
-  K(tI + 5.0, 300, 2000, 1.75), K(tI + 5.8, 300, 2000, 1.78),
-  K(tI + 6.3, 790, 2000, 1.75), K(tI + 7.6, 790, 2000, 1.8),
-  K(tR + .3, 540, 1000, 1.25), K(tR + 2.6, 540, 1000, 1.32),
-  K(tS + .6, 540, 640, 1.2), K(tS + 4.4, 540, 640, 1.25),
-  K(tT + .5, 790, 2000, 1.35), K(tT + .95, 790, 2000, 1.42),
-  K(tT + 1.8, 560, 900, 1.25), K(S.grafik - .2, 560, 1700, 1.3, 'lin'),
-  K(S.grafik + .1, 300, 600, 1.4), K(S.grafik + 1.1, 400, 1100, 1.6), K(S.daya - .1, 500, 1750, 1.45),
-  K(S.daya + .4, 700, 950, 1.4), K(S.daya + 1.5, 540, 1250, 1.16), K(S.daya + 3.4, 540, 1250, 1.2),
-  K(S.daya + 4.2, 540, 1850, 1.15), K(S.more - .1, 540, 1850, 1.2),
-  K(S.more + .8, 2200, 1200, .5), K(S.more + 1.2, 2290, 1290, .62), K(S.more + 2.4, 2290, 1290, .65),
-  K(S.more + 2.9, 3590, 1170, .62), K(S.more + 3.8, 3590, 1170, .65),
-  K(S.more + 4.3, 4940, 1290, .62), K(S.outro - .1, 4940, 1290, .66),
-  K(S.outro + .9, 540, 330, .62), K(S.end, 540, 300, .64),
+  K(tI, 540, 3000, .55), K(tI + .6, 540, 1250, .62, 'out'), K(tI + .85, 540, 1300, .66),
+  K(tI + 1.15, 540, 1870, 1.04), K(tI + 2.2, 540, 1870, 1.08),
+  K(tI + 2.45, 300, 2000, 1.75), K(tI + 2.8, 300, 2000, 1.78),
+  K(tI + 3.0, 790, 2000, 1.75), K(tI + 3.6, 790, 2000, 1.8),
+  K(tR + .3, 540, 1000, 1.25), K(tR + 1.95, 540, 1000, 1.32),
+  K(tS + .4, 540, 640, 1.2), K(tS + 2.9, 540, 640, 1.25),
+  K(tT + .3, 790, 2000, 1.35), K(tT + .5, 790, 2000, 1.42),
+  K(tT + 1.0, 560, 900, 1.25), K(S.grafik - .1, 560, 1500, 1.3, 'lin'),
+  K(S.grafik + .1, 300, 600, 1.4), K(S.grafik + .8, 400, 1100, 1.6), K(S.daya - .05, 500, 1600, 1.45),
+  K(S.daya + .3, 700, 950, 1.4), K(S.daya + .8, 540, 1250, 1.16), K(S.daya + 1.9, 540, 1250, 1.2),
+  K(S.daya + 2.5, 540, 1850, 1.15), K(S.more - .05, 540, 1850, 1.2),
+  K(S.more + .6, 2200, 1200, .5), K(S.more + .9, 2290, 1290, .62), K(S.more + 1.8, 2290, 1290, .65),
+  K(S.more + 2.2, 3590, 1170, .62), K(S.more + 3.0, 3590, 1170, .65),
+  K(S.more + 3.45, 4940, 1290, .62), K(S.outro - .05, 4940, 1290, .66),
+  K(S.outro + .7, 540, 330, .62), K(S.end, 540, 300, .64),
 ]; else CAM = [
   K(0, 540, 3400, .4),
-  K(tI, 540, 3200, .4), K(tI + .9, 540, 1170, .4, 'out'), K(tI + 1.3, 540, 1170, .42),
-  K(tI + 2.0, 560, 1830, 1.0), K(tI + 4.4, 560, 1830, 1.05),
-  K(tI + 5.0, 300, 2000, 1.25), K(tI + 5.8, 300, 2000, 1.28),
-  K(tI + 6.3, 790, 2000, 1.25), K(tI + 7.6, 790, 2000, 1.3),
-  K(tR + .3, 540, 1000, .85), K(tR + 2.6, 540, 1000, .9),
-  K(tS + .6, 540, 600, 1.0), K(tS + 4.4, 540, 600, 1.05),
-  K(tT + .5, 790, 2100, .95), K(tT + .95, 790, 2100, 1.0),
-  K(tT + 1.8, 540, 800, 1.05), K(S.grafik - .2, 540, 1500, 1.08, 'lin'),
-  K(S.grafik + .1, 300, 560, 1.05), K(S.grafik + 1.1, 540, 1100, 1.2), K(S.daya - .1, 540, 1600, 1.1),
-  K(S.daya + .4, 700, 900, 1.05), K(S.daya + 1.5, 540, 1250, 1.2), K(S.daya + 3.4, 540, 1250, 1.22),
-  K(S.daya + 4.2, 540, 1880, 1.15), K(S.more - .1, 540, 1880, 1.2),
-  K(S.more + .9, 4450, 1170, .3), K(S.more + 2.0, 4650, 1170, .34), K(S.outro - .1, 4700, 1170, .355, 'lin'),
-  K(S.outro + .9, 540, 1170, .4), K(S.end, 540, 1170, .42),
+  K(tI, 540, 3200, .4), K(tI + .6, 540, 1170, .4, 'out'), K(tI + .85, 540, 1170, .42),
+  K(tI + 1.15, 560, 1830, 1.0), K(tI + 2.2, 560, 1830, 1.05),
+  K(tI + 2.45, 300, 2000, 1.25), K(tI + 2.8, 300, 2000, 1.28),
+  K(tI + 3.0, 790, 2000, 1.25), K(tI + 3.6, 790, 2000, 1.3),
+  K(tR + .3, 540, 1000, .85), K(tR + 1.95, 540, 1000, .9),
+  K(tS + .4, 540, 600, 1.0), K(tS + 2.9, 540, 600, 1.05),
+  K(tT + .3, 790, 2100, .95), K(tT + .5, 790, 2100, 1.0),
+  K(tT + 1.0, 540, 800, 1.05), K(S.grafik - .1, 540, 1400, 1.08, 'lin'),
+  K(S.grafik + .1, 300, 560, 1.05), K(S.grafik + .8, 540, 1100, 1.2), K(S.daya - .05, 540, 1500, 1.1),
+  K(S.daya + .3, 700, 900, 1.05), K(S.daya + .8, 540, 1250, 1.2), K(S.daya + 1.9, 540, 1250, 1.22),
+  K(S.daya + 2.5, 540, 1880, 1.15), K(S.more - .05, 540, 1880, 1.2),
+  K(S.more + .7, 4450, 1170, .3), K(S.more + 1.6, 4650, 1170, .34), K(S.outro - .05, 4700, 1170, .355, 'lin'),
+  K(S.outro + .7, 540, 1170, .4), K(S.end, 540, 1170, .42),
 ];
 function camAt(t) {
   if (t <= CAM[0].t) return CAM[0];
@@ -419,7 +402,7 @@ function render(t) {
   world.style.transform = `translate(${AX - c.x * c.s + dx}px, ${AY - c.y * c.s + dy}px) scale(${c.s})`;
   world.style.opacity = t < S.input - .05 ? 0 : 1;
   // HP masuk sedikit miring
-  const tilt = (1 - E.out(prog(t, S.input, S.input + 1.4))) * 14;
+  const tilt = (1 - E.out(prog(t, S.input, S.input + 1.0))) * 14;
   P.ph.style.transform = `perspective(4000px) rotateX(${tilt}deg) rotateZ(${-tilt * .25}deg)`;
 
   // ---- layar beranda: field
@@ -432,12 +415,12 @@ function render(t) {
   }
   // ---- donut & angka
   const tR = S.result;
-  const trackK = E.out(prog(t, tR, tR + .5));
+  const trackK = E.out(prog(t, tR, tR + .4));
   const swIdx = (() => { let i = 0; for (const s of SW) if (t >= s.t + .05) i = s.i; return i; })();
   const RES = [{ tot: 4635062, p: 1510062, b: 3125000 }, { tot: 5902778, p: 2777778, b: 3125000 }, { tot: 5902778, p: 2777778, b: 3125000 }];
   // nilai dihitung naik (hasil pertama) atau transisi cepat (ganti metode)
   let cur = { tot: 0, p: 0, b: 0 };
-  const k0 = E.out5(prog(t, tR + .45, tR + 2.0));
+  const k0 = E.out5(prog(t, tR + .3, tR + 1.3));
   cur = { tot: RES[0].tot * k0, p: RES[0].p * k0, b: RES[0].b * k0 };
   let prev = RES[0];
   for (const s of SW) {
@@ -447,11 +430,11 @@ function render(t) {
   track.setAttribute('stroke-dasharray', `${RC * trackK} ${RC}`);
   const frac = cur.tot ? cur.p / cur.tot : 0;
   arc.setAttribute('stroke-dasharray', `${Math.max(0.01, RC * frac)} ${RC}`);
-  arc.style.opacity = t > tR + .45 ? 1 : 0;
-  total.textContent = t > tR + .4 ? 'Rp ' + rp(cur.tot) : '';
-  legP.textContent = t > tR + .4 ? 'Rp ' + rp(cur.p) : '';
-  legB.textContent = t > tR + .4 ? 'Rp ' + rp(cur.b) : '';
-  const popK = prog(t, tR + 1.95, tR + 2.35);
+  arc.style.opacity = t > tR + .3 ? 1 : 0;
+  total.textContent = t > tR + .25 ? 'Rp ' + rp(cur.tot) : '';
+  legP.textContent = t > tR + .25 ? 'Rp ' + rp(cur.p) : '';
+  legB.textContent = t > tR + .25 ? 'Rp ' + rp(cur.b) : '';
+  const popK = prog(t, tR + 1.25, tR + 1.65);
   total.style.transform = `scale(${1 + Math.sin(popK * Math.PI) * .08})`;
   // switch: posisi indikator
   let indX = 0; let pv = 0;
@@ -461,12 +444,12 @@ function render(t) {
 
   // ---- pergantian layar (push)
   const tT = S.tabel;
-  const push = E.inOut(prog(t, tT + 1.0, tT + 1.45));
+  const push = E.inOut(prog(t, tT + .5, tT + .9));
   L.home.style.transform = `translateX(${-push * 35}%)`; L.home.style.filter = `brightness(${1 - push * .25})`;
   L.tabel.style.transform = `translateX(${(1 - push) * 100}%)`; L.tabel.style.boxShadow = '-30px 0 60px rgba(0,0,0,.15)';
-  const g = E.out(prog(t, S.grafik + .35, S.grafik + .75));
+  const g = E.out(prog(t, S.grafik + .25, S.grafik + .6));
   L.grafik.style.opacity = g; L.grafik.style.transform = `translateX(${(1 - g) * -6}%)`;
-  const d = E.out(prog(t, S.daya + .35, S.daya + .75));
+  const d = E.out(prog(t, S.daya + .25, S.daya + .6));
   L.daya.style.opacity = d; L.daya.style.transform = `translateX(${(1 - d) * 6}%)`;
   L.home.style.visibility = push >= 1 ? 'hidden' : 'visible';
   // outro: kembali ke beranda (layar hasil lengkap)
@@ -474,7 +457,7 @@ function render(t) {
   if (back) { L.tabel.style.opacity = 0; L.grafik.style.opacity = 0; L.daya.style.opacity = 0; L.home.style.visibility = 'visible'; L.home.style.transform = 'none'; L.home.style.filter = 'none'; }
   else L.tabel.style.opacity = 1;
   // rasio daya bayar muncul
-  const wipe = E.inOut(prog(t, S.daya + 3.6, S.daya + 4.2));
+  const wipe = E.inOut(prog(t, S.daya + 2.0, S.daya + 2.5));
   dayaCover.style.clipPath = `inset(0 0 0 ${wipe * 100}%)`;
 
   // ---- tap
@@ -521,8 +504,8 @@ function renderOverlay(t) {
   css(lg, { left: (W / 2 - ls / 2) + 'px', top: (V ? 560 : 170) + 'px', width: ls + 'px', height: ls + 'px' });
   show(lgTitle, lOn, 1 - lout, `translateY(${-lout * 80}px)`);
   css(lgTitle, { left: 0, width: W + 'px', textAlign: 'center', top: (V ? 990 : 530) + 'px', fontWeight: 900, fontSize: (V ? 118 : 120) + 'px', letterSpacing: '-2px' });
-  if (lOn) lgTitle.innerHTML = `<span class="typed">${lgT.html(t, S.logo + 3.0)}</span>`;
-  const sk = E.out(prog(t, S.logo + 1.9, S.logo + 2.5));
+  if (lOn) lgTitle.innerHTML = `<span class="typed">${lgT.html(t, S.logo + 2.2)}</span>`;
+  const sk = E.out(prog(t, S.logo + 1.1, S.logo + 1.6));
   show(lgSub, lOn, sk * (1 - lout), `translateY(${(1 - sk) * 30}px)`);
   css(lgSub, { left: 0, width: W + 'px', textAlign: 'center', top: (V ? 1160 : 700) + 'px', fontWeight: 500, fontSize: (V ? 48 : 46) + 'px', color: 'rgba(255,255,255,.92)' });
   lgSub.innerHTML = V ? 'Simulasi cicilan rumah<br>cepat, akurat, gratis' : 'Simulasi cicilan rumah — cepat, akurat, gratis';
@@ -541,20 +524,20 @@ function renderOverlay(t) {
   }
 
   // float hasil
-  const fOn = t >= S.result + 2.0 && t < S.sw + .1;
-  const fk = E.back(prog(t, S.result + 2.0, S.result + 2.45));
-  const fo = E.in(prog(t, S.sw - .3, S.sw + .1));
+  const fOn = t >= S.result + 1.3 && t < S.sw + 1.0;
+  const fk = E.back(prog(t, S.result + 1.3, S.result + 1.75));
+  const fo = E.in(prog(t, S.sw + .6, S.sw + 1.0));
   show(fc, fOn, 1 - fo, `scale(${fk}) rotate(${V ? -3 : -2}deg)`);
   css(fc, V ? { left: 0, width: W + 'px', textAlign: 'center', top: (H - 420) + 'px' } : { left: '80px', top: (H / 2 + 70) + 'px', transformOrigin: '0 50%' });
 
   // chip fitur lanjutan
   EXTRA.forEach((e, i) => {
     const c = moreChips[i];
-    const tIn = S.more + 1.3 + i * (V ? 1.35 : .35);
+    const tIn = S.more + .9 + i * (V ? 1.3 : .35);
     const on = t >= tIn && t < S.outro;
     const k = E.back(prog(t, tIn, tIn + .4)); const ko = E.in(prog(t, S.outro - .35, S.outro));
     let tr = `scale(${k})`;
-    if (V) { show(c, on && (i === 2 || t < tIn + 1.35 + .05), 1 - ko, tr);
+    if (V) { show(c, on && (i === 2 || t < tIn + 1.3 + .05), 1 - ko, tr);
       css(c, { left: 0, width: W + 'px', textAlign: 'center', top: (H - 300) + 'px' }); }
     else { show(c, on, 1 - ko, tr);
       // posisi di bawah tiap HP (perkiraan dari kamera akhir)
@@ -571,14 +554,14 @@ function renderOverlay(t) {
   show(oTitle, oOn, 1);
   css(oTitle, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '440px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' }
     : { left: '150px', top: '410px', fontSize: '110px', fontWeight: 900, letterSpacing: '-2px' });
-  if (oOn) oTitle.innerHTML = `<span class="typed">${oT.html(t, S.outro + 2.6)}</span>`;
+  if (oOn) oTitle.innerHTML = `<span class="typed">${oT.html(t, S.outro + 2.0)}</span>`;
   show(oSub, oOn, 1);
   css(oSub, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '590px', fontSize: '44px', fontWeight: 500, color: 'rgba(255,255,255,.92)' }
     : { left: '150px', top: '560px', fontSize: '42px', fontWeight: 500, color: 'rgba(255,255,255,.92)' });
-  if (oOn) oSub.innerHTML = `<span class="typed">${oSubT.html(t, S.outro + 3.0)}</span>`;
-  const bk = E.back(prog(t, S.outro + 3.0, S.outro + 3.5));
-  const pulse = 1 + Math.max(0, Math.sin((t - S.outro - 3.6) * 5)) * .03 * (t > S.outro + 3.6 ? 1 : 0);
-  show(oBadge, t >= S.outro + 3.0, 1, `scale(${bk * pulse})`);
+  if (oOn) oSub.innerHTML = `<span class="typed">${oSubT.html(t, S.outro + 2.4)}</span>`;
+  const bk = E.back(prog(t, S.outro + 2.0, S.outro + 2.5));
+  const pulse = 1 + Math.max(0, Math.sin((t - S.outro - 2.6) * 5)) * .03 * (t > S.outro + 2.6 ? 1 : 0);
+  show(oBadge, t >= S.outro + 2.0, 1, `scale(${bk * pulse})`);
   css(oBadge, V ? { left: 0, width: W + 'px', textAlign: 'center', top: '700px' } : { left: '150px', top: '680px' });
 }
 

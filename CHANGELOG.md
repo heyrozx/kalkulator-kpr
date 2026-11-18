@@ -2,7 +2,7 @@
 
 * Perbaikan build Android: Gradle, Android Gradle Plugin, dan Kotlin dinaikkan
   ke versi yang diwajibkan Flutter 3.47 (build appbundle sebelumnya gagal)
-* (Aset promosi, tidak memengaruhi aplikasi) Video promo 51 detik versi vertikal
+* (Aset promosi, tidak memengaruhi aplikasi) Video promo 32 detik versi vertikal
   (1080×1920) dan horizontal (1920×1080) di `store/video/export/`: mockup HP dari
   screenshot asli, animasi zoom, efek ketik, voice-over, serta efek suara & musik
   dari ElevenLabs
