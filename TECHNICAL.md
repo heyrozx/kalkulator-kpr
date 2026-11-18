@@ -365,8 +365,9 @@ Test berada di `test/core/`:
 | `validators_test.dart` | Batasan input: pinjaman, tenor 1–40 tahun, bunga 0–100%, DP ≤ pinjaman. |
 | `currency_format_test.dart` | Format Rupiah Indonesia dan parsing balik (koma maupun titik sebagai desimal). |
 
-CI (`.github/workflows/ci.yml`) menjalankan `dart format --set-exit-if-changed`,
-`flutter analyze`, dan `flutter test` pada setiap push/PR ke `master`.
+Tidak ada CI otomatis (workflow GitHub Actions sudah dihapus). Sebelum commit, jalankan
+manual: `dart format --output=none --set-exit-if-changed lib test`, `flutter analyze`,
+dan `flutter test`.
 
 ## 9. Konvensi kontribusi
 

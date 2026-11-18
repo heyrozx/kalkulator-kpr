@@ -7,6 +7,8 @@
   screenshot asli, animasi zoom, efek ketik, voice-over, serta efek suara & musik
   dari ElevenLabs
 * (Dokumentasi) Konsep & panduan video promo disimpan di `docs/video-promo/`
+* (Internal) Workflow CI GitHub Actions dihapus karena tidak dipakai lagi; format,
+  analyze, dan test dijalankan manual
 * Pilihan metode bunga di beranda (Anuitas / Efektif / Flat) kini berupa switch
   berbentuk pil dengan penanda ungu yang bergeser, menggantikan tab bergaris.
   Ukurannya ringkas di tengah, tidak lagi selebar layar
