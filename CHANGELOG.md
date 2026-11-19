@@ -1,5 +1,9 @@
 ## 1.5.1 (17)
 
+* (Internal) Integration test end-to-end di `integration_test/` (33 skenario):
+  kalkulator beranda, Advanced (fix & floating, berjenjang), KPR Syariah, riwayat
+  simulasi & kuota, bantuan, pengaturan, serta status premium/pulihkan pembelian.
+  RevenueCat dan AdMob di-mock sehingga tidak ada pembelian atau iklan sungguhan
 * Perbaikan build Android: Gradle, Android Gradle Plugin, dan Kotlin dinaikkan
   ke versi yang diwajibkan Flutter 3.47 (build appbundle sebelumnya gagal)
 * (Aset promosi, tidak memengaruhi aplikasi) Video promo 32 detik versi vertikal
