@@ -43,7 +43,11 @@ class SubmitBar extends StatelessWidget {
       child: SizedBox(
         width: double.infinity,
         child: FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            // Lebih tinggi dari baku Material (40) supaya mudah diketuk.
+            minimumSize: const Size.fromHeight(48),
+          ),
           onPressed: onPressed,
           child: Wrap(
             children: [Text(label), const Icon(Icons.chevron_right)],

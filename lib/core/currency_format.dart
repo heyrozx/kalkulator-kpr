@@ -56,6 +56,11 @@ class CurrencyFormat {
   /// Format angka untuk dimasukkan kembali ke `TextEditingController`.
   static String formatNumber(num value) => inputNumberFormat.format(value);
 
+  /// Persentase dengan koma desimal ala Indonesia: `7.5` menjadi `7,5%`.
+  /// `null` ditampilkan sebagai `0%`.
+  static String percent(num? value) =>
+      '${inputNumberFormat.format(value ?? 0)}%';
+
   /// Format ringkas untuk label sumbu grafik dan judul riwayat, di mana angka
   /// penuh (`1.500.000.000`) terlalu panjang: `1,5 M`, `500 jt`, `750 rb`.
   static String compact(num value) {

@@ -42,8 +42,7 @@ void advancedFlow() {
       expect(fieldText(tester, _total), '0');
     });
 
-    testWidgets('masa fix >= tenor ditolak dengan peringatan',
-        (tester) async {
+    testWidgets('masa fix >= tenor ditolak dengan peringatan', (tester) async {
       await _openAdvanced(tester);
       await enter(tester, _loan, '500000000');
       await enter(tester, _year, '3');

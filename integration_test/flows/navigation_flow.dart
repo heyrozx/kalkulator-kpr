@@ -43,9 +43,18 @@ void navigationFlow() {
 
       await openDrawerItem(tester, 'Pengaturan');
       expect(find.byType(SettingsScreen), findsOneWidget);
-      expect(find.text('Bebas Iklan'), findsOneWidget);
-      expect(find.text('Premium Aktif'), findsNothing);
-      expect(find.text('9.9.9'), findsOneWidget);
+      expect(find.text('Langganan'), findsOneWidget);
+      expect(
+          find.text('Hilangkan iklan & buka fitur premium.'), findsOneWidget);
+      expect(find.text('Bebas Iklan'), findsNothing);
+      expect(find.text('Versi Aplikasi'), findsNothing);
+      expect(find.text('Cek Update'), findsOneWidget);
+      expect(find.text('Versi 9.9.9'), findsOneWidget);
+
+      // Judul menu dicetak tebal.
+      final RichText title = tester.widget(find.descendant(
+          of: find.text('Cek Update'), matching: find.byType(RichText)));
+      expect(title.text.style?.fontWeight, FontWeight.bold);
 
       await tapText(tester, 'Disklaimer');
       expect(find.byType(Disclaimer), findsOneWidget);
@@ -59,7 +68,8 @@ void navigationFlow() {
 
       await tapText(tester, 'Pulihkan Pembelian');
       expect(find.text('Berhasil'), findsOneWidget);
-      expect(find.text('Premium Aktif'), findsOneWidget);
+      expect(find.text('Premium aktif. Ketuk untuk kelola di Google Play.'),
+          findsOneWidget);
       expect(FakeStore.calls, contains('restorePurchases'));
 
       await goBack(tester);
@@ -74,7 +84,8 @@ void navigationFlow() {
 
       await tapText(tester, 'Pulihkan Pembelian');
       expect(find.text('Tidak Ditemukan'), findsOneWidget);
-      expect(find.text('Bebas Iklan'), findsOneWidget);
+      expect(
+          find.text('Hilangkan iklan & buka fitur premium.'), findsOneWidget);
     });
 
     testWidgets('pulihkan pembelian gagal saat offline', (tester) async {
@@ -108,7 +119,8 @@ void navigationFlow() {
 
       await goBack(tester);
       await openDrawerItem(tester, 'Pengaturan');
-      expect(find.text('Premium Aktif'), findsOneWidget);
+      expect(find.text('Premium aktif. Ketuk untuk kelola di Google Play.'),
+          findsOneWidget);
     });
 
     testWidgets('pengguna gratis memuat iklan banner', (tester) async {

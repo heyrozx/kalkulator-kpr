@@ -206,17 +206,17 @@ Future<Uint8List> buildPrincipalPdfBytes(PdfBuildParams params) async {
                     if (calculateModel?.floatingInterest != null &&
                         (tieredInterest ?? []).isEmpty)
                       pw.Text(
-                          "Bunga Fix : ${calculateModel?.fixInterest?.toString()}%"),
+                          "Bunga Fix : ${CurrencyFormat.percent(calculateModel?.fixInterest)}"),
                     if (calculateModel?.floatingInterest != null &&
                         (tieredInterest ?? []).isEmpty)
                       pw.Text(
                           "Tahun Bunga Fix : ${calculateModel?.fixYear?.toInt()} Tahun"),
                     for (int i = 0; i < (tieredInterest ?? []).length; i++)
                       pw.Text(
-                          "Bunga Fix Tahun ke ${i + 1} : ${tieredInterest![i]}%"),
+                          "Bunga Fix Tahun ke ${i + 1} : ${CurrencyFormat.percent(tieredInterest![i])}"),
                     if (calculateModel?.floatingInterest != null)
                       pw.Text(
-                          "Bunga : ${calculateModel?.floatingInterest?.toString()}%"),
+                          "Bunga : ${CurrencyFormat.percent(calculateModel?.floatingInterest)}"),
 
                     // Common
                     if (calculateModel?.floatingInterest == null)
@@ -224,7 +224,7 @@ Future<Uint8List> buildPrincipalPdfBytes(PdfBuildParams params) async {
                           "Jangka Waktu (Tahun): ${currencyId.format(calculateModel?.year ?? 0)}"),
                     if (calculateModel?.floatingInterest == null)
                       pw.Text(
-                          "${terms.rate} : ${calculateModel?.interest?.toString()}%"),
+                          "${terms.rate} : ${CurrencyFormat.percent(calculateModel?.interest)}"),
                   ])),
             ]),
           ),

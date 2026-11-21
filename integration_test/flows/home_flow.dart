@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kalkulator_kpr/core/currency_format.dart';
 import 'package:kalkulator_kpr/core/helpers.dart';
 import 'package:kalkulator_kpr/models/calculate_model.dart';
+import 'package:kalkulator_kpr/models/financing_contract.dart';
 import 'package:kalkulator_kpr/pages/principle/principal_table.dart';
 
 import '../support/test_app.dart';
@@ -16,6 +18,8 @@ CalculateModel _model() => CalculateModel(
       year: 15,
       interest: 7.5,
     );
+
+final _terms = FinancingContract.conventional.terms;
 
 String _rp(double? value) => 'Rp ${currencyId.format(value ?? 0)}';
 
@@ -41,8 +45,8 @@ void homeFlow() {
 
       expect(find.text('Jumlah pinjaman tidak boleh kosong'), findsOneWidget);
       expect(find.text('Jangka waktu tidak boleh kosong'), findsOneWidget);
-      expect(find.text('Bunga pinjaman harus lebih besar dari 0'),
-          findsOneWidget);
+      expect(
+          find.text('Bunga pinjaman harus lebih besar dari 0'), findsOneWidget);
       // Tombol tabel angsuran baru muncul setelah ada hasil.
       expect(find.text('Tabel Angsuran'), findsNothing);
     });
@@ -87,8 +91,7 @@ void homeFlow() {
       expect(find.text('Tabel Angsuran'), findsOneWidget);
     });
 
-    testWidgets('ganti metode bunga menghitung ulang otomatis',
-        (tester) async {
+    testWidgets('ganti metode bunga menghitung ulang otomatis', (tester) async {
       await pumpKprApp(tester);
       await _fillForm(tester);
       await tapText(tester, 'Hitung Simulasi');
@@ -130,20 +133,50 @@ void homeFlow() {
       expect(find.byType(PrincipalTable), findsOneWidget);
       expect(find.text('Anuitas'), findsWidgets);
       expect(find.text('Rp. 500.000.000'), findsOneWidget);
-      expect(find.text('7.5%'), findsOneWidget);
+      // Bunga memakai koma desimal ala Indonesia.
+      expect(find.text('7,5%'), findsOneWidget);
+      expect(find.text('7.5%'), findsNothing);
 
       // Tab tabel: baris pertama sama dengan hasil helper.
       await tapText(tester, 'Tabel');
-      final List<CalculateResultModel> rows =
-          installmentTableAnuitas(_model());
+      final List<CalculateResultModel> rows = installmentTableAnuitas(_model());
       expect(rows, hasLength(180));
       expect(find.text(currencyId.format(rows.first.principal)), findsWidgets);
       expect(find.text(currencyId.format(rows.first.installmentResult)),
           findsWidgets);
 
+      // Lebar kolom mengikuti isi: jarak antar-angka di satu baris tidak
+      // boleh jauh lebih lebar dari padding sel (sebelumnya ada ruang kosong
+      // lebar karena tabel dipaksa minimal 700 px dan dibagi rata).
+      final Finder firstPrincipal =
+          find.text(currencyId.format(rows.first.principal)).first;
+      final Finder firstInterest =
+          find.text(currencyId.format(rows.first.interestResult)).first;
+      final double gap = tester.getTopLeft(firstInterest).dx -
+          tester.getTopRight(firstPrincipal).dx;
+      expect(gap, lessThan(60));
+
+      // Header kolom yang menempel berjarak dari TabBar saat tabel digulir.
+      await tester.dragFrom(
+          tester.getCenter(firstPrincipal), const Offset(0, -500));
+      await tester.pumpAndSettle();
+      final double tabBottom = tester.getBottomLeft(find.byType(TabBar)).dy;
+      final double headerTop =
+          tester.getTopLeft(find.text(_terms.principalColumn).hitTestable()).dy;
+      expect(headerTop - tabBottom, greaterThanOrEqualTo(8));
+
       // Tab daya bayar memuat form penghasilan.
       await tapText(tester, 'Daya Bayar');
       expect(find.text('Cek Daya Bayar'), findsOneWidget);
+
+      // Penjelasan daya bayar tertutup secara bawaan dan bisa dibuka-tutup.
+      const String about = 'Apa itu Daya Bayar?';
+      expect(find.text(about), findsOneWidget);
+      expect(find.text('≤30% Aman'), findsNothing);
+      await tapText(tester, about);
+      expect(find.text('≤30% Aman'), findsOneWidget);
+      await tapText(tester, about);
+      expect(find.text('≤30% Aman'), findsNothing);
       expect(field('Penghasilan Bersih per Bulan (Rp)'), findsOneWidget);
 
       await tapText(tester, 'Grafik');

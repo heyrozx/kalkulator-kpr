@@ -169,6 +169,10 @@ Future<PurchaseCubit> pumpKprApp(WidgetTester tester) async {
         title: 'Kalkulator KPR',
         theme: AppTheme.light,
         debugShowCheckedModeBanner: false,
+        // Seperti di ponsel: tanpa scrollbar otomatis yang hanya ditambahkan
+        // Flutter di desktop (test juga dijalankan di Linux desktop).
+        scrollBehavior:
+            const MaterialScrollBehavior().copyWith(scrollbars: false),
         home: const MyHomePage(title: 'Kalkulator KPR'),
       ),
     ),

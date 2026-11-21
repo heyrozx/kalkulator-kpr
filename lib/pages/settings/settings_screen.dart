@@ -88,66 +88,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
         centerTitle: false,
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 20),
-          children: [
-            _sectionTitle('Premium'),
-            BlocBuilder<PurchaseCubit, PurchaseState>(
-              builder: (context, state) {
-                final bool isPremium = state is PurchaseData && state.isPremium;
-                if (isPremium) {
-                  return const ListTile(
-                    leading: Icon(Icons.verified, color: AppColors.primary),
-                    title: Text('Premium Aktif'),
-                    subtitle: Text('Terima kasih, aplikasi Anda bebas iklan.'),
+        // Judul tiap menu dibuat tebal supaya mudah dipindai.
+        child: ListTileTheme.merge(
+          titleTextStyle: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: AppColors.onSurface,
+          ),
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 20),
+            children: [
+              _sectionTitle('Premium'),
+              BlocBuilder<PurchaseCubit, PurchaseState>(
+                builder: (context, state) {
+                  final bool isPremium =
+                      state is PurchaseData && state.isPremium;
+                  if (isPremium) {
+                    return ListTile(
+                      leading:
+                          const Icon(Icons.verified, color: AppColors.primary),
+                      title: const Text('Langganan'),
+                      subtitle: const Text(
+                          'Premium aktif. Ketuk untuk kelola di Google Play.'),
+                      trailing: const Icon(Icons.open_in_new, size: 18),
+                      onTap: () => _launchUrl(context
+                              .read<PurchaseCubit>()
+                              .customerInfo
+                              ?.managementURL ??
+                          AppConfig.subscriptionManagementUrl),
+                    );
+                  }
+                  return ListTile(
+                    leading: const Icon(Icons.workspace_premium_outlined),
+                    title: const Text('Langganan'),
+                    subtitle:
+                        const Text('Hilangkan iklan & buka fitur premium.'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showPremiumPaywall(context),
                   );
-                }
-                return ListTile(
-                  leading: const Icon(Icons.workspace_premium_outlined),
-                  title: const Text('Bebas Iklan'),
-                  subtitle: const Text('Hilangkan iklan & buka fitur premium.'),
-                  onTap: () => showPremiumPaywall(context),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.restore),
-              title: const Text('Pulihkan Pembelian'),
-              subtitle: const Text('Sudah pernah membeli di perangkat lain?'),
-              onTap: _restorePurchase,
-            ),
-            const Divider(thickness: 0.5),
-            _sectionTitle('Lainnya'),
-            ListTile(
-              leading: const Icon(Icons.star_outline),
-              title: const Text('Beri Rating'),
-              onTap: () => _launchUrl(AppConfig.playStoreUrl),
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: const Text('Disklaimer'),
-              onTap: () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const Disclaimer())),
-            ),
-            ListTile(
-              leading: const Icon(Icons.mail_outline),
-              title: const Text('Hubungi Kami'),
-              onTap: () => _launchUrl(AppConfig.contactUrl),
-            ),
-            ListTile(
-              leading: const Icon(Icons.gpp_maybe_outlined),
-              title: const Text('Kebijakan Privasi'),
-              onTap: () => _launchUrl(AppConfig.privacyPolicyUrl),
-            ),
-            ListTile(
-              leading: const Icon(Icons.smartphone_outlined),
-              title: const Text('Versi Aplikasi'),
-              trailing: Text(
-                _appVersion.isEmpty ? '-' : _appVersion,
-                style: TextStyle(color: AppColors.muted),
+                },
               ),
-            ),
-          ],
+              ListTile(
+                leading: const Icon(Icons.restore),
+                title: const Text('Pulihkan Pembelian'),
+                subtitle: const Text('Sudah pernah membeli di perangkat lain?'),
+                onTap: _restorePurchase,
+              ),
+              const Divider(thickness: 0.5),
+              _sectionTitle('Lainnya'),
+              ListTile(
+                leading: const Icon(Icons.star_outline),
+                title: const Text('Beri Rating'),
+                onTap: () => _launchUrl(AppConfig.playStoreUrl),
+              ),
+              ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('Disklaimer'),
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const Disclaimer())),
+              ),
+              ListTile(
+                leading: const Icon(Icons.mail_outline),
+                title: const Text('Hubungi Kami'),
+                onTap: () => _launchUrl(AppConfig.contactUrl),
+              ),
+              ListTile(
+                leading: const Icon(Icons.gpp_maybe_outlined),
+                title: const Text('Kebijakan Privasi'),
+                onTap: () => _launchUrl(AppConfig.privacyPolicyUrl),
+              ),
+              ListTile(
+                leading: const Icon(Icons.system_update_outlined),
+                title: const Text('Cek Update'),
+                subtitle: Text(
+                    _appVersion.isEmpty ? 'Versi -' : 'Versi $_appVersion'),
+                trailing: const Icon(Icons.open_in_new, size: 18),
+                onTap: () => _launchUrl(AppConfig.playStoreUrl),
+              ),
+            ],
+          ),
         ),
       ),
     );

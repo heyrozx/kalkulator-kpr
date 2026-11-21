@@ -1,5 +1,20 @@
 ## 1.5.1 (17)
 
+* Tabel angsuran lebih rapi: lebar kolom kini mengikuti isinya (tidak ada lagi
+  ruang kosong lebar di antara kolom), header kolom yang menempel saat digulir
+  diberi jarak dari tab, dan baris terakhir ringkasan (bunga) tanpa garis bawah
+* Bunga ditampilkan dengan koma desimal ala Indonesia (`7,5%`, bukan `7.5%`) di
+  ringkasan tabel angsuran, detail fix & floating/berjenjang, dan PDF
+* Penjelasan "Apa itu Daya Bayar?" kini bisa dibuka-tutup dan tertutup secara
+  bawaan, supaya form penghasilan langsung terlihat
+* Menu samping: logo tanpa latar putih, ikon sejajar dengan judul & subjudul,
+  dan ukuran huruf menu sedikit lebih kecil
+* Ruang kosong di atas judul halaman Advanced dan KPR Syariah dirapatkan;
+  tombol Hitung Simulasi (beranda, Advanced, KPR Syariah) sedikit lebih tinggi
+* Pengaturan: judul menu dicetak tebal, menu "Bebas Iklan" menjadi "Langganan"
+  (pengguna premium bisa langsung kelola langganan di Google Play), dan
+  "Versi Aplikasi" menjadi "Cek Update" yang membuka halaman aplikasi di Google
+  Play (nomor versi tetap tampil di bawahnya)
 * (Internal) Integration test end-to-end di `integration_test/` (33 skenario):
   kalkulator beranda, Advanced (fix & floating, berjenjang), KPR Syariah, riwayat
   simulasi & kuota, bantuan, pengaturan, serta status premium/pulihkan pembelian.

@@ -287,15 +287,19 @@ class _PrincipalTableState extends State<PrincipalTable> {
         child: icon,
       );
 
-  /// Satu baris ringkasan di kepala halaman, dengan garis pemisah tipis di
-  /// bawahnya.
-  Widget _summaryRow(String label, String value, {Color? valueColor}) {
+  /// Satu baris ringkasan di kepala halaman. Garis pemisah tipis di bawahnya
+  /// hanya dipasang di antara baris, tidak di baris terakhir.
+  Widget _summaryRow(String label, String value,
+      {Color? valueColor, bool divider = true}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10),
       decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(color: AppColors.primary.withValues(alpha: 0.12)),
-        ),
+        border: divider
+            ? Border(
+                bottom: BorderSide(
+                    color: AppColors.primary.withValues(alpha: 0.12)),
+              )
+            : null,
       ),
       child: Row(
         children: [
@@ -498,7 +502,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     title: const Text('Bunga Fix'),
                                     trailing: Icon(Icons.percent),
                                     subtitle: Text(
-                                      '${widget.calculateModel?.fixInterest ?? '0'}%',
+                                      CurrencyFormat.percent(widget.calculateModel?.fixInterest),
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.primary),
@@ -541,7 +545,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     title: Text('Bunga Fix Tahun ke ${i + 1}'),
                                     trailing: Icon(Icons.date_range),
                                     subtitle: Text(
-                                      '${widget.tieredInterest![i]}%',
+                                      CurrencyFormat.percent(widget.tieredInterest![i]),
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.primary),
@@ -561,7 +565,7 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     selectedColor: AppColors.primary,
                                     title: const Text('Bunga Floating'),
                                     subtitle: Text(
-                                      '${widget.calculateModel?.floatingInterest ?? '0'}%',
+                                      CurrencyFormat.percent(widget.calculateModel?.floatingInterest),
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.primary),
@@ -642,11 +646,17 @@ class _PrincipalTableState extends State<PrincipalTable> {
                           _summaryRow(
                             'Jangka Waktu (Tahun)',
                             currencyId.format(widget.calculateModel!.year),
+                            // Jadi baris terakhir kalau bunganya ada di
+                            // drawer "Selengkapnya" (fix & floating).
+                            divider:
+                                widget.calculateModel?.floatingInterest == null,
                           ),
                           if (widget.calculateModel?.floatingInterest == null)
                             _summaryRow(
                               _terms.rate,
-                              '${widget.calculateModel!.interest!}%',
+                              CurrencyFormat.percent(
+                                  widget.calculateModel!.interest),
+                              divider: false,
                             ),
                           if (widget.calculateModel?.floatingInterest != null)
                             const SizedBox(height: 10),

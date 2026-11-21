@@ -37,12 +37,10 @@ class _AdvancedScreenState extends State<AdvancedScreen> {
         body: SafeArea(
           child: Column(
             children: [
-              const SizedBox(
-                height: 10,
-              ),
+              // Jarak atas dirapatkan: sebelumnya SizedBox 10 + margin 15 di
+              // bawah status bar terlihat seperti ruang kosong di atas judul.
               Container(
-                margin:
-                    const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                margin: const EdgeInsets.fromLTRB(15, 4, 15, 10),
                 child: Row(
                   children: [
                     IconButton(

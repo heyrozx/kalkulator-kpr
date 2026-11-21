@@ -490,7 +490,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                       onPressed: calculate,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         child: Text(
                           result != null ? 'Hitung Ulang' : 'Hitung Simulasi',
                           style: _buttonStyle,
@@ -513,7 +513,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                         onPressed: _openInstallmentTable,
                         child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
+                          padding: EdgeInsets.symmetric(vertical: 16),
                           child: Text('Tabel Angsuran', style: _buttonStyle),
                         ),
                       ),
@@ -530,68 +530,84 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildDrawer() {
     return Drawer(
-      child: SafeArea(
-        child: Column(
-          children: [
-            ListTile(
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8, bottom: 10),
-                    child: Image.asset('assets/ic_launcher.png',
-                        width: 56, height: 56),
-                  ),
-                  const Text(
-                    'Kalkulator KPR',
-                    style: TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text('Simulasi Kredit'),
-                ],
-              ),
+      // Ukuran huruf menu sedikit di bawah baku Material, dan ikon diratakan
+      // ke tengah blok judul + subjudul. Bawaan Material 3 menaruh ikon sedikit
+      // lebih tinggi daripada teksnya pada tile dua baris.
+      child: ListTileTheme.merge(
+        titleAlignment: ListTileTitleAlignment.center,
+        horizontalTitleGap: 14,
+        titleTextStyle: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.onSurface),
+        subtitleTextStyle: TextStyle(fontSize: 12, color: AppColors.muted),
+        child: _buildDrawerContent(),
+      ),
+    );
+  }
+
+  Widget _buildDrawerContent() {
+    return SafeArea(
+      child: Column(
+        children: [
+          ListTile(
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 10),
+                  // Logo tanpa plat putih ikon launcher.
+                  child: Image.asset('assets/logo.png', width: 56, height: 56),
+                ),
+                const Text(
+                  'Kalkulator KPR',
+                  style: TextStyle(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20),
+                ),
+                const SizedBox(height: 5),
+                const Text('Simulasi Kredit'),
+              ],
             ),
-            const Divider(thickness: 0.5),
-            // Metode bunga sekarang dipilih lewat switch di beranda, jadi drawer
-            // hanya menyisakan layar-layar lain.
-            ListTile(
-              leading: const Icon(Icons.tune),
-              title: const Text('Advanced'),
-              subtitle: const Text('Fix & floating, bunga berjenjang'),
-              onTap: () => _openPage(
-                AdvancedScreen(type: type == CalculatorType.flat ? null : type),
-              ),
+          ),
+          const Divider(thickness: 0.5),
+          // Metode bunga sekarang dipilih lewat switch di beranda, jadi drawer
+          // hanya menyisakan layar-layar lain.
+          ListTile(
+            leading: const Icon(Icons.tune),
+            title: const Text('Advanced'),
+            subtitle: const Text('Fix & floating, bunga berjenjang'),
+            onTap: () => _openPage(
+              AdvancedScreen(type: type == CalculatorType.flat ? null : type),
             ),
-            ListTile(
-              leading: const Icon(Icons.mosque_outlined),
-              title: const Text('KPR Syariah'),
-              subtitle: const Text('Murabahah & MMQ'),
-              onTap: () => _openPage(const ShariaScreen()),
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Riwayat Simulasi'),
-              subtitle: const Text('Simulasi yang Anda simpan'),
-              onTap: () => _openPage(const HistoryScreen()),
-            ),
-            const Spacer(),
-            const Divider(thickness: 0.5),
-            ListTile(
-              leading: const Icon(Icons.help_outline),
-              title: const Text('Bantuan'),
-              onTap: _openHelp,
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings_outlined),
-              title: const Text('Pengaturan'),
-              onTap: () => _openPage(const SettingsScreen()),
-            ),
-            const SizedBox(height: 15)
-          ],
-        ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.mosque_outlined),
+            title: const Text('KPR Syariah'),
+            subtitle: const Text('Murabahah & MMQ'),
+            onTap: () => _openPage(const ShariaScreen()),
+          ),
+          ListTile(
+            leading: const Icon(Icons.history),
+            title: const Text('Riwayat Simulasi'),
+            subtitle: const Text('Simulasi yang Anda simpan'),
+            onTap: () => _openPage(const HistoryScreen()),
+          ),
+          const Spacer(),
+          const Divider(thickness: 0.5),
+          ListTile(
+            leading: const Icon(Icons.help_outline),
+            title: const Text('Bantuan'),
+            onTap: _openHelp,
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('Pengaturan'),
+            onTap: () => _openPage(const SettingsScreen()),
+          ),
+          const SizedBox(height: 15)
+        ],
       ),
     );
   }

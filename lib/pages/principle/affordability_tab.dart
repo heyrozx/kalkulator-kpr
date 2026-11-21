@@ -282,50 +282,94 @@ class _RatioBar extends StatelessWidget {
 }
 
 /// Penjelasan singkat apa itu daya bayar dan cara bank menilainya.
-class _AboutAffordability extends StatelessWidget {
+///
+/// Tertutup secara bawaan supaya form penghasilan langsung terlihat; isinya
+/// dibuka dengan mengetuk judulnya.
+class _AboutAffordability extends StatefulWidget {
   const _AboutAffordability();
 
   @override
+  State<_AboutAffordability> createState() => _AboutAffordabilityState();
+}
+
+class _AboutAffordabilityState extends State<_AboutAffordability> {
+  bool _expanded = false;
+
+  static const Duration _duration = Duration(milliseconds: 200);
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: AppColors.headerTint,
-        borderRadius: BorderRadius.circular(AppRadius.panel),
-      ),
+    return Material(
+      color: AppColors.headerTint,
+      borderRadius: BorderRadius.circular(AppRadius.panel),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            children: [
-              Icon(Icons.info_outline, color: AppColors.primary, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Apa itu Daya Bayar?',
-                style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary),
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Semantics(
+              button: true,
+              expanded: _expanded,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(15, 12, 10, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline,
+                        color: AppColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Apa itu Daya Bayar?',
+                        style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primary),
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: _duration,
+                      child: const Icon(Icons.expand_more,
+                          color: AppColors.primary),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          const Text(
-            'Daya bayar adalah kemampuan Anda membayar cicilan setiap bulan '
-            'tanpa mengganggu kebutuhan hidup. Bank menilainya dengan rasio '
-            'cicilan (Debt Service Ratio): total cicilan per bulan dibagi '
-            'penghasilan bersih.',
-            style: TextStyle(fontSize: 13, height: 1.4),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _levelChip('≤30% Aman', AppColors.success),
-              _levelChip('30–40% Waspada', AppColors.warning),
-              _levelChip('>40% Berat', AppColors.danger),
-            ],
+          AnimatedSize(
+            duration: _duration,
+            curve: Curves.easeOut,
+            alignment: Alignment.topCenter,
+            child: !_expanded
+                ? const SizedBox(width: double.infinity)
+                : Padding(
+                    padding: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Daya bayar adalah kemampuan Anda membayar cicilan '
+                          'setiap bulan tanpa mengganggu kebutuhan hidup. Bank '
+                          'menilainya dengan rasio cicilan (Debt Service '
+                          'Ratio): total cicilan per bulan dibagi penghasilan '
+                          'bersih.',
+                          style: TextStyle(fontSize: 13, height: 1.4),
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            _levelChip('≤30% Aman', AppColors.success),
+                            _levelChip('30–40% Waspada', AppColors.warning),
+                            _levelChip('>40% Berat', AppColors.danger),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),

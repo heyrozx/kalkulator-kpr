@@ -32,6 +32,11 @@ class AppConfig {
       'https://nexadream.id/page/privacy-policy-kalkulator-kpr-simulasi-kredit';
   static const String contactUrl = 'https://nexadream.id/contact';
 
+  /// Halaman kelola langganan aplikasi ini di Google Play. Dipakai kalau
+  /// RevenueCat tidak mengembalikan `managementURL`.
+  static const String subscriptionManagementUrl =
+      'https://play.google.com/store/account/subscriptions?package=com.caraguna.kalkulator.kpr';
+
   // --- Batasan input ---
   /// Jangka waktu maksimum. Membatasi tenor mencegah tabel angsuran raksasa
   /// (mis. salah ketik "1.000" tahun = 12.000 baris) yang membekukan UI.
