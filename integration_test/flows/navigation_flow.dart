@@ -5,6 +5,7 @@ import 'package:kalkulator_kpr/pages/about/disclaimer.dart';
 import 'package:kalkulator_kpr/pages/about/effective_description.dart';
 import 'package:kalkulator_kpr/pages/about/flat_description.dart';
 import 'package:kalkulator_kpr/pages/about/sharia_description.dart';
+import 'package:kalkulator_kpr/core/theme.dart';
 import 'package:kalkulator_kpr/pages/settings/settings_screen.dart';
 import 'package:kalkulator_kpr/shared/widgets/premium_tab.dart';
 
@@ -51,10 +52,11 @@ void navigationFlow() {
       expect(find.text('Cek Update'), findsOneWidget);
       expect(find.text('Versi 9.9.9'), findsOneWidget);
 
-      // Judul menu dicetak tebal.
+      // Gaya judul menu sama dengan menu samping (tidak tebal penuh).
       final RichText title = tester.widget(find.descendant(
           of: find.text('Cek Update'), matching: find.byType(RichText)));
-      expect(title.text.style?.fontWeight, FontWeight.bold);
+      expect(title.text.style?.fontWeight, AppMenu.title.fontWeight);
+      expect(title.text.style?.fontSize, AppMenu.title.fontSize);
 
       await tapText(tester, 'Disklaimer');
       expect(find.byType(Disclaimer), findsOneWidget);

@@ -1,4 +1,4 @@
-## 1.5.1 (17)
+## 1.5.2 (18) — Draft, belum dirilis
 
 * Tabel angsuran lebih rapi: lebar kolom kini mengikuti isinya (tidak ada lagi
   ruang kosong lebar di antara kolom), header kolom yang menempel saat digulir
@@ -7,11 +7,12 @@
   ringkasan tabel angsuran, detail fix & floating/berjenjang, dan PDF
 * Penjelasan "Apa itu Daya Bayar?" kini bisa dibuka-tutup dan tertutup secara
   bawaan, supaya form penghasilan langsung terlihat
-* Menu samping: logo tanpa latar putih, ikon sejajar dengan judul & subjudul,
-  dan ukuran huruf menu sedikit lebih kecil
+* Menu samping: logo tanpa latar putih dan sedikit lebih kecil, ikon sejajar
+  dengan judul & subjudul, dan ukuran huruf menu sedikit lebih kecil
 * Ruang kosong di atas judul halaman Advanced dan KPR Syariah dirapatkan;
   tombol Hitung Simulasi (beranda, Advanced, KPR Syariah) sedikit lebih tinggi
-* Pengaturan: judul menu dicetak tebal, menu "Bebas Iklan" menjadi "Langganan"
+* Pengaturan: ukuran & ketebalan huruf menu sama dengan menu samping, ikon
+  sejajar dengan teks, menu "Bebas Iklan" menjadi "Langganan"
   (pengguna premium bisa langsung kelola langganan di Google Play), dan
   "Versi Aplikasi" menjadi "Cek Update" yang membuka halaman aplikasi di Google
   Play (nomor versi tetap tampil di bawahnya)
@@ -19,6 +20,9 @@
   kalkulator beranda, Advanced (fix & floating, berjenjang), KPR Syariah, riwayat
   simulasi & kuota, bantuan, pengaturan, serta status premium/pulihkan pembelian.
   RevenueCat dan AdMob di-mock sehingga tidak ada pembelian atau iklan sungguhan
+
+## 1.5.1 (17)
+
 * Perbaikan build Android: Gradle, Android Gradle Plugin, dan Kotlin dinaikkan
   ke versi yang diwajibkan Flutter 3.47 (build appbundle sebelumnya gagal)
 * (Aset promosi, tidak memengaruhi aplikasi) Video promo 32 detik versi vertikal

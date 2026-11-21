@@ -88,13 +88,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         centerTitle: false,
       ),
       body: SafeArea(
-        // Judul tiap menu dibuat tebal supaya mudah dipindai.
-        child: ListTileTheme.merge(
-          titleTextStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.onSurface,
-          ),
+        // Ukuran & ketebalan huruf sama dengan menu samping beranda.
+        child: AppMenu.theme(
           child: ListView(
             padding: const EdgeInsets.only(bottom: 20),
             children: [

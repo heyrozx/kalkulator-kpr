@@ -530,17 +530,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildDrawer() {
     return Drawer(
-      // Ukuran huruf menu sedikit di bawah baku Material, dan ikon diratakan
-      // ke tengah blok judul + subjudul. Bawaan Material 3 menaruh ikon sedikit
-      // lebih tinggi daripada teksnya pada tile dua baris.
-      child: ListTileTheme.merge(
-        titleAlignment: ListTileTitleAlignment.center,
-        horizontalTitleGap: 14,
-        titleTextStyle: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.onSurface),
-        subtitleTextStyle: TextStyle(fontSize: 12, color: AppColors.muted),
+      // Gaya menu dipakai bersama halaman Pengaturan.
+      child: AppMenu.theme(
         child: _buildDrawerContent(),
       ),
     );
@@ -557,7 +548,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8, bottom: 10),
                   // Logo tanpa plat putih ikon launcher.
-                  child: Image.asset('assets/logo.png', width: 56, height: 56),
+                  child: Image.asset('assets/logo.png', width: 44, height: 44),
                 ),
                 const Text(
                   'Kalkulator KPR',

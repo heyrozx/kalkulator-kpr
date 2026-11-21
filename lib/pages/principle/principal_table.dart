@@ -502,7 +502,8 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     title: const Text('Bunga Fix'),
                                     trailing: Icon(Icons.percent),
                                     subtitle: Text(
-                                      CurrencyFormat.percent(widget.calculateModel?.fixInterest),
+                                      CurrencyFormat.percent(
+                                          widget.calculateModel?.fixInterest),
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.primary),
@@ -545,7 +546,8 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     title: Text('Bunga Fix Tahun ke ${i + 1}'),
                                     trailing: Icon(Icons.date_range),
                                     subtitle: Text(
-                                      CurrencyFormat.percent(widget.tieredInterest![i]),
+                                      CurrencyFormat.percent(
+                                          widget.tieredInterest![i]),
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.primary),
@@ -565,7 +567,8 @@ class _PrincipalTableState extends State<PrincipalTable> {
                                     selectedColor: AppColors.primary,
                                     title: const Text('Bunga Floating'),
                                     subtitle: Text(
-                                      CurrencyFormat.percent(widget.calculateModel?.floatingInterest),
+                                      CurrencyFormat.percent(widget
+                                          .calculateModel?.floatingInterest),
                                       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           color: AppColors.primary),

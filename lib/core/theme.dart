@@ -99,6 +99,29 @@ class AppShadows {
       ];
 }
 
+/// Gaya daftar menu yang dipakai bersama menu samping beranda dan halaman
+/// Pengaturan, supaya ukuran & ketebalan hurufnya selalu sama.
+class AppMenu {
+  const AppMenu._();
+
+  static const TextStyle title = TextStyle(
+      fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.onSurface);
+
+  static TextStyle get subtitle =>
+      TextStyle(fontSize: 12, color: AppColors.muted);
+
+  /// Membungkus [child] dengan tema `ListTile` menu: huruf sedikit di bawah
+  /// baku Material, dan ikon diratakan ke tengah blok judul + subjudul
+  /// (bawaan Material 3 menaruh ikon sedikit lebih tinggi pada tile dua baris).
+  static Widget theme({required Widget child}) => ListTileTheme.merge(
+        titleAlignment: ListTileTitleAlignment.center,
+        horizontalTitleGap: 14,
+        titleTextStyle: title,
+        subtitleTextStyle: subtitle,
+        child: child,
+      );
+}
+
 class AppTheme {
   const AppTheme._();
 
